@@ -2,8 +2,16 @@ import { useEffect, useState } from "react"
 
 import { Storage } from "@plasmohq/storage"
 
+import { ChevronsUpDown, Check, Search } from "lucide-react"
+
 import { Button } from "~components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "~components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "~components/ui/dropdown-menu"
 import { Input } from "~components/ui/input"
 import { Label } from "~components/ui/label"
 import { RadioGroup, RadioGroupItem } from "~components/ui/radio-group"
@@ -14,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "~components/ui/select"
+import { cn } from "~lib/utils"
 import { t } from "~utils/i18n"
 
 import "~style.css"
@@ -26,7 +35,7 @@ interface AIProvider {
   models: string[]
   defaultModel: string
   modelsEndpoint?: string
-  supportsModelFetch?: boolean
+
 }
 
 const AI_PROVIDERS: AIProvider[] = [
@@ -38,7 +47,7 @@ const AI_PROVIDERS: AIProvider[] = [
     models: ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
     defaultModel: "gpt-3.5-turbo",
     modelsEndpoint: "/models",
-    supportsModelFetch: true
+
   },
   {
     id: "gemini",
@@ -48,7 +57,7 @@ const AI_PROVIDERS: AIProvider[] = [
     models: ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"],
     defaultModel: "gemini-1.5-flash",
     modelsEndpoint: "/models",
-    supportsModelFetch: true
+
   },
   {
     id: "claude",
@@ -61,7 +70,7 @@ const AI_PROVIDERS: AIProvider[] = [
       "claude-3-haiku-20240307"
     ],
     defaultModel: "claude-3-haiku-20240307",
-    supportsModelFetch: false
+
   },
   {
     id: "openai-compatible",
@@ -71,7 +80,17 @@ const AI_PROVIDERS: AIProvider[] = [
     models: ["gpt-3.5-turbo", "gpt-4"],
     defaultModel: "gpt-3.5-turbo",
     modelsEndpoint: "/models",
-    supportsModelFetch: true
+
+  },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    apiKeyLabel: "OpenRouter API Key",
+    baseUrl: "https://openrouter.ai/api/v1",
+    models: ["openai/gpt-3.5-turbo", "openai/gpt-4", "anthropic/claude-3-opus"],
+    defaultModel: "openai/gpt-3.5-turbo",
+    modelsEndpoint: "/models",
+
   }
 ]
 
@@ -95,6 +114,7 @@ interface AIConfig {
     gemini?: string
     claude?: string
     "openai-compatible"?: string
+    openrouter?: string
   }
   model: string
   baseUrl?: string
@@ -103,6 +123,7 @@ interface AIConfig {
     gemini?: string
     claude?: string
     "openai-compatible"?: string
+    openrouter?: string
   }
   customModel?: string
   replyLanguage?: string
@@ -123,6 +144,8 @@ function OptionsPage() {
   }>({})
   const [fetchingModels, setFetchingModels] = useState(false)
   const [useCustomModel, setUseCustomModel] = useState(false)
+  const [openModelSelect, setOpenModelSelect] = useState(false)
+  const [modelSearchQuery, setModelSearchQuery] = useState("")
   const storage = new Storage()
 
   useEffect(() => {
@@ -143,7 +166,7 @@ function OptionsPage() {
         const provider = AI_PROVIDERS.find((p) => p.id === config.provider)
         const apiKey =
           config.apiKeys?.[config.provider as keyof typeof config.apiKeys]
-        if (provider && apiKey && provider.supportsModelFetch) {
+        if (provider && apiKey) {
           fetchModels(provider, apiKey).then((models) => {
             setAvailableModels((prev) => ({
               ...prev,
@@ -183,7 +206,7 @@ function OptionsPage() {
   }
 
   const fetchModels = async (provider: AIProvider, apiKey: string) => {
-    if (!provider.supportsModelFetch || !provider.modelsEndpoint || !apiKey) {
+    if (!provider.modelsEndpoint || !apiKey) {
       return provider.models
     }
 
@@ -196,7 +219,7 @@ function OptionsPage() {
         "Content-Type": "application/json"
       }
 
-      if (provider.id === "openai" || provider.id === "openai-compatible") {
+      if (provider.id === "openai" || provider.id === "openai-compatible" || provider.id === "openrouter") {
         headers["Authorization"] = `Bearer ${apiKey}`
       } else if (provider.id === "gemini") {
         // Gemini uses API key as query parameter and different endpoint
@@ -216,21 +239,7 @@ function OptionsPage() {
       const response = await fetch(url, { headers })
       const data = await response.json()
 
-      if (provider.id === "openai" || provider.id === "openai-compatible") {
-        return (
-          data.data
-            ?.map((m: any) => m.id)
-            .filter(
-              (id: string) =>
-                id.includes("gpt") ||
-                id.includes("text-davinci") ||
-                id.includes("claude") ||
-                id.includes("llama")
-            ) || provider.models
-        )
-      }
-
-      return provider.models
+      return data.data?.map((m: any) => m.id) || provider.models
     } catch (error) {
       console.error(t("fetchModelsFailed"), error)
       return provider.models
@@ -265,7 +274,7 @@ function OptionsPage() {
       // 如果有API Key，尝试获取模型列表
       const apiKey =
         aiConfig.apiKeys?.[providerId as keyof typeof aiConfig.apiKeys]
-      if (apiKey && provider.supportsModelFetch) {
+      if (apiKey) {
         fetchModels(provider, apiKey).then((models) => {
           setAvailableModels((prev) => ({
             ...prev,
@@ -284,7 +293,7 @@ function OptionsPage() {
     setAiConfig({ ...aiConfig, apiKeys: newApiKeys })
 
     const provider = AI_PROVIDERS.find((p) => p.id === aiConfig.provider)
-    if (provider && apiKey && provider.supportsModelFetch) {
+    if (provider && apiKey) {
       fetchModels(provider, apiKey).then((models) => {
         setAvailableModels((prev) => ({
           ...prev,
@@ -335,6 +344,27 @@ function OptionsPage() {
             </Select>
           </div>
 
+          {currentProvider?.baseUrl && (
+            <div className="space-y-2">
+              <Label htmlFor="api-address">{t("apiAddress")}</Label>
+              <Input
+                id="api-address"
+                type="text"
+                value={aiConfig.baseUrl || ""}
+                onChange={(e) =>
+                  setAiConfig({
+                    ...aiConfig,
+                    baseUrl: e.target.value || undefined
+                  })
+                }
+                placeholder={currentProvider.baseUrl}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("customApiAddressTip")}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="api-key">
               {currentProvider?.apiKeyLabel || "API Key"}
@@ -353,11 +383,9 @@ function OptionsPage() {
                 currentProvider?.name || ""
               )}
             />
-            {currentProvider?.supportsModelFetch && (
-              <p className="text-xs text-muted-foreground">
-                {t("autoFetchModelsTip")}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              {t("autoFetchModelsTip")}
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -380,28 +408,80 @@ function OptionsPage() {
                 {!useCustomModel && (
                   <div className="ml-6 space-y-2">
                     <div className="flex gap-2 items-center">
-                      <Select
-                        value={aiConfig.model}
-                        onValueChange={handleModelChange}
-                        disabled={fetchingModels}>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(
-                            availableModels[aiConfig.provider] ||
-                            currentProvider?.models ||
-                            []
-                          ).map((model) => (
-                            <SelectItem key={model} value={model}>
-                              {model}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <DropdownMenu
+                        open={openModelSelect}
+                        onOpenChange={setOpenModelSelect}>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openModelSelect}
+                            className="flex-1 justify-between text-left font-normal"
+                            disabled={fetchingModels}>
+                            {aiConfig.model || t("modelSelection")}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="p-0" align="start">
+                          <div className="flex items-center border-b px-3">
+                            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                            <input
+                              className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                              placeholder={t("searchModels")}
+                              value={modelSearchQuery}
+                              onChange={(e) =>
+                                setModelSearchQuery(e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="max-h-[220px] overflow-y-auto p-1">
+                            {(
+                              availableModels[aiConfig.provider] ||
+                              currentProvider?.models ||
+                              []
+                            )
+                              .filter((model) =>
+                                model
+                                  .toLowerCase()
+                                  .includes(modelSearchQuery.toLowerCase())
+                              )
+                              .map((model) => (
+                                <DropdownMenuItem
+                                  key={model}
+                                  onSelect={() => {
+                                    handleModelChange(model)
+                                    setOpenModelSelect(false)
+                                    setModelSearchQuery("")
+                                  }}>
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      aiConfig.model === model
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {model}
+                                </DropdownMenuItem>
+                              ))}
+                            {(
+                              availableModels[aiConfig.provider] ||
+                              currentProvider?.models ||
+                              []
+                            ).filter((model) =>
+                              model
+                                .toLowerCase()
+                                .includes(modelSearchQuery.toLowerCase())
+                            ).length === 0 && (
+                              <div className="py-6 text-center text-sm text-muted-foreground">
+                                No models found.
+                              </div>
+                            )}
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
 
-                      {currentProvider?.supportsModelFetch &&
-                        aiConfig.apiKeys?.[
+                      {aiConfig.apiKeys?.[
                           aiConfig.provider as keyof typeof aiConfig.apiKeys
                         ] && (
                           <Button
@@ -460,32 +540,9 @@ function OptionsPage() {
             </RadioGroup>
 
             <p className="text-xs text-muted-foreground">
-              {currentProvider?.supportsModelFetch
-                ? t("supportsAutoFetchModels")
-                : t("notSupportsAutoFetchModels")}
+              {t("supportsAutoFetchModels")}
             </p>
           </div>
-
-          {currentProvider?.baseUrl && (
-            <div className="space-y-2">
-              <Label htmlFor="api-address">{t("apiAddress")}</Label>
-              <Input
-                id="api-address"
-                type="text"
-                value={aiConfig.baseUrl || ""}
-                onChange={(e) =>
-                  setAiConfig({
-                    ...aiConfig,
-                    baseUrl: e.target.value || undefined
-                  })
-                }
-                placeholder={currentProvider.baseUrl}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("customApiAddressTip")}
-              </p>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="reply-language">{t("aiReplyLanguage")}</Label>

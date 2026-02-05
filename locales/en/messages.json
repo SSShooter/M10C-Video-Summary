@@ -131,6 +131,10 @@
     "message": "Model Selection",
     "description": "Model selection label"
   },
+  "searchModels": {
+    "message": "Search models...",
+    "description": "Placeholder for search models input"
+  },
   "usePresetModel": {
     "message": "Use preset model",
     "description": "Use preset model option"
@@ -140,7 +144,7 @@
     "description": "Custom model option"
   },
   "apiAddress": {
-    "message": "API Address (Optional)",
+    "message": "API Address",
     "description": "API address label"
   },
   "customApiAddressTip": {

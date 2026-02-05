@@ -52,6 +52,7 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "name": "__MSG_extensionName__",
     "default_locale": "en",
     "host_permissions": [
       "https://*/*",
