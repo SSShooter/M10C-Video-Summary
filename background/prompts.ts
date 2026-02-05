@@ -20,7 +20,6 @@ const LANGUAGE_MAP: Record<string, string> = {
 }
 
 interface AIConfig {
-
   provider: string
   apiKeys: {
     openai?: string
@@ -137,20 +136,6 @@ export interface Arrow {
    * id of end node
    */
   to: string
-  /**
-   * offset of control point from start point
-   */
-  delta1: {
-    x: number
-    y: number
-  }
-  /**
-   * offset of control point from end point
-   */
-  delta2: {
-    x: number
-    y: number
-  }
   /**
    * whether the arrow is bidirectional
    */
