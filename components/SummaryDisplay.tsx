@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
+import { Check, Copy } from "lucide-react"
 
 import { Storage } from "@plasmohq/storage"
 
 import { Button } from "~components/ui/button"
 import { ScrollArea } from "~components/ui/scroll-area"
-import { aiService, type SubtitleSummary } from "~utils/ai-service"
 import { t } from "~utils/i18n"
 
 export interface SummaryGenerateConfig {
@@ -23,6 +23,103 @@ interface SummaryDisplayProps {
   generatePromptText?: string
 }
 
+const SimpleMarkdown = ({ content }: { content: string }) => {
+  if (!content) return null
+
+  // Split content by lines but keep code blocks together? For simplicity, line by line.
+  const lines = content.split("\n")
+  const elements = []
+  let listBuffer: React.ReactNode[] = []
+
+  const flushList = (keyPrefix: string) => {
+    if (listBuffer.length > 0) {
+      elements.push(
+        <ul key={`${keyPrefix}-list`} className="list-disc pl-5 my-2 text-sm">
+          {listBuffer}
+        </ul>
+      )
+      listBuffer = []
+    }
+  }
+
+  lines.forEach((line, index) => {
+    const key = `line-${index}`
+    const trimmed = line.trim()
+
+    if (trimmed.startsWith("### ")) {
+      flushList(key)
+      elements.push(
+        <h3 key={key} className="text-base font-bold mt-4 mb-2 text-blue-600">
+          {trimmed.replace(/^###\s+/, "")}
+        </h3>
+      )
+    } else if (trimmed.startsWith("## ")) {
+      flushList(key)
+      elements.push(
+        <h2 key={key} className="text-lg font-bold mt-4 mb-2 text-blue-700">
+          {trimmed.replace(/^##\s+/, "")}
+        </h2>
+      )
+    } else if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
+      flushList(key)
+      elements.push(
+        <p key={key} className="font-bold my-2 text-sm">
+          {trimmed.replace(/^\*\*/, "").replace(/\*\*$/, "")}
+        </p>
+      )
+    } else if (trimmed.startsWith("- ")) {
+      const content = trimmed.replace(/^- /, "")
+      // Convert bold inside list items
+      const parts = content.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <strong key={i} className="text-blue-600">
+              {part.slice(2, -2)}
+            </strong>
+          )
+        }
+        return part
+      })
+      listBuffer.push(<li key={key}>{parts}</li>)
+    } else if (trimmed === "") {
+      flushList(key)
+      if (index < lines.length - 1 && lines[index + 1].trim() === "") {
+        // Double newline, maybe add spacing
+        elements.push(<br key={key} />)
+      }
+    } else {
+      flushList(key)
+      // Standard paragraph, check for bold
+      if (trimmed.length > 0) {
+        const parts = line.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+          if (part.startsWith("**") && part.endsWith("**")) {
+            return <strong key={i}>{part.slice(2, -2)}</strong>
+          }
+           // Simple hash tag highlighting
+          if (part.includes("#")) {
+             return part.split(/(#\S+)/g).map((subPart, j) => {
+                if(subPart.startsWith("#")) {
+                  return <span key={`${i}-${j}`} className="text-blue-500">{subPart}</span>
+                }
+                return subPart
+             });
+          }
+          return part
+        })
+        elements.push(
+          <p key={key} className="my-1 text-sm leading-relaxed text-gray-800">
+            {parts.flat()}
+          </p>
+        )
+      }
+    }
+  })
+
+  flushList("end")
+
+  return <div>{elements}</div>
+}
+
 export function SummaryDisplay({
   generateConfig,
   cacheKey,
@@ -30,10 +127,12 @@ export function SummaryDisplay({
   noSummaryText,
   generatePromptText
 }: SummaryDisplayProps) {
-  const [aiSummary, setAiSummary] = useState<SubtitleSummary | null>(null)
+  const [markdownContent, setMarkdownContent] = useState<string>("")
   const [aiLoading, setAiLoading] = useState(false)
   const [cacheLoaded, setCacheLoaded] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
   const storage = new Storage()
+  const portRef = useRef<chrome.runtime.Port | null>(null)
 
   // 加载缓存数据
   const loadCacheData = async () => {
@@ -41,13 +140,13 @@ export function SummaryDisplay({
 
     try {
       const cached = await storage.get<{
-        aiSummary: SubtitleSummary
+        content: string
         timestamp: number
       }>(cacheKey)
-      if (cached && cached.aiSummary) {
+      if (cached && cached.content) {
         const isExpired = Date.now() - cached.timestamp > 24 * 60 * 60 * 1000 // 24小时过期
         if (!isExpired) {
-          setAiSummary(cached.aiSummary)
+          setMarkdownContent(cached.content)
           setCacheLoaded(true)
         }
       }
@@ -57,12 +156,12 @@ export function SummaryDisplay({
   }
 
   // 保存缓存数据
-  const saveCacheData = async (aiSummary: SubtitleSummary) => {
+  const saveCacheData = async (content: string) => {
     if (!cacheKey) return
 
     try {
       const cacheData = {
-        aiSummary,
+        content,
         timestamp: Date.now()
       }
       await storage.set(cacheKey, cacheData)
@@ -71,106 +170,128 @@ export function SummaryDisplay({
     }
   }
 
-  // 生成AI总结
+  const handleCopy = () => {
+    if (!markdownContent) return
+    navigator.clipboard.writeText(markdownContent)
+    setIsCopied(true)
+    toast.success("Success")
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
+
+  
+  // 监听 markdownContent 变化并在完成时保存缓存? 
+  // onMessage 'done' handler uses current markdownContent state closure which might be stale!
+  // Uses functional update for setMarkdownContent, but saveCacheData needs latest.
+  // Better use a ref for accumulating content or useEffect to save when loading becomes false.
+  
+  const contentRef = useRef("")
+  useEffect(() => {
+      contentRef.current = markdownContent
+  }, [markdownContent])
+
+  // Enhance port listener to use ref
   const generateSummary = async (forceRegenerate = false) => {
     if (!generateConfig) return
-
-    // 如果不是强制重新生成且已有缓存数据，直接使用缓存
-    if (!forceRegenerate && aiSummary) {
-      return
-    }
-
+    if (!forceRegenerate && markdownContent && !aiLoading) return
+    
     const content = generateConfig.getContent()
     if (!content) {
       toast.error("没有内容可以生成总结")
       return
     }
 
-    try {
-      setAiLoading(true)
-      toast.loading(t("generatingAiSummary"))
-
-      // 构建消息数据
-      const messageData: any = {
-        action: generateConfig.action,
+    setAiLoading(true)
+    setMarkdownContent("")
+    contentRef.current = ""
+    setCacheLoaded(false)
+    
+    if (portRef.current) portRef.current.disconnect()
+    
+    const port = chrome.runtime.connect({ name: "AI_STREAM" })
+    portRef.current = port
+    
+    port.onMessage.addListener((msg) => {
+        if (msg.type === "chunk") {
+            const newChunk = msg.content || ""
+            setMarkdownContent(prev => prev + newChunk)
+        } else if (msg.type === "done") {
+             setAiLoading(false)
+             saveCacheData(contentRef.current)
+             toast.success(t("aiSummaryGenerated"))
+             port.disconnect()
+             portRef.current = null
+        } else if (msg.type === "error") {
+            setAiLoading(false)
+            toast.error(msg.error || t("summaryFailed"))
+            port.disconnect()
+            portRef.current = null
+        }
+    })
+    
+     // ... rest as before ...
+     const messageData: any = {
+        action: "summarizeSubtitlesStream",
         ...generateConfig.additionalData
       }
-
-      // 根据不同的action设置不同的内容字段
       if (generateConfig.action === "summarizeSubtitles") {
         messageData.subtitles = content
       } else {
-        messageData.content = content
-        if (generateConfig.getTitle) {
-          messageData.title = generateConfig.getTitle()
-        }
+         messageData.subtitles = content
+         if (generateConfig.getTitle) {
+             // prompt might only use subtitles arg? 
+             // background/index.ts: PROMPTS.SUBTITLE_SUMMARY_USER(msg.subtitles)
+             // So we must put content in subtitles field.
+          }
       }
-
-      // 通过background脚本调用AI服务
-      const summary = await new Promise<SubtitleSummary>((resolve, reject) => {
-        chrome.runtime.sendMessage(messageData, (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message))
-            return
-          }
-
-          if (response.success) {
-            resolve(response.data)
-          } else {
-            reject(new Error(response.error))
-          }
-        })
-      })
-
-      setAiSummary(summary)
-      setCacheLoaded(false)
-
-      // 保存到缓存
-      await saveCacheData(summary)
-
-      toast.dismiss()
-      toast.success(t("aiSummaryGenerated"))
-    } catch (error) {
-      console.error("生成AI总结失败:", error)
-      toast.dismiss()
-      toast.error(
-        error instanceof Error ? error.message : t("summaryFailed")
-      )
-    } finally {
-      setAiLoading(false)
-    }
+      port.postMessage(messageData)
   }
 
   // 加载缓存数据
   useEffect(() => {
     loadCacheData()
   }, [cacheKey])
+
   return (
     <div className="flex-1 flex flex-col h-full">
       <div className="flex mb-2 gap-2 justify-between">
         <Button
           className="flex-grow"
-          onClick={() => generateSummary(!!aiSummary)}
+          onClick={() => generateSummary(!!markdownContent)}
           disabled={aiLoading}
           size="sm"
           title={
             aiLoading
               ? t("summarizing")
-              : aiSummary
+              : markdownContent
                 ? t("regenerate")
                 : generateButtonText || t("generateAiSummary")
           }>
           {aiLoading
             ? t("summarizing")
-            : aiSummary
+            : markdownContent
               ? t("regenerate")
               : generateButtonText || t("generateAiSummary")}
         </Button>
+        {markdownContent && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="px-3 shrink-0"
+            title="Copy">
+            {isCopied ? (
+              <Check className="h-4 w-4 text-green-500" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto">
         <ScrollArea className="h-full">
-          {!aiSummary && !aiLoading && (
+          {!markdownContent && !aiLoading && (
             <div className="text-center py-[40px] px-[20px] text-gray-600">
               <div className="mb-[12px]">
                 {noSummaryText || t("noAiSummary")}
@@ -181,13 +302,13 @@ export function SummaryDisplay({
             </div>
           )}
 
-          {aiLoading && (
-            <div className="text-center py-[40px] px-[20px] text-gray-600">
+          {aiLoading && !markdownContent && (
+             <div className="text-center py-[40px] px-[20px] text-gray-600">
               {t("generatingAiSummary")}
             </div>
           )}
 
-          {aiSummary && (
+          {(markdownContent || (aiLoading && markdownContent)) && (
             <div className="prose p-[12px] bg-blue-50 rounded-[6px]">
               <div className="flex justify-between items-center mb-[12px]">
                 <h4 className="m-0 text-[14px] text-blue-500 font-semibold">
@@ -199,47 +320,9 @@ export function SummaryDisplay({
                   </span>
                 )}
               </div>
-
-              <div className="mb-[12px]">
-                <div className="text-[12px] text-gray-600 mb-[4px] font-medium">
-                  {t("summary")}
-                </div>
-                <div className="text-[12px] leading-relaxed text-gray-800">
-                  {aiSummary.summary}
-                </div>
-              </div>
-
-              {aiSummary.keyPoints.length > 0 && (
-                <div className="mb-[12px]">
-                  <div className="text-[12px] text-gray-600 mb-[4px] font-medium">
-                    {t("keyPoints")}
-                  </div>
-                  <ul className="m-0 pl-[16px] text-[12px] leading-relaxed text-gray-800">
-                    {aiSummary.keyPoints.map((point, index) => (
-                      <li key={index} className="mb-[2px]">
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {aiSummary.topics.length > 0 && (
-                <div>
-                  <div className="text-[12px] text-gray-600 mb-[4px] font-medium">
-                    {t("mainTopics")}
-                  </div>
-                  <div className="flex flex-wrap gap-[4px]">
-                    {aiSummary.topics.map((topic, index) => (
-                      <span
-                        key={index}
-                        className="py-[2px] px-[6px] bg-blue-50 text-blue-500 text-[12px] rounded-full border border-blue-200">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+              
+              <SimpleMarkdown content={markdownContent} />
+              
             </div>
           )}
         </ScrollArea>

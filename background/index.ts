@@ -7,7 +7,6 @@ import type { SubtitleSummary } from "../utils/types"
 import { PROMPTS } from "./prompts"
 
 interface AIConfig {
-
   provider: string
   apiKeys: {
     openai?: string
@@ -40,9 +39,15 @@ interface ProviderConfig {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    apiKey: string
+    apiKey: string,
+    stream?: boolean
   ): APIRequestConfig
   extractContent(response: any): string
+  /**
+   * Parse a single SSE data line or stream chunk.
+   * Returns the extracted text delta, or null if no text.
+   */
+  parseStreamChunk(chunk: any): string | null
 }
 
 // 提供商配置类
@@ -56,7 +61,8 @@ class OpenAIProvider implements ProviderConfig {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    apiKey: string
+    apiKey: string,
+    stream: boolean = false
   ): APIRequestConfig {
     const baseUrl = config.baseUrl || this.getDefaultBaseUrl()
 
@@ -75,9 +81,14 @@ class OpenAIProvider implements ProviderConfig {
       body: {
         model: model,
         messages: messages,
-        temperature: 0.3
+        temperature: 0.3,
+        stream: stream
       }
     }
+  }
+
+  parseStreamChunk(chunk: any): string | null {
+    return chunk?.choices?.[0]?.delta?.content || null
   }
 
   extractContent(response: any): string {
@@ -95,7 +106,8 @@ class GeminiProvider implements ProviderConfig {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    apiKey: string
+    apiKey: string,
+    stream: boolean = false
   ): APIRequestConfig {
     const baseUrl = config.baseUrl || this.getDefaultBaseUrl()
     const fullModelName = model.startsWith("models/")
@@ -107,8 +119,11 @@ class GeminiProvider implements ProviderConfig {
       ? `${systemPrompt}\n\n${userPrompt}`
       : userPrompt
 
+    const action = stream ? "streamGenerateContent" : "generateContent"
+    const queryParams = stream ? `key=${apiKey}&alt=sse` : `key=${apiKey}`
+
     return {
-      url: `${baseUrl}/${fullModelName}:generateContent?key=${apiKey}`,
+      url: `${baseUrl}/${fullModelName}:${action}?${queryParams}`,
       headers: {
         "Content-Type": "application/json"
       },
@@ -126,6 +141,10 @@ class GeminiProvider implements ProviderConfig {
     }
   }
 
+  parseStreamChunk(chunk: any): string | null {
+    return chunk?.candidates?.[0]?.content?.parts?.[0]?.text || null
+  }
+
   extractContent(response: any): string {
     return response.candidates[0]?.content?.parts[0]?.text || ""
   }
@@ -141,7 +160,8 @@ class ClaudeProvider implements ProviderConfig {
     systemPrompt: string,
     userPrompt: string,
     model: string,
-    apiKey: string
+    apiKey: string,
+    stream: boolean = false
   ): APIRequestConfig {
     const baseUrl = config.baseUrl || this.getDefaultBaseUrl()
 
@@ -155,9 +175,17 @@ class ClaudeProvider implements ProviderConfig {
       body: {
         model: model,
         system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }]
+        messages: [{ role: "user", content: userPrompt }],
+        stream: stream
       }
     }
+  }
+
+  parseStreamChunk(chunk: any): string | null {
+    if (chunk?.type === "content_block_delta") {
+      return chunk?.delta?.text || null
+    }
+    return null
   }
 
   extractContent(response: any): string {
@@ -190,6 +218,9 @@ class BackgroundAIService {
   /**
    * 统一的API调用方法
    */
+  /**
+   * 统一的API调用方法
+   */
   private async callAI(
     systemPrompt: string,
     userPrompt: string
@@ -213,7 +244,8 @@ class BackgroundAIService {
       systemPrompt,
       userPrompt,
       model,
-      apiKey
+      apiKey,
+      false
     )
 
     const response = await fetch(requestConfig.url, {
@@ -230,6 +262,98 @@ class BackgroundAIService {
 
     const data = await response.json()
     return provider.extractContent(data)
+  }
+
+  /**
+   * 流式API调用
+   */
+  async streamAI(
+    systemPrompt: string,
+    userPrompt: string,
+    onChunk: (text: string) => void,
+    onDone: () => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    try {
+      const config = await this.getConfig()
+      const apiKey =
+        config?.apiKeys?.[config.provider as keyof typeof config.apiKeys]
+
+      if (!config || !apiKey) {
+        throw new Error("AI功能未配置")
+      }
+
+      const provider = this.providers[config.provider]
+      if (!provider) {
+        throw new Error(`不支持的AI服务商: ${config.provider}`)
+      }
+
+      const model = config.customModel || config.model
+      const requestConfig = provider.buildRequestConfig(
+        config,
+        systemPrompt,
+        userPrompt,
+        model,
+        apiKey,
+        true
+      )
+
+      const response = await fetch(requestConfig.url, {
+        method: "POST",
+        headers: requestConfig.headers,
+        body: JSON.stringify(requestConfig.body)
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        throw new Error(
+          `${config.provider} API请求失败: ${response.status} ${response.statusText} - ${text}`
+        )
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error("无法获取响应流")
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        buffer += chunk
+
+        const lines = buffer.split("\n")
+        buffer = lines.pop() || ""
+
+        for (const line of lines) {
+          const trimmedLine = line.trim()
+          if (!trimmedLine) continue
+          if (trimmedLine.startsWith("data: ")) {
+            const dataStr = trimmedLine.slice(6)
+            if (dataStr === "[DONE]") continue
+
+            try {
+              const data = JSON.parse(dataStr)
+              const content = provider.parseStreamChunk(data)
+              if (content) {
+                onChunk(content)
+              }
+            } catch (e) {
+              console.warn("Failed to parse stream chunk:", e)
+            }
+          }
+        }
+      }
+
+      onDone()
+    } catch (error) {
+      console.error("Stream error:", error)
+      onError(error instanceof Error ? error.message : String(error))
+    }
   }
 
   async summarizeSubtitles(subtitles: string): Promise<SubtitleSummary> {
@@ -408,5 +532,38 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === "clearCapturedSubtitleUrl") {
     capturedSubtitleUrl = null
     sendResponse({ success: true })
+  }
+})
+
+// Handle streaming connections
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === "AI_STREAM") {
+    port.onMessage.addListener(async (msg) => {
+      if (msg.action === "summarizeSubtitlesStream") {
+        try {
+          const systemPrompt = await PROMPTS.SUBTITLE_SUMMARY_SYSTEM()
+          const userPrompt = PROMPTS.SUBTITLE_SUMMARY_USER(msg.subtitles)
+
+          await backgroundAIService.streamAI(
+            systemPrompt,
+            userPrompt,
+            (chunk) => {
+              port.postMessage({ type: "chunk", content: chunk })
+            },
+            () => {
+              port.postMessage({ type: "done" })
+            },
+            (error) => {
+              port.postMessage({ type: "error", error })
+            }
+          )
+        } catch (error) {
+          port.postMessage({
+            type: "error",
+            error: error instanceof Error ? error.message : String(error)
+          })
+        }
+      }
+    })
   }
 })
