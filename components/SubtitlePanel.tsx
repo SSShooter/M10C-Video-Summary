@@ -1,8 +1,9 @@
-import React, { useRef } from "react"
+import React, { useRef, useState } from "react"
 
 import { Button } from "~components/ui/button"
 import { Toaster } from "~components/ui/sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs"
+import { cn } from "~lib/utils"
 import { t } from "~utils/i18n"
 
 import { MindmapDisplay, type MindmapGenerateConfig } from "./MindmapDisplay"
@@ -45,6 +46,7 @@ export function SubtitlePanel({
   onClose
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const [activeTab, setActiveTab] = useState("subtitles")
 
   // 获取思维导图缓存键
   const getMindmapCacheKey = () => {
@@ -164,7 +166,8 @@ export function SubtitlePanel({
       </div>
 
       <Tabs
-        defaultValue="subtitles"
+        value={activeTab}
+        onValueChange={setActiveTab}
         className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="subtitles">{t("subtitles")}</TabsTrigger>
@@ -174,7 +177,8 @@ export function SubtitlePanel({
 
         <TabsContent
           value="subtitles"
-          className="flex-1 overflow-auto mt-2">
+          forceMount={true}
+          className={cn("overflow-hidden mt-2", activeTab !== "subtitles" && "hidden")}>
           {loading && (
             <div className="text-center p-[20px] text-gray-600">
               {t("loading")}
@@ -208,18 +212,25 @@ export function SubtitlePanel({
           )}
         </TabsContent>
 
-        <TabsContent value="summary" className="overflow-hidden mt-2">
+        <TabsContent
+          value="summary"
+          forceMount={true}
+          className={cn("overflow-hidden mt-2", activeTab !== "summary" && "hidden")}>
           <SummaryDisplay
             generateConfig={summaryGenerateConfig}
             cacheKey={getSummaryCacheKey()}
           />
         </TabsContent>
 
-        <TabsContent value="mindmap" className="overflow-hidden mt-2">
+        <TabsContent
+          value="mindmap"
+          forceMount={true}
+          className={cn("overflow-hidden mt-2", activeTab !== "mindmap" && "hidden")}>
           <MindmapDisplay
             panelRef={panelRef}
             generateConfig={mindmapGenerateConfig}
             cacheKey={getMindmapCacheKey()}
+            show={activeTab === "mindmap"}
           />
         </TabsContent>
       </Tabs>

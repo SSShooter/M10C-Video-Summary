@@ -43,6 +43,7 @@ interface MindmapDisplayProps {
   // 新增的生成配置
   generateConfig?: MindmapGenerateConfig
   cacheKey?: string
+  show?: boolean
 }
 
 export function MindmapDisplay({
@@ -50,7 +51,8 @@ export function MindmapDisplay({
   generateButtonText,
   noMindmapText,
   generateConfig,
-  cacheKey
+  cacheKey,
+  show
 }: MindmapDisplayProps) {
   const mindmapRef = useRef<MindElixirReactRef>(null)
   const [mindElixirLoading, setMindElixirLoading] = useState(false)
@@ -58,6 +60,14 @@ export function MindmapDisplay({
   const [mindmapData, setMindmapData] = useState<MindElixirData | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const storage = new Storage()
+
+  // tab hidden cause render error, so refresh to fix it when tab is shown
+  useEffect(() => {
+    if (show) {
+      mindmapRef.current?.instance?.refresh()
+      mindmapRef.current?.instance?.toCenter()
+    }
+  }, [show])
 
   // 加载缓存数据
   const loadCacheData = async () => {

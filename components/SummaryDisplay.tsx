@@ -275,13 +275,12 @@ export function SummaryDisplay({
         </Button>
         {markdownContent && (
           <Button
-            variant="outline"
             size="sm"
             onClick={handleCopy}
             className="px-3 shrink-0"
             title="Copy">
             {isCopied ? (
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4" />
             ) : (
               <Copy className="h-4 w-4" />
             )}
