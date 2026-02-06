@@ -32,6 +32,11 @@ interface APIRequestConfig {
   body: any
 }
 
+interface StreamChunk {
+  content: string | null
+  reasoning: string | null
+}
+
 interface ProviderConfig {
   getDefaultBaseUrl(): string
   buildRequestConfig(
@@ -45,9 +50,9 @@ interface ProviderConfig {
   extractContent(response: any): string
   /**
    * Parse a single SSE data line or stream chunk.
-   * Returns the extracted text delta, or null if no text.
+   * Returns the extracted text delta and reasoning delta.
    */
-  parseStreamChunk(chunk: any): string | null
+  parseStreamChunk(chunk: any): StreamChunk
 }
 
 // 提供商配置类
@@ -87,8 +92,14 @@ class OpenAIProvider implements ProviderConfig {
     }
   }
 
-  parseStreamChunk(chunk: any): string | null {
-    return chunk?.choices?.[0]?.delta?.content || null
+  parseStreamChunk(chunk: any): StreamChunk {
+    return {
+      content: chunk?.choices?.[0]?.delta?.content || null,
+      reasoning:
+        chunk?.choices?.[0]?.delta?.reasoning_content ||
+        chunk?.choices?.[0]?.delta?.reasoning ||
+        null
+    }
   }
 
   extractContent(response: any): string {
@@ -141,8 +152,11 @@ class GeminiProvider implements ProviderConfig {
     }
   }
 
-  parseStreamChunk(chunk: any): string | null {
-    return chunk?.candidates?.[0]?.content?.parts?.[0]?.text || null
+  parseStreamChunk(chunk: any): StreamChunk {
+    return {
+      content: chunk?.candidates?.[0]?.content?.parts?.[0]?.text || null,
+      reasoning: null // Gemini currently doesn't separate reasoning in standard API this way
+    }
   }
 
   extractContent(response: any): string {
@@ -181,11 +195,14 @@ class ClaudeProvider implements ProviderConfig {
     }
   }
 
-  parseStreamChunk(chunk: any): string | null {
+  parseStreamChunk(chunk: any): StreamChunk {
     if (chunk?.type === "content_block_delta") {
-      return chunk?.delta?.text || null
+      return {
+        content: chunk?.delta?.text || null,
+        reasoning: null // Claude reasoning not standard via this field yet
+      }
     }
-    return null
+    return { content: null, reasoning: null }
   }
 
   extractContent(response: any): string {
@@ -199,7 +216,8 @@ class BackgroundAIService {
     openai: new OpenAIProvider(),
     "openai-compatible": new OpenAIProvider(),
     gemini: new GeminiProvider(),
-    claude: new ClaudeProvider()
+    claude: new ClaudeProvider(),
+    openrouter: new OpenAIProvider()
   }
 
   // 从prompts文件导入提示词
@@ -215,9 +233,6 @@ class BackgroundAIService {
     }
   }
 
-  /**
-   * 统一的API调用方法
-   */
   /**
    * 统一的API调用方法
    */
@@ -270,7 +285,7 @@ class BackgroundAIService {
   async streamAI(
     systemPrompt: string,
     userPrompt: string,
-    onChunk: (text: string) => void,
+    onChunk: (chunk: StreamChunk) => void,
     onDone: () => void,
     onError: (error: string) => void,
     signal?: AbortSignal
@@ -340,9 +355,9 @@ class BackgroundAIService {
 
             try {
               const data = JSON.parse(dataStr)
-              const content = provider.parseStreamChunk(data)
-              if (content) {
-                onChunk(content)
+              const chunkData = provider.parseStreamChunk(data)
+              if (chunkData.content || chunkData.reasoning) {
+                onChunk(chunkData)
               }
             } catch (e) {
               console.warn("Failed to parse stream chunk:", e)
@@ -582,7 +597,11 @@ chrome.runtime.onConnect.addListener((port) => {
             systemPrompt,
             userPrompt,
             (chunk) => {
-              safePostMessage({ type: "chunk", content: chunk })
+              safePostMessage({
+                type: "chunk",
+                content: chunk.content,
+                reasoning: chunk.reasoning
+              })
             },
             () => {
               safePostMessage({ type: "done" })
@@ -620,7 +639,11 @@ chrome.runtime.onConnect.addListener((port) => {
             mindmapPrompt,
             userPrompt,
             (chunk) => {
-              safePostMessage({ type: "chunk", content: chunk })
+              safePostMessage({
+                type: "chunk",
+                content: chunk.content,
+                reasoning: chunk.reasoning
+              })
             },
             () => {
               safePostMessage({ type: "done" })

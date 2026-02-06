@@ -1,6 +1,6 @@
+import { Brain, Check, Copy } from "lucide-react"
 import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { Check, Copy } from "lucide-react"
 
 import { Storage } from "@plasmohq/storage"
 
@@ -102,14 +102,18 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
           if (part.startsWith("**") && part.endsWith("**")) {
             return <strong key={i}>{part.slice(2, -2)}</strong>
           }
-           // Simple hash tag highlighting
+          // Simple hash tag highlighting
           if (part.includes("#")) {
-             return part.split(/(#\S+)/g).map((subPart, j) => {
-                if(subPart.startsWith("#")) {
-                  return <span key={`${i}-${j}`} className="text-blue-500">{subPart}</span>
-                }
-                return subPart
-             });
+            return part.split(/(#\S+)/g).map((subPart, j) => {
+              if (subPart.startsWith("#")) {
+                return (
+                  <span key={`${i}-${j}`} className="text-blue-500">
+                    {subPart}
+                  </span>
+                )
+              }
+              return subPart
+            })
           }
           return part
         })
@@ -138,6 +142,8 @@ export function SummaryDisplay({
   const [aiLoading, setAiLoading] = useState(false)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
+  const [reasoning, setReasoning] = useState("")
+
   const storage = new Storage({
     area: "local"
   })
@@ -187,23 +193,15 @@ export function SummaryDisplay({
     setTimeout(() => setIsCopied(false), 2000)
   }
 
-
-  
-  // 监听 markdownContent 变化并在完成时保存缓存? 
-  // onMessage 'done' handler uses current markdownContent state closure which might be stale!
-  // Uses functional update for setMarkdownContent, but saveCacheData needs latest.
-  // Better use a ref for accumulating content or useEffect to save when loading becomes false.
-  
   const contentRef = useRef("")
   useEffect(() => {
-      contentRef.current = markdownContent
+    contentRef.current = markdownContent
   }, [markdownContent])
 
-  // Enhance port listener to use ref
   const generateSummary = async (forceRegenerate = false) => {
     if (!generateConfig) return
     if (!forceRegenerate && markdownContent && !aiLoading) return
-    
+
     const content = generateConfig.getContent()
     if (!content) {
       toast.error("没有内容可以生成总结")
@@ -212,48 +210,50 @@ export function SummaryDisplay({
 
     setAiLoading(true)
     setMarkdownContent("")
+    setReasoning("")
     contentRef.current = ""
     setCacheLoaded(false)
-    
+
     if (portRef.current) portRef.current.disconnect()
-    
+
     const port = chrome.runtime.connect({ name: "AI_STREAM" })
     portRef.current = port
-    
+
     port.onMessage.addListener((msg) => {
-        if (msg.type === "chunk") {
-            const newChunk = msg.content || ""
-            setMarkdownContent(prev => prev + newChunk)
-        } else if (msg.type === "done") {
-             setAiLoading(false)
-             saveCacheData(contentRef.current)
-             toast.success(t("aiSummaryGenerated"))
-             port.disconnect()
-             portRef.current = null
-        } else if (msg.type === "error") {
-            setAiLoading(false)
-            toast.error(msg.error || t("summaryFailed"))
-            port.disconnect()
-            portRef.current = null
+      if (msg.type === "chunk") {
+        if (msg.reasoning) {
+          setReasoning((prev) => prev + msg.reasoning)
         }
+        if (msg.content) {
+          setReasoning("")
+          const newChunk = msg.content || ""
+          setMarkdownContent((prev) => prev + newChunk)
+        }
+      } else if (msg.type === "done") {
+        setAiLoading(false)
+        setReasoning("")
+        saveCacheData(contentRef.current)
+        toast.success(t("aiSummaryGenerated"))
+        port.disconnect()
+        portRef.current = null
+      } else if (msg.type === "error") {
+        setAiLoading(false)
+        toast.error(msg.error || t("summaryFailed"))
+        port.disconnect()
+        portRef.current = null
+      }
     })
-    
-     // ... rest as before ...
-     const messageData: any = {
-        action: "summarizeSubtitlesStream",
-        ...generateConfig.additionalData
-      }
-      if (generateConfig.action === "summarizeSubtitles") {
-        messageData.subtitles = content
-      } else {
-         messageData.subtitles = content
-         if (generateConfig.getTitle) {
-             // prompt might only use subtitles arg? 
-             // background/index.ts: PROMPTS.SUBTITLE_SUMMARY_USER(msg.subtitles)
-             // So we must put content in subtitles field.
-          }
-      }
-      port.postMessage(messageData)
+
+    const messageData: any = {
+      action: "summarizeSubtitlesStream",
+      ...generateConfig.additionalData
+    }
+    if (generateConfig.action === "summarizeSubtitles") {
+      messageData.subtitles = content
+    } else {
+      messageData.subtitles = content
+    }
+    port.postMessage(messageData)
   }
 
   // 加载缓存数据
@@ -311,8 +311,24 @@ export function SummaryDisplay({
           )}
 
           {aiLoading && !markdownContent && (
-             <div className="text-center py-[40px] px-[20px] text-gray-600">
-              {t("generatingAiSummary")}
+            <div className="flex-1 flex flex-col items-center justify-center p-4 text-gray-600">
+              <div className="mb-4 text-center">
+                {reasoning ? (
+                  <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-blue-600">
+                    <Brain className="w-4 h-4" />
+                    思考中...
+                  </div>
+                ) : (
+                  t("summarizing")
+                )}
+              </div>
+              {reasoning && (
+                <div className="w-full bg-gray-50/50 rounded-md border p-4 text-left">
+                  <div className="text-xs text-gray-500 whitespace-pre-wrap font-mono leading-relaxed">
+                    {reasoning}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -328,9 +344,8 @@ export function SummaryDisplay({
                   </span>
                 )}
               </div>
-              
+
               <SimpleMarkdown content={markdownContent} />
-              
             </div>
           )}
         </ScrollArea>

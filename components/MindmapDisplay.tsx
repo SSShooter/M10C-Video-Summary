@@ -61,6 +61,8 @@ export function MindmapDisplay({
   const [mindmapLoading, setMindmapLoading] = useState(false)
   const [mindmapData, setMindmapData] = useState<MindElixirData | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
+  const [reasoning, setReasoning] = useState("")
+
   const storage = new Storage({
     area: "local"
   })
@@ -130,6 +132,7 @@ export function MindmapDisplay({
     try {
       setMindmapLoading(true)
       setMindmapData(null) // Clear previous data
+      setReasoning("")
       toast.loading(t("generatingMindmap"))
 
       // 构建消息数据
@@ -161,26 +164,38 @@ export function MindmapDisplay({
 
       port.onMessage.addListener(async (msg) => {
         if (msg.type === "chunk") {
-          accumulatedPlaintext += msg.content || ""
+          if (msg.reasoning) {
+            setReasoning((prev) => prev + msg.reasoning)
+          }
 
-          // Throttle rendering
-          const now = Date.now()
-          if (now - lastRenderTime > RENDER_THROTTLE_MS) {
-            try {
-              // Import lazily or assumes imported
-              const cleanedText =
-                ResponseParser.cleanMindmapResponse(accumulatedPlaintext)
-              const data = plaintextToMindElixir(cleanedText)
-              setMindmapData(data)
-              lastRenderTime = now
-            } catch (e) {
-              // Ignore parse errors during streaming (incomplete data)
-              console.warn("Stream parse error:", e)
+          if (msg.content) {
+            // Once we start receiving content, we clear reasoning (it's transient)
+            // But we might want to do it only once. Since reasoning and content usually don't mix interleaved in a way that we want to show reasoning flashes.
+            // When we get first content chunk, we can clear reasoning.
+            setReasoning("") // Ensuring reasoning is hidden when content starts
+
+            accumulatedPlaintext += msg.content || ""
+
+            // Throttle rendering
+            const now = Date.now()
+            if (now - lastRenderTime > RENDER_THROTTLE_MS) {
+              try {
+                // Import lazily or assumes imported
+                const cleanedText =
+                  ResponseParser.cleanMindmapResponse(accumulatedPlaintext)
+                const data = plaintextToMindElixir(cleanedText)
+                setMindmapData(data)
+                lastRenderTime = now
+              } catch (e) {
+                // Ignore parse errors during streaming (incomplete data)
+                console.warn("Stream parse error:", e)
+              }
             }
           }
         } else if (msg.type === "done") {
           // Final render
           try {
+            setReasoning("") // Ensure reasoning is gone
             console.log("Final render", accumulatedPlaintext)
             const cleanedText =
               ResponseParser.cleanMindmapResponse(accumulatedPlaintext)
@@ -327,9 +342,25 @@ export function MindmapDisplay({
         </div>
       )}
 
-      {mindmapLoading && (
-        <div className="text-center py-[40px] px-[20px] text-gray-600">
-          {t("generatingMindmap")}
+      {mindmapLoading && !mindmapData && (
+        <div className="flex-1 flex flex-col items-center justify-center p-4 text-gray-600">
+          <div className="mb-4 text-center">
+            {reasoning ? (
+              <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-blue-600">
+                <Brain className="w-4 h-4" />
+                思考中...
+              </div>
+            ) : (
+              t("generatingMindmap")
+            )}
+          </div>
+          {reasoning && (
+            <ScrollArea className="w-full h-full max-h-[300px] border rounded-md bg-gray-50/50 p-4">
+              <div className="text-xs text-gray-500 whitespace-pre-wrap font-mono leading-relaxed">
+                {reasoning}
+              </div>
+            </ScrollArea>
+          )}
         </div>
       )}
 
