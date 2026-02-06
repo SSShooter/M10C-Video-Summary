@@ -4,6 +4,7 @@ import styleText from "data-text:mind-elixir/style.css"
 import sonnerStyle from "data-text:sonner/dist/styles.css"
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import { useEffect, useRef, useState } from "react"
+
 import {
   MindmapDisplay,
   type MindmapGenerateConfig
@@ -42,42 +43,31 @@ function ArticleMindmapPanel() {
 
   const panelRef = useRef<HTMLDivElement>(null)
 
+  // 获取文章内容
+  const getArticleContent = () => {
+    if (!articleInfo) return null
+
+    // 使用智能HTML到Markdown转换
+    let markdownContent = detectAndConvertArticle()
+
+    // 如果智能检测失败，使用原始文本内容
+    if (!markdownContent) {
+      markdownContent = articleInfo.content
+    }
+
+    return markdownContent
+  }
+
   // AI总结生成配置
   const summaryGenerateConfig: SummaryGenerateConfig = {
-    action: "summarizeSubtitles",
-    getContent: () => {
-      if (!articleInfo) return null
-
-      // 使用智能HTML到Markdown转换
-      let markdownContent = detectAndConvertArticle()
-
-      // 如果智能检测失败，使用原始文本内容
-      if (!markdownContent) {
-        markdownContent = articleInfo.content
-      }
-
-      return markdownContent
-    },
+    getContent: getArticleContent,
     additionalData: {}
   }
 
   // 思维导图生成配置
   const mindmapGenerateConfig: MindmapGenerateConfig = {
-    action: "generateArticleMindmap",
-    getContent: () => {
-      if (!articleInfo) return null
-
-      // 使用智能HTML到Markdown转换
-      let markdownContent = detectAndConvertArticle()
-      console.log("智能HTML到Markdown转换结果:", markdownContent)
-
-      // 如果智能检测失败，使用原始文本内容
-      if (!markdownContent) {
-        markdownContent = articleInfo.content
-      }
-
-      return markdownContent
-    },
+    action: "generateArticleMindmapStream",
+    getContent: getArticleContent,
     getTitle: () => articleInfo?.title || "",
     additionalData: {}
   }
@@ -131,7 +121,7 @@ function ArticleMindmapPanel() {
   return (
     <div
       ref={panelRef}
-      className="w-[350px] h-[600px] bg-white border border-gray-300 border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col">
+      className="w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col">
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
           <h3 className="m-0 text-[16px] font-semibold text-gray-900">

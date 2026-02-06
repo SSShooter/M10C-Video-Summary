@@ -2,8 +2,6 @@
 
 import { Storage } from "@plasmohq/storage"
 
-import { ResponseParser } from "../utils/response-parser"
-import type { SubtitleSummary } from "../utils/types"
 import { PROMPTS } from "./prompts"
 
 interface AIConfig {
@@ -373,35 +371,6 @@ class BackgroundAIService {
     }
   }
 
-  async summarizeSubtitles(subtitles: string): Promise<SubtitleSummary> {
-    const systemPrompt = await PROMPTS.SUBTITLE_SUMMARY_SYSTEM()
-    const userPrompt = this.USER_PROMPT_TEMPLATE(subtitles)
-    const content = await this.callAI(systemPrompt, userPrompt)
-    return ResponseParser.parseSubtitleSummaryResponse(content, {
-      enableTextFallback: true
-    })
-  }
-
-  async generateMindmap(subtitles: string): Promise<any> {
-    const mindmapPrompt = await PROMPTS.MINDMAP_GENERATION()
-    const userPrompt = PROMPTS.MINDMAP_VIDEO_USER(subtitles)
-    const content = await this.callAI(mindmapPrompt, userPrompt)
-    // Fallback if AI returns valid parsed structure or try to parse as plaintext?
-    // The prompts are changed to return plaintext now.
-    // We should probably remove this method or update it to use ResponseParser.parseMindmapResponse checks?
-    // But since prompts are changed, callAI will return plaintext.
-    // So the previous logic that expects JSON might need adjustment if still used.
-    // However, for now we want to support streaming.
-    return ResponseParser.parseMindmapResponse(content)
-  }
-
-  async generateArticleMindmap(content: string, title: string): Promise<any> {
-    const mindmapPrompt = await PROMPTS.MINDMAP_GENERATION()
-    const userPrompt = PROMPTS.MINDMAP_ARTICLE_USER(content, title)
-    const responseContent = await this.callAI(mindmapPrompt, userPrompt)
-    return ResponseParser.parseMindmapResponse(responseContent)
-  }
-
   /**
    * 格式化字幕数据供AI分析使用
    * @param subtitles 字幕数组
@@ -505,47 +474,11 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-  if (request.action === "summarizeSubtitles") {
-    backgroundAIService
-      .summarizeSubtitles(request.subtitles)
-      .then((result) => {
-        sendResponse({ success: true, data: result })
-      })
-      .catch((error) => {
-        sendResponse({ success: false, error: error.message })
-      })
-    return true // Keep the message channel open for async response
-  }
-
-  if (request.action === "generateMindmap") {
-    backgroundAIService
-      .generateMindmap(request.subtitles)
-      .then((result) => {
-        sendResponse({ success: true, data: result })
-      })
-      .catch((error) => {
-        sendResponse({ success: false, error: error.message })
-      })
-    return true // Keep the message channel open for async response
-  }
-
   if (request.action === "formatSubtitles") {
     const formatted = backgroundAIService.formatSubtitlesForAI(
       request.subtitles
     )
     sendResponse({ success: true, data: formatted })
-  }
-
-  if (request.action === "generateArticleMindmap") {
-    backgroundAIService
-      .generateArticleMindmap(request.content, request.title)
-      .then((result) => {
-        sendResponse({ success: true, data: result })
-      })
-      .catch((error) => {
-        sendResponse({ success: false, error: error.message })
-      })
-    return true // Keep the message channel open for async response
   }
 
   if (request.action === "getCapturedSubtitleUrl") {

@@ -136,16 +136,14 @@ export function MindmapDisplay({
       toast.loading(t("generatingMindmap"))
 
       // 构建消息数据
+      // 构建消息数据
       const messageData: any = {
-        action:
-          generateConfig.action === "generateArticleMindmap"
-            ? "generateArticleMindmapStream"
-            : "generateMindmapStream", // Use new stream actions
+        action: generateConfig.action,
         ...generateConfig.additionalData
       }
 
       // 根据不同的action设置不同的内容字段
-      if (generateConfig.action === "generateArticleMindmap") {
+      if (generateConfig.action === "generateArticleMindmapStream") {
         messageData.content = content
         if (generateConfig.getTitle) {
           messageData.title = generateConfig.getTitle()

@@ -9,7 +9,6 @@ import { ScrollArea } from "~components/ui/scroll-area"
 import { t } from "~utils/i18n"
 
 export interface SummaryGenerateConfig {
-  action: string
   getContent: () => string | null
   getTitle?: () => string
   additionalData?: Record<string, any>
@@ -246,12 +245,8 @@ export function SummaryDisplay({
 
     const messageData: any = {
       action: "summarizeSubtitlesStream",
-      ...generateConfig.additionalData
-    }
-    if (generateConfig.action === "summarizeSubtitles") {
-      messageData.subtitles = content
-    } else {
-      messageData.subtitles = content
+      ...generateConfig.additionalData,
+      subtitles: content
     }
     port.postMessage(messageData)
   }

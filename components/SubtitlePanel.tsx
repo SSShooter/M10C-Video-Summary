@@ -95,35 +95,26 @@ export function SubtitlePanel({
     return subtitle.content || subtitle.text || ""
   }
 
+  // 获取所有字幕文本
+  const getAllSubtitlesText = () => {
+    if (subtitles.length === 0) return null
+    return subtitles
+      .map((subtitle) => getSubtitleContent(subtitle))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim()
+  }
+
   // AI总结生成配置
   const summaryGenerateConfig: SummaryGenerateConfig = {
-    action: "summarizeSubtitles",
-    getContent: () => {
-      if (subtitles.length === 0) return null
-
-      // 格式化字幕内容
-      return subtitles
-        .map((subtitle) => getSubtitleContent(subtitle))
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim()
-    },
+    getContent: getAllSubtitlesText,
     additionalData: {}
   }
 
   // 思维导图生成配置
   const mindmapGenerateConfig: MindmapGenerateConfig = {
-    action: "generateMindmap",
-    getContent: () => {
-      if (subtitles.length === 0) return null
-
-      // 格式化字幕内容
-      return subtitles
-        .map((subtitle) => getSubtitleContent(subtitle))
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim()
-    },
+    action: "generateMindmapStream",
+    getContent: getAllSubtitlesText,
     additionalData: {}
   }
 
@@ -178,7 +169,10 @@ export function SubtitlePanel({
         <TabsContent
           value="subtitles"
           forceMount={true}
-          className={cn("overflow-hidden mt-2", activeTab !== "subtitles" && "hidden")}>
+          className={cn(
+            "overflow-hidden mt-2",
+            activeTab !== "subtitles" && "hidden"
+          )}>
           {loading && (
             <div className="text-center p-[20px] text-gray-600">
               {t("loading")}
@@ -215,7 +209,10 @@ export function SubtitlePanel({
         <TabsContent
           value="summary"
           forceMount={true}
-          className={cn("overflow-hidden mt-2", activeTab !== "summary" && "hidden")}>
+          className={cn(
+            "overflow-hidden mt-2",
+            activeTab !== "summary" && "hidden"
+          )}>
           <SummaryDisplay
             generateConfig={summaryGenerateConfig}
             cacheKey={getSummaryCacheKey()}
@@ -225,7 +222,10 @@ export function SubtitlePanel({
         <TabsContent
           value="mindmap"
           forceMount={true}
-          className={cn("overflow-hidden mt-2", activeTab !== "mindmap" && "hidden")}>
+          className={cn(
+            "overflow-hidden mt-2",
+            activeTab !== "mindmap" && "hidden"
+          )}>
           <MindmapDisplay
             panelRef={panelRef}
             generateConfig={mindmapGenerateConfig}

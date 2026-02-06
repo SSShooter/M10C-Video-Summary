@@ -21,12 +21,6 @@ export interface AIConfig {
   replyLanguage?: string
 }
 
-export interface SubtitleSummary {
-  summary: string
-  keyPoints: string[]
-  topics: string[]
-}
-
 class AIService {
   private storage = new Storage()
 
@@ -37,39 +31,6 @@ class AIService {
       console.error("获取AI配置失败:", error)
       return null
     }
-  }
-
-  async summarizeSubtitles(subtitles: any[]): Promise<SubtitleSummary> {
-    const config = await this.getConfig()
-    const apiKey =
-      config.apiKeys?.[config.provider as keyof typeof config.apiKeys]
-    if (!config || !apiKey) {
-      throw new Error("AI功能未配置")
-    }
-
-    const formattedSubtitles = this.formatSubtitlesForAI(subtitles)
-
-    // 通过background脚本发送请求避免CORS问题
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          action: "summarizeSubtitles",
-          subtitles: formattedSubtitles
-        },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message))
-            return
-          }
-
-          if (response.success) {
-            resolve(response.data)
-          } else {
-            reject(new Error(response.error))
-          }
-        }
-      )
-    })
   }
 
   // 格式化字幕文本用于AI分析
