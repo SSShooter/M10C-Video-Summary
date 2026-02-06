@@ -272,7 +272,8 @@ class BackgroundAIService {
     userPrompt: string,
     onChunk: (text: string) => void,
     onDone: () => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    signal?: AbortSignal
   ): Promise<void> {
     try {
       const config = await this.getConfig()
@@ -301,7 +302,8 @@ class BackgroundAIService {
       const response = await fetch(requestConfig.url, {
         method: "POST",
         headers: requestConfig.headers,
-        body: JSON.stringify(requestConfig.body)
+        body: JSON.stringify(requestConfig.body),
+        signal // Pass signal to fetch
       })
 
       if (!response.ok) {
@@ -369,6 +371,12 @@ class BackgroundAIService {
     const mindmapPrompt = await PROMPTS.MINDMAP_GENERATION()
     const userPrompt = PROMPTS.MINDMAP_VIDEO_USER(subtitles)
     const content = await this.callAI(mindmapPrompt, userPrompt)
+    // Fallback if AI returns valid parsed structure or try to parse as plaintext?
+    // The prompts are changed to return plaintext now.
+    // We should probably remove this method or update it to use ResponseParser.parseMindmapResponse checks?
+    // But since prompts are changed, callAI will return plaintext.
+    // So the previous logic that expects JSON might need adjustment if still used.
+    // However, for now we want to support streaming.
     return ResponseParser.parseMindmapResponse(content)
   }
 
@@ -538,7 +546,33 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 // Handle streaming connections
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name === "AI_STREAM") {
+    let controller: AbortController | null = null
+
+    port.onDisconnect.addListener(() => {
+      console.log("Port disconnected, aborting stream")
+      if (controller) {
+        controller.abort()
+        controller = null
+      }
+    })
+
+    const safePostMessage = (msg: any) => {
+      try {
+        port.postMessage(msg)
+      } catch (e) {
+        // Ignore disconnected port errors
+        console.warn("Failed to post message to port (disconnected?):", e)
+      }
+    }
+
     port.onMessage.addListener(async (msg) => {
+      // Abort previous request if new one comes on same port (unlikely but safe)
+      if (controller) {
+        controller.abort()
+      }
+      controller = new AbortController()
+      const signal = controller.signal
+
       if (msg.action === "summarizeSubtitlesStream") {
         try {
           const systemPrompt = await PROMPTS.SUBTITLE_SUMMARY_SYSTEM()
@@ -548,20 +582,64 @@ chrome.runtime.onConnect.addListener((port) => {
             systemPrompt,
             userPrompt,
             (chunk) => {
-              port.postMessage({ type: "chunk", content: chunk })
+              safePostMessage({ type: "chunk", content: chunk })
             },
             () => {
-              port.postMessage({ type: "done" })
+              safePostMessage({ type: "done" })
+              controller = null
             },
             (error) => {
-              port.postMessage({ type: "error", error })
-            }
+              if (signal.aborted) return
+              safePostMessage({ type: "error", error })
+              controller = null
+            },
+            signal
           )
         } catch (error) {
-          port.postMessage({
+          if (signal.aborted) return
+          safePostMessage({
             type: "error",
             error: error instanceof Error ? error.message : String(error)
           })
+          controller = null
+        }
+      }
+
+      if (
+        msg.action === "generateMindmapStream" ||
+        msg.action === "generateArticleMindmapStream"
+      ) {
+        try {
+          const mindmapPrompt = await PROMPTS.MINDMAP_GENERATION()
+          const userPrompt =
+            msg.action === "generateMindmapStream"
+              ? PROMPTS.MINDMAP_VIDEO_USER(msg.subtitles)
+              : PROMPTS.MINDMAP_ARTICLE_USER(msg.content, msg.title)
+
+          await backgroundAIService.streamAI(
+            mindmapPrompt,
+            userPrompt,
+            (chunk) => {
+              safePostMessage({ type: "chunk", content: chunk })
+            },
+            () => {
+              safePostMessage({ type: "done" })
+              controller = null
+            },
+            (error) => {
+              if (signal.aborted) return
+              safePostMessage({ type: "error", error })
+              controller = null
+            },
+            signal
+          )
+        } catch (error) {
+          if (signal.aborted) return
+          safePostMessage({
+            type: "error",
+            error: error instanceof Error ? error.message : String(error)
+          })
+          controller = null
         }
       }
     })

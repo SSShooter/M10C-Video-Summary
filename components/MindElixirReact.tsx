@@ -26,7 +26,6 @@ const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
     const mindmapEl = useRef<HTMLDivElement>(null)
     const meInstance = useRef<MindElixirInstance | null>(null)
     const isInitialized = useRef<boolean>(false)
-    const [dataHash, setDataHash] = useState<string>("")
 
     useImperativeHandle(ref, () => ({
       instance: meInstance.current
@@ -40,19 +39,6 @@ const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
         }
       }
     }
-
-    // 计算数据的简单哈希值，用于比较数据是否变化
-    useEffect(() => {
-      if (data) {
-        // 使用简单的字符串化方法创建哈希
-        // 注意：这不是真正的哈希，只是一种简单的比较方法
-        const hash =
-          JSON.stringify(data.nodeData.id) +
-          JSON.stringify(data.nodeData.topic) +
-          (data.nodeData.children?.length || 0)
-        setDataHash(hash)
-      }
-    }, [data])
 
     // Load MindElixir dynamically and initialize
     useEffect(() => {
@@ -121,17 +107,28 @@ const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
       }
     }, [options, plugins, initScale])
 
-    // 使用dataHash作为依赖项，只有当数据真正变化时才刷新
+    // Data update effect
     useEffect(() => {
-      if (!data || !meInstance.current || !isInitialized.current || !dataHash)
-        return
+      if (!data || !meInstance.current || !isInitialized.current) return
 
       sanitizeNodeData(data.nodeData)
       meInstance.current.refresh(data)
-      meInstance.current.toCenter()
-      fitPage && meInstance.current.scaleFit()
-      meInstance.current.map.style.opacity = "1"
-    }, [dataHash, fitPage])
+      const getLastNode = (
+        node: MindElixirData["nodeData"]
+      ): MindElixirData["nodeData"] => {
+        if (node.children && node.children.length > 0) {
+          return getLastNode(node.children[node.children.length - 1])
+        }
+        return node
+      }
+      const lastNode = getLastNode(data.nodeData)
+      if (lastNode.id) {
+        const lastNodeEle = meInstance.current.findEle(lastNode.id)
+        if (lastNodeEle) {
+          meInstance.current.scrollIntoView(lastNodeEle)
+        }
+      }
+    }, [data, fitPage])
 
     return (
       <div

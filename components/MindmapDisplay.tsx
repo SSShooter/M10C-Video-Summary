@@ -28,6 +28,8 @@ import { ScrollArea } from "~components/ui/scroll-area"
 import { fullscreen } from "~utils/fullscreen"
 import { t } from "~utils/i18n"
 import { options } from "~utils/mind-elixir"
+import { plaintextToMindElixir } from "~utils/plaintextConverter"
+import { ResponseParser } from "~utils/response-parser"
 
 export interface MindmapGenerateConfig {
   action: string
@@ -59,7 +61,9 @@ export function MindmapDisplay({
   const [mindmapLoading, setMindmapLoading] = useState(false)
   const [mindmapData, setMindmapData] = useState<MindElixirData | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
-  const storage = new Storage()
+  const storage = new Storage({
+    area: "local"
+  })
 
   // tab hidden cause render error, so refresh to fix it when tab is shown
   useEffect(() => {
@@ -125,11 +129,15 @@ export function MindmapDisplay({
 
     try {
       setMindmapLoading(true)
+      setMindmapData(null) // Clear previous data
       toast.loading(t("generatingMindmap"))
 
       // 构建消息数据
       const messageData: any = {
-        action: generateConfig.action,
+        action:
+          generateConfig.action === "generateArticleMindmap"
+            ? "generateArticleMindmapStream"
+            : "generateMindmapStream", // Use new stream actions
         ...generateConfig.additionalData
       }
 
@@ -143,37 +151,67 @@ export function MindmapDisplay({
         messageData.subtitles = content
       }
 
-      // 通过background脚本调用AI服务
-      const response = await new Promise<MindElixirData>((resolve, reject) => {
-        chrome.runtime.sendMessage(messageData, (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message))
-            return
-          }
+      // Establish streaming connection
+      const port = chrome.runtime.connect({ name: "AI_STREAM" })
+      port.postMessage(messageData)
 
-          if (response.success) {
-            resolve(response.data)
-          } else {
-            reject(new Error(response.error))
+      let accumulatedPlaintext = ""
+      let lastRenderTime = 0
+      const RENDER_THROTTLE_MS = 500 // 500ms throttle
+
+      port.onMessage.addListener(async (msg) => {
+        if (msg.type === "chunk") {
+          accumulatedPlaintext += msg.content || ""
+
+          // Throttle rendering
+          const now = Date.now()
+          if (now - lastRenderTime > RENDER_THROTTLE_MS) {
+            try {
+              // Import lazily or assumes imported
+              const cleanedText =
+                ResponseParser.cleanMindmapResponse(accumulatedPlaintext)
+              const data = plaintextToMindElixir(cleanedText)
+              setMindmapData(data)
+              lastRenderTime = now
+            } catch (e) {
+              // Ignore parse errors during streaming (incomplete data)
+              console.warn("Stream parse error:", e)
+            }
           }
-        })
+        } else if (msg.type === "done") {
+          // Final render
+          try {
+            console.log("Final render", accumulatedPlaintext)
+            const cleanedText =
+              ResponseParser.cleanMindmapResponse(accumulatedPlaintext)
+            const data = plaintextToMindElixir(cleanedText)
+            setMindmapData(data)
+            await saveCacheData(data)
+            setCacheLoaded(false)
+            toast.dismiss()
+            toast.success(t("mindmapGenerated"))
+          } catch (e) {
+            console.error("Final parse error:", e)
+            toast.dismiss()
+            toast.error(t("generateMindmapFailed"))
+          } finally {
+            setMindmapLoading(false)
+            port.disconnect()
+          }
+        } else if (msg.type === "error") {
+          console.error("生成思维导图失败:", msg.error)
+          toast.dismiss()
+          toast.error(msg.error || t("generateMindmapFailed"))
+          setMindmapLoading(false)
+          port.disconnect()
+        }
       })
-
-      setMindmapData(response)
-      setCacheLoaded(false)
-
-      // 保存到缓存
-      await saveCacheData(response)
-
-      toast.dismiss()
-      toast.success(t("mindmapGenerated"))
     } catch (error) {
-      console.error("生成思维导图失败:", error)
+      console.error("启动生成思维导图失败:", error)
       toast.dismiss()
       toast.error(
         error instanceof Error ? error.message : t("generateMindmapFailed")
       )
-    } finally {
       setMindmapLoading(false)
     }
   }

@@ -68,19 +68,8 @@ export const PROMPTS = {
 **输出格式：**
 请直接使用**Markdown**格式输出，不要包含任何JSON结构或其他无关内容。
 
-示例结构：
-### 总结
-(内容...)
-
-### 关键要点
-- (要点1...)
-- (要点2...)
-
-### 主要话题
-- #话题1 #话题2
-
 **注意事项：**
-- 输出全文语言为${language}
+- 保证输出全文的语言都为${language}
 - 保持客观和准确
 - 避免重复内容`
   },
@@ -102,72 +91,31 @@ ${subtitles}
   MINDMAP_GENERATION: async () => {
     const language = await getReplyLanguage()
     return `
-\`\`\`ts
-export interface NodeObj {
-  topic: string
-  id: string
-  tags?: string[]
-  children?: NodeObj[]
-}
-// 总结父id的第start到end个节点的内容
-export interface Summary {
-  id: string
-  label: string
-  /**
-   * parent node id of the summary
-   */
-  parent: string
-  /**
-   * start index of the summary
-   */
-  start: number
-  /**
-   * end index of the summary
-   */
-  end: number
-}
+You are a mindmap generator.
+You should output the mindmap in a specific plaintext format that can be parsed line by line.
 
-export interface Arrow {
-  id: string
-  /**
-   * label of arrow
-   */
-  label: string
-  /**
-   * id of start node
-   */
-  from: string
-  /**
-   * id of end node
-   */
-  to: string
-  /**
-   * whether the arrow is bidirectional
-   */
-  bidirectional?: boolean
-}
-\`\`\`
+Format Definition:
+- Root Node
+  - Child Node 1
+    - Child Node 1-1
+    - Child Node 1-2
+    - }:2 Summary of first two nodes
+  - Child Node 2
+    - Child Node 2-1 [^id1]
+    - Child Node 2-2 [^id2]
+    - Child Node 2-3 {color: #e87a90}
+    - > [^id1] <-Bidirectional Link-> [^id2]
 
-使用符合  {
-  nodeData: NodeObj
-  arrows?: Arrow[]
-  summaries?: Summary[]
-} 格式的 JSON 回复用户，这是一个表达**思维导图数据**的递归结构。
-
-**注意！！nodeData、arrows、summaries 三者的同一层级！！**
-
-**提醒**：
-- 节点 ID 使用递增数字即可
-- 注意不要一昧使用兄弟节点关系，适当应用父子级别的分层
-- 只能向根节点插入 tags，tag 必须是普适的，不是独特的，用于用户快速找到同类内容
-- Summary 是总结多个同父节点的子节点的工具，会使用花括号把总结文本显示在指定子节点侧边，因为节点存在两侧分布的情况，禁止总结根节点
-- Arrow 可以添加连接节点的箭头，label 说明两个节点的联系，delta 的默认值为 50,50
-- **Arrow 仅能用于连接不同章节或段落的内容**
-- 适当添加 Summary 和 Arrow
-
-**注意事项：**
-- 输出语言：${language}
-- 确保JSON格式正确，不要返回任何JSON以外的内容
+Rules:
+1. Use indentation (2 spaces) to represent hierarchy.
+2. Use "- " for nodes.
+3. Use "[^id]" to define ID for a node if it needs to be referenced by links.
+4. Use "{color: #hex}" to define color for a node.
+5. Use "}:n Label" to summarize the last n nodes.
+6. Use "> [^id1] <-Label-> [^id2]" for bidirectional links.
+7. Use "> [^id1] >-Label-> [^id2]" for one-way links.
+8. Output MUST be in ${language}.
+9. Do NOT wrap the output in markdown code blocks. Just valid plaintext.
 `
   },
 

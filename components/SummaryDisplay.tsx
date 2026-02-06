@@ -46,7 +46,14 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
     const key = `line-${index}`
     const trimmed = line.trim()
 
-    if (trimmed.startsWith("### ")) {
+    if (trimmed.startsWith("# ")) {
+      flushList(key)
+      elements.push(
+        <h1 key={key} className="text-xl font-bold mt-4 mb-2 text-blue-800">
+          {trimmed.replace(/^#\s+/, "")}
+        </h1>
+      )
+    } else if (trimmed.startsWith("### ")) {
       flushList(key)
       elements.push(
         <h3 key={key} className="text-base font-bold mt-4 mb-2 text-blue-600">
@@ -131,7 +138,9 @@ export function SummaryDisplay({
   const [aiLoading, setAiLoading] = useState(false)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
-  const storage = new Storage()
+  const storage = new Storage({
+    area: "local"
+  })
   const portRef = useRef<chrome.runtime.Port | null>(null)
 
   // 加载缓存数据

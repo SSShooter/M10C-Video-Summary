@@ -200,4 +200,16 @@ export class ResponseParser {
       topics: topics.length > 0 ? topics : ["视频分析"]
     }
   }
+
+  /**
+   * 去除Markdown代码块标记，返回纯文本内容
+   */
+  static cleanMindmapResponse(content: string): string {
+    if (!content) return ""
+    // 移除开头和结尾的 ```, ```plaintext, ```json 等
+    return content
+      .replace(/^```[\w]*\n?/gm, "") // Remove starting ```tag
+      .replace(/```$/gm, "") // Remove ending ```
+      .trim()
+  }
 }
