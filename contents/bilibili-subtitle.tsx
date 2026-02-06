@@ -5,7 +5,7 @@ import sonnerStyle from "data-text:sonner/dist/styles.css"
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import { useEffect, useRef, useState } from "react"
 
-import { SubtitlePanel as CommonSubtitlePanel } from "~components/SubtitlePanel"
+import { SubtitlePanel } from "~components/SubtitlePanel"
 import { t } from "~utils/i18n"
 
 export const config: PlasmoCSConfig = {
@@ -229,7 +229,7 @@ function BilibiliSubtitlePanel() {
     : null
 
   return (
-    <CommonSubtitlePanel
+    <SubtitlePanel
       subtitles={convertedSubtitles}
       loading={loading}
       error={error}

@@ -288,6 +288,14 @@ export function MindmapDisplay({
             <Brain className="w-4 h-4" />
           )}
         </Button>
+
+        {cacheLoaded && (
+          <div className="flex items-center">
+            <span className="text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
+              {t("cached")}
+            </span>
+          </div>
+        )}
         {mindmapData && (
           <>
             <Button
