@@ -1,6 +1,6 @@
 import { downloadMethodList } from "@mind-elixir/export-mindmap"
 import { launchMindElixir } from "@mind-elixir/open-desktop"
-import { Brain, Download, ExternalLink, Maximize } from "lucide-react"
+import { Download, ExternalLink, Maximize } from "lucide-react"
 import type { MindElixirData } from "mind-elixir"
 import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -19,7 +19,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger
 } from "~components/ui/dropdown-menu"
-import { ScrollArea } from "~components/ui/scroll-area"
 import { fullscreen } from "~utils/fullscreen"
 import { t } from "~utils/i18n"
 import { options } from "~utils/mind-elixir"
@@ -106,8 +105,7 @@ export function MindmapDisplay({
     }
   }
 
-  // 内置的生成思维导图逻辑
-  const internalGenerateMindmap = async (forceRegenerate = false) => {
+  const generateMindmap = async (forceRegenerate = false) => {
     if (!generateConfig) {
       console.error("generateConfig is required for internal generation")
       return
@@ -130,8 +128,6 @@ export function MindmapDisplay({
       setReasoning("")
       toast.loading(t("generatingMindmap"))
 
-      // 构建消息数据
-      // 构建消息数据
       const messageData: any = {
         action: generateConfig.action,
         ...generateConfig.additionalData
@@ -253,7 +249,7 @@ export function MindmapDisplay({
   // 生成思维导图
   const handleGenerate = () => {
     if (generateConfig) {
-      internalGenerateMindmap(!!mindmapData)
+      generateMindmap(!!mindmapData)
     }
   }
 
@@ -279,7 +275,7 @@ export function MindmapDisplay({
               : generateButtonText || t("generateMindmapBtn")}
         </Button>
 
-        {mindmapData && (
+        {!mindmapLoading && (
           <>
             <Button
               onClick={openInMindElixir}

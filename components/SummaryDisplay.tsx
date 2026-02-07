@@ -185,24 +185,20 @@ export function SummaryDisplay({
         )}
       </div>
 
-      <div className="flex-1 overflow-auto">
-        <ScrollArea className="h-full">
-          {!markdownContent && !aiLoading && (
-            <div className="text-center py-[40px] px-[20px] text-gray-600">
-              <div className="mb-[12px]">
-                {noSummaryText || t("noAiSummary")}
-              </div>
-              <div className="text-[12px]">
-                {t("clickToGenerateVideoSummary")}
-              </div>
-            </div>
-          )}
+      {!markdownContent && !aiLoading && (
+        <div className="text-center py-[40px] px-[20px] text-gray-600">
+          <div className="mb-[12px]">{noSummaryText || t("noAiSummary")}</div>
+          <div className="text-[12px]">{t("clickToGenerateVideoSummary")}</div>
+        </div>
+      )}
 
-          {aiLoading && !markdownContent && (
-            <ReasoningDisplay reasoning={reasoning} />
-          )}
+      {aiLoading && !markdownContent && (
+        <ReasoningDisplay reasoning={reasoning} />
+      )}
 
-          {(markdownContent || (aiLoading && markdownContent)) && (
+      {(markdownContent || (aiLoading && markdownContent)) && (
+        <div className="flex-1 overflow-auto">
+          <ScrollArea className="h-full">
             <div className="relative prose p-[12px] border border-gray-300 rounded-[6px]">
               {cacheLoaded && (
                 <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
@@ -211,9 +207,9 @@ export function SummaryDisplay({
               )}
               <SimpleMarkdown content={markdownContent} />
             </div>
-          )}
-        </ScrollArea>
-      </div>
+          </ScrollArea>
+        </div>
+      )}
     </div>
   )
 }
