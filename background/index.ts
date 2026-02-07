@@ -232,52 +232,6 @@ class BackgroundAIService {
   }
 
   /**
-   * 统一的API调用方法
-   */
-  private async callAI(
-    systemPrompt: string,
-    userPrompt: string
-  ): Promise<string> {
-    const config = await this.getConfig()
-    const apiKey =
-      config?.apiKeys?.[config.provider as keyof typeof config.apiKeys]
-
-    if (!config || !apiKey) {
-      throw new Error("AI功能未配置")
-    }
-
-    const provider = this.providers[config.provider]
-    if (!provider) {
-      throw new Error(`不支持的AI服务商: ${config.provider}`)
-    }
-
-    const model = config.customModel || config.model
-    const requestConfig = provider.buildRequestConfig(
-      config,
-      systemPrompt,
-      userPrompt,
-      model,
-      apiKey,
-      false
-    )
-
-    const response = await fetch(requestConfig.url, {
-      method: "POST",
-      headers: requestConfig.headers,
-      body: JSON.stringify(requestConfig.body)
-    })
-
-    if (!response.ok) {
-      throw new Error(
-        `${config.provider} API请求失败: ${response.status} ${response.statusText}`
-      )
-    }
-
-    const data = await response.json()
-    return provider.extractContent(data)
-  }
-
-  /**
    * 流式API调用
    */
   async streamAI(

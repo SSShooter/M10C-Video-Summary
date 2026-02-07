@@ -462,5 +462,9 @@
   "aiReplyLanguageTip": {
     "message": "Select the language for AI replies, auto detect will use browser language settings",
     "description": "AI reply language selection tip"
+  },
+  "clickToGenerateVideoSummary": {
+    "message": "Click the button above to generate video AI summary",
+    "description": "Click to generate video summary tip"
   }
 }

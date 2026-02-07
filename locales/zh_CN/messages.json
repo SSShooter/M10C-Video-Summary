@@ -462,5 +462,9 @@
   "aiReplyLanguageTip": {
     "message": "选择AI回复时使用的语言，自动检测将根据浏览器语言设置",
     "description": "AI回复语言选择提示"
+  },
+  "clickToGenerateVideoSummary": {
+    "message": "点击上方按钮生成视频AI总结",
+    "description": "点击生成视频总结提示"
   }
 }

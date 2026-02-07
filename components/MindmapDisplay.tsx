@@ -1,12 +1,6 @@
 import { downloadMethodList } from "@mind-elixir/export-mindmap"
 import { launchMindElixir } from "@mind-elixir/open-desktop"
-import {
-  Brain,
-  Download,
-  ExternalLink,
-  Maximize,
-  RotateCcw
-} from "lucide-react"
+import { Brain, Download, ExternalLink, Maximize } from "lucide-react"
 import type { MindElixirData } from "mind-elixir"
 import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -282,11 +276,6 @@ export function MindmapDisplay({
             : mindmapData
               ? t("regenerate")
               : generateButtonText || t("generateMindmapBtn")}
-          {mindmapData ? (
-            <RotateCcw className="w-4 h-4" />
-          ) : (
-            <Brain className="w-4 h-4" />
-          )}
         </Button>
 
         {cacheLoaded && (

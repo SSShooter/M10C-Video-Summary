@@ -1,8 +1,7 @@
+import { Check, ChevronsUpDown, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { Storage } from "@plasmohq/storage"
-
-import { ChevronsUpDown, Check, Search } from "lucide-react"
 
 import { Button } from "~components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "~components/ui/card"
@@ -32,10 +31,7 @@ interface AIProvider {
   name: string
   apiKeyLabel: string
   baseUrl?: string
-  models: string[]
-  defaultModel: string
   modelsEndpoint?: string
-
 }
 
 const AI_PROVIDERS: AIProvider[] = [
@@ -44,53 +40,34 @@ const AI_PROVIDERS: AIProvider[] = [
     name: "OpenAI",
     apiKeyLabel: "API Key",
     baseUrl: "https://api.openai.com/v1",
-    models: ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
-    defaultModel: "gpt-3.5-turbo",
-    modelsEndpoint: "/models",
-
+    modelsEndpoint: "/models"
   },
   {
     id: "gemini",
     name: "Google Gemini",
     apiKeyLabel: "API Key",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    models: ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"],
-    defaultModel: "gemini-1.5-flash",
-    modelsEndpoint: "/models",
-
+    modelsEndpoint: "/models"
   },
   {
     id: "claude",
     name: "Anthropic Claude",
     apiKeyLabel: "API Key",
-    baseUrl: "https://api.anthropic.com/v1",
-    models: [
-      "claude-3-opus-20240229",
-      "claude-3-sonnet-20240229",
-      "claude-3-haiku-20240307"
-    ],
-    defaultModel: "claude-3-haiku-20240307",
-
+    baseUrl: "https://api.anthropic.com/v1"
   },
   {
     id: "openai-compatible",
     name: "OpenAI Compatible API",
     apiKeyLabel: "API Key",
     baseUrl: "https://api.example.com/v1",
-    models: ["gpt-3.5-turbo", "gpt-4"],
-    defaultModel: "gpt-3.5-turbo",
-    modelsEndpoint: "/models",
-
+    modelsEndpoint: "/models"
   },
   {
     id: "openrouter",
     name: "OpenRouter",
     apiKeyLabel: "OpenRouter API Key",
     baseUrl: "https://openrouter.ai/api/v1",
-    models: ["openai/gpt-3.5-turbo", "openai/gpt-4", "anthropic/claude-3-opus"],
-    defaultModel: "openai/gpt-3.5-turbo",
-    modelsEndpoint: "/models",
-
+    modelsEndpoint: "/models"
   }
 ]
 
@@ -167,7 +144,12 @@ function OptionsPage() {
         const apiKey =
           config.apiKeys?.[config.provider as keyof typeof config.apiKeys]
         if (provider && apiKey) {
-          fetchModels(provider, apiKey).then((models) => {
+          fetchModels(
+            provider,
+            apiKey,
+            config.baseUrl ||
+              config.baseUrls?.[provider.id as keyof typeof config.baseUrls]
+          ).then((models) => {
             setAvailableModels((prev) => ({
               ...prev,
               [provider.id]: models
@@ -205,21 +187,29 @@ function OptionsPage() {
     }
   }
 
-  const fetchModels = async (provider: AIProvider, apiKey: string) => {
+  const fetchModels = async (
+    provider: AIProvider,
+    apiKey: string,
+    baseUrlOverride?: string
+  ) => {
     if (!provider.modelsEndpoint || !apiKey) {
-      return provider.models
+      return []
     }
 
     try {
       setFetchingModels(true)
-      const baseUrl = aiConfig.baseUrl || provider.baseUrl
+      const baseUrl = baseUrlOverride || aiConfig.baseUrl || provider.baseUrl
       const url = `${baseUrl}${provider.modelsEndpoint}`
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json"
       }
 
-      if (provider.id === "openai" || provider.id === "openai-compatible" || provider.id === "openrouter") {
+      if (
+        provider.id === "openai" ||
+        provider.id === "openai-compatible" ||
+        provider.id === "openrouter"
+      ) {
         headers["Authorization"] = `Bearer ${apiKey}`
       } else if (provider.id === "gemini") {
         // Gemini uses API key as query parameter and different endpoint
@@ -232,17 +222,17 @@ function OptionsPage() {
             ?.filter((m: any) =>
               m.supportedGenerationMethods?.includes("generateContent")
             )
-            .map((m: any) => m.name.replace("models/", "")) || provider.models
+            .map((m: any) => m.name.replace("models/", "")) || []
         return supportedModels
       }
 
       const response = await fetch(url, { headers })
       const data = await response.json()
 
-      return data.data?.map((m: any) => m.id) || provider.models
+      return data.data?.map((m: any) => m.id) || []
     } catch (error) {
       console.error(t("fetchModelsFailed"), error)
-      return provider.models
+      return []
     } finally {
       setFetchingModels(false)
     }
@@ -266,7 +256,7 @@ function OptionsPage() {
       setAiConfig({
         ...aiConfig,
         provider: providerId,
-        model: provider.defaultModel,
+        model: "",
         baseUrl: newBaseUrl
       })
       setUseCustomModel(false)
@@ -275,11 +265,17 @@ function OptionsPage() {
       const apiKey =
         aiConfig.apiKeys?.[providerId as keyof typeof aiConfig.apiKeys]
       if (apiKey) {
-        fetchModels(provider, apiKey).then((models) => {
+        fetchModels(provider, apiKey, newBaseUrl).then((models) => {
           setAvailableModels((prev) => ({
             ...prev,
             [providerId]: models
           }))
+          if (models.length > 0) {
+            setAiConfig((prev) => ({
+              ...prev,
+              model: models[0]
+            }))
+          }
         })
       }
     }
@@ -435,11 +431,7 @@ function OptionsPage() {
                             />
                           </div>
                           <div className="max-h-[220px] overflow-y-auto p-1">
-                            {(
-                              availableModels[aiConfig.provider] ||
-                              currentProvider?.models ||
-                              []
-                            )
+                            {(availableModels[aiConfig.provider] || [])
                               .filter((model) =>
                                 model
                                   .toLowerCase()
@@ -464,14 +456,11 @@ function OptionsPage() {
                                   {model}
                                 </DropdownMenuItem>
                               ))}
-                            {(
-                              availableModels[aiConfig.provider] ||
-                              currentProvider?.models ||
-                              []
-                            ).filter((model) =>
-                              model
-                                .toLowerCase()
-                                .includes(modelSearchQuery.toLowerCase())
+                            {(availableModels[aiConfig.provider] || []).filter(
+                              (model) =>
+                                model
+                                  .toLowerCase()
+                                  .includes(modelSearchQuery.toLowerCase())
                             ).length === 0 && (
                               <div className="py-6 text-center text-sm text-muted-foreground">
                                 No models found.
@@ -482,32 +471,32 @@ function OptionsPage() {
                       </DropdownMenu>
 
                       {aiConfig.apiKeys?.[
-                          aiConfig.provider as keyof typeof aiConfig.apiKeys
-                        ] && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const provider = AI_PROVIDERS.find(
-                                (p) => p.id === aiConfig.provider
-                              )
-                              const apiKey =
-                                aiConfig.apiKeys?.[
-                                  aiConfig.provider as keyof typeof aiConfig.apiKeys
-                                ]
-                              if (provider && apiKey) {
-                                fetchModels(provider, apiKey).then((models) => {
-                                  setAvailableModels((prev) => ({
-                                    ...prev,
-                                    [provider.id]: models
-                                  }))
-                                })
-                              }
-                            }}
-                            disabled={fetchingModels}>
-                            {fetchingModels ? t("refreshing") : t("refresh")}
-                          </Button>
-                        )}
+                        aiConfig.provider as keyof typeof aiConfig.apiKeys
+                      ] && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const provider = AI_PROVIDERS.find(
+                              (p) => p.id === aiConfig.provider
+                            )
+                            const apiKey =
+                              aiConfig.apiKeys?.[
+                                aiConfig.provider as keyof typeof aiConfig.apiKeys
+                              ]
+                            if (provider && apiKey) {
+                              fetchModels(provider, apiKey).then((models) => {
+                                setAvailableModels((prev) => ({
+                                  ...prev,
+                                  [provider.id]: models
+                                }))
+                              })
+                            }
+                          }}
+                          disabled={fetchingModels}>
+                          {fetchingModels ? t("refreshing") : t("refresh")}
+                        </Button>
+                      )}
                     </div>
 
                     {fetchingModels && (

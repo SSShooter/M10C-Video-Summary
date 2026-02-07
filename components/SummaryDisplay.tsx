@@ -21,15 +21,13 @@ interface SummaryDisplayProps {
   cacheKey?: string
   generateButtonText?: string
   noSummaryText?: string
-  generatePromptText?: string
 }
 
 export function SummaryDisplay({
   generateConfig,
   cacheKey,
   generateButtonText,
-  noSummaryText,
-  generatePromptText
+  noSummaryText
 }: SummaryDisplayProps) {
   const [markdownContent, setMarkdownContent] = useState<string>("")
   const [aiLoading, setAiLoading] = useState(false)
@@ -201,7 +199,7 @@ export function SummaryDisplay({
                 {noSummaryText || t("noAiSummary")}
               </div>
               <div className="text-[12px]">
-                {generatePromptText || t("clickToGenerateVideoSummary")}
+                {t("clickToGenerateVideoSummary")}
               </div>
             </div>
           )}
