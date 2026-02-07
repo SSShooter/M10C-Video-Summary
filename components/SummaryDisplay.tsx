@@ -8,6 +8,7 @@ import { Button } from "~components/ui/button"
 import { ScrollArea } from "~components/ui/scroll-area"
 import { t } from "~utils/i18n"
 
+import { ReasoningDisplay } from "./ReasoningDisplay"
 import { SimpleMarkdown } from "./SimpleMarkdown"
 
 export interface SummaryGenerateConfig {
@@ -169,13 +170,6 @@ export function SummaryDisplay({
               ? t("regenerate")
               : generateButtonText || t("generateAiSummary")}
         </Button>
-        {cacheLoaded && (
-          <div className="flex items-center">
-            <span className="text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
-              {t("cached")}
-            </span>
-          </div>
-        )}
         {markdownContent && (
           <Button
             size="sm"
@@ -205,29 +199,16 @@ export function SummaryDisplay({
           )}
 
           {aiLoading && !markdownContent && (
-            <div className="flex-1 flex flex-col items-center justify-center p-4 text-gray-600">
-              <div className="mb-4 text-center">
-                {reasoning ? (
-                  <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-blue-600">
-                    <Brain className="w-4 h-4" />
-                    思考中...
-                  </div>
-                ) : (
-                  t("summarizing")
-                )}
-              </div>
-              {reasoning && (
-                <ScrollArea className="w-full h-full max-h-[300px] border rounded-md bg-gray-50/50 p-4">
-                  <div className="text-xs text-gray-500 whitespace-pre-wrap font-mono leading-relaxed">
-                    {reasoning}
-                  </div>
-                </ScrollArea>
-              )}
-            </div>
+            <ReasoningDisplay reasoning={reasoning} />
           )}
 
           {(markdownContent || (aiLoading && markdownContent)) && (
-            <div className="prose p-[12px] border border-gray-300 rounded-[6px]">
+            <div className="relative prose p-[12px] border border-gray-300 rounded-[6px]">
+              {cacheLoaded && (
+                <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
+                  {t("cached")}
+                </span>
+              )}
               <SimpleMarkdown content={markdownContent} />
             </div>
           )}

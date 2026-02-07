@@ -4,7 +4,7 @@ export const SimpleMarkdown = ({ content }: { content: string }) => {
   if (!content) return null
 
   // Split content by lines but keep code blocks together? For simplicity, line by line.
-  const lines = content.split("\n")
+  const lines = content.trim().split("\n")
   const elements = []
   let listBuffer: React.ReactNode[] = []
 

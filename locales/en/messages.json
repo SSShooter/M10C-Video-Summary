@@ -466,5 +466,13 @@
   "clickToGenerateVideoSummary": {
     "message": "Click the button above to generate video AI summary",
     "description": "Click to generate video summary tip"
+  },
+  "thinking": {
+    "message": "Thinking...",
+    "description": "Thinking status"
+  },
+  "connecting": {
+    "message": "Connecting...",
+    "description": "Connecting status"
   }
 }

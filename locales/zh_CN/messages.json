@@ -466,5 +466,13 @@
   "clickToGenerateVideoSummary": {
     "message": "点击上方按钮生成视频AI总结",
     "description": "点击生成视频总结提示"
+  },
+  "thinking": {
+    "message": "思考中...",
+    "description": "思考中状态"
+  },
+  "connecting": {
+    "message": "连接中...",
+    "description": "连接中状态"
   }
 }
