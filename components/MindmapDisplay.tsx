@@ -2,6 +2,7 @@ import { downloadMethodList } from "@mind-elixir/export-mindmap"
 import { launchMindElixir } from "@mind-elixir/open-desktop"
 import { Download, ExternalLink, Maximize } from "lucide-react"
 import type { MindElixirData } from "mind-elixir"
+import { plaintextToMindElixir } from "mind-elixir/plaintextConverter"
 import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -22,7 +23,6 @@ import {
 import { fullscreen } from "~utils/fullscreen"
 import { t } from "~utils/i18n"
 import { options } from "~utils/mind-elixir"
-import { plaintextToMindElixir } from "~utils/plaintextConverter"
 import { ResponseParser } from "~utils/response-parser"
 
 export interface MindmapGenerateConfig {
