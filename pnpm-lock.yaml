@@ -54,8 +54,8 @@ importers:
         specifier: ^0.536.0
         version: 0.536.0(react@18.3.1)
       mind-elixir:
-        specifier: 5.8.0
-        version: 5.8.0
+        specifier: 5.11.1-beta.4
+        version: 5.11.1-beta.4
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1895,8 +1895,8 @@ packages:
     resolution: {integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==}
     engines: {node: '>=18'}
 
-  mind-elixir@5.8.0:
-    resolution: {integrity: sha512-/UpfwZoiySbXoc6nUIK5DSo8HK5vKtW8tnQz63vuoCvuVU3xj1j2mfmMTnGgiV5NoAKxSyAD59RMBpJfD0kbPw==}
+  mind-elixir@5.11.1-beta.4:
+    resolution: {integrity: sha512-5cXfg+ebh0woZmGoAfBOBbOsGlVUxOf8q3nSgjfYE1v3v/cQ68afcnLYPceXUSRznxzumkQTHlhotzm2R+Jm+w==}
 
   minimatch@3.1.5:
     resolution: {integrity: sha512-VgjWUsnnT6n+NUk6eZq77zeFdpW2LWDzP6zFGrCbHXiYNul5Dzqk2HHQ5uFH2DNW5Xbp8+jVzaeNt94ssEEl4w==}
@@ -4238,7 +4238,7 @@ snapshots:
 
   mimic-function@5.0.1: {}
 
-  mind-elixir@5.8.0: {}
+  mind-elixir@5.11.1-beta.4: {}
 
   minimatch@3.1.5:
     dependencies:
