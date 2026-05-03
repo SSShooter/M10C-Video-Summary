@@ -2,6 +2,7 @@ import ReactDOM from "react-dom/client"
 import { useEffect, useState } from "react"
 import { SubtitlePanel } from "~/components/SubtitlePanel"
 import { t } from "~/utils/i18n"
+import { waitForElement } from "~/utils/subtitle-utils"
 import mainStyles from "@/assets/style.css?inline"
 import elixirStyles from "mind-elixir/style.css?inline"
 import overrideStyles from "@/assets/mind-elixir-override.css?inline"
@@ -34,9 +35,10 @@ function YouTubeSubtitlePanel() {
   }
 
   // 获取视频标题
-  const getVideoTitle = (): string => {
-    const titleElement = document.querySelector(
-      "h1.ytd-watch-metadata yt-formatted-string, h1.title"
+  const getVideoTitle = async (): Promise<string> => {
+    const titleElement = await waitForElement(
+      "h1.ytd-watch-metadata yt-formatted-string, h1.title",
+      5000
     )
     return titleElement?.textContent || t("unknownTitle")
   }
@@ -250,7 +252,7 @@ function YouTubeSubtitlePanel() {
     setSubtitles([]) // 清空旧字幕
     setError(null)
 
-    const title = getVideoTitle()
+    const title = await getVideoTitle()
     setVideoInfo({ videoId, title })
 
     // 开始字幕逻辑
