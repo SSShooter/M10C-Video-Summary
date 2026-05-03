@@ -37,6 +37,7 @@ export function SummaryDisplay({
   const [reasoning, setReasoning] = useState("")
 
   const portRef = useRef<chrome.runtime.Port | null>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   // 加载缓存数据
   const loadCacheData = async () => {
@@ -85,6 +86,18 @@ export function SummaryDisplay({
   const contentRef = useRef("")
   useEffect(() => {
     contentRef.current = markdownContent
+  }, [markdownContent])
+
+  // 自动滚动到底部
+  useEffect(() => {
+    if (markdownContent) {
+      const scrollElement = scrollAreaRef.current?.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      ) as HTMLElement
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight
+      }
+    }
   }, [markdownContent])
 
   const generateSummary = async (forceRegenerate = false) => {
@@ -195,7 +208,7 @@ export function SummaryDisplay({
 
       {(markdownContent || (aiLoading && markdownContent)) && (
         <div className="flex-1 overflow-auto">
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full" ref={scrollAreaRef}>
             <div className="relative prose p-[12px] border border-gray-300 rounded-[6px]">
               {cacheLoaded && (
                 <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
