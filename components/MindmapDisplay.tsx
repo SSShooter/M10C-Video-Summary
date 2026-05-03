@@ -287,7 +287,7 @@ export function MindmapDisplay({
               title={t("fullscreen")}>
               <Maximize className="w-4 h-4" />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" title={t("download") || "下载"}>
                   <Download className="w-4 h-4" />
