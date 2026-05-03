@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom/client"
 import { useEffect, useRef, useState } from "react"
+import { cn } from "~/lib/utils"
 import {
   MindmapDisplay,
   type MindmapGenerateConfig
@@ -22,6 +23,7 @@ import sonnerStyles from "sonner/dist/styles.css?inline"
 function ArticleMindmapPanel() {
   const [articleInfo, setArticleInfo] = useState<ArticleInfo | null>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const [activeTab, setActiveTab] = useState("summary")
   const panelRef = useRef<HTMLDivElement>(null)
 
   // 获取文章内容
@@ -136,14 +138,21 @@ function ArticleMindmapPanel() {
       </div>
 
       <Tabs
-        defaultValue="summary"
+        value={activeTab}
+        onValueChange={setActiveTab}
         className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="summary">{t("aiSummary")}</TabsTrigger>
           <TabsTrigger value="mindmap">{t("mindmap")}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="summary" className="overflow-hidden mt-2">
+        <TabsContent 
+          value="summary" 
+          forceMount={true}
+          className={cn(
+            "overflow-hidden mt-2",
+            activeTab !== "summary" && "hidden"
+          )}>
           <SummaryDisplay
             generateConfig={summaryGenerateConfig}
             cacheKey={getSummaryCacheKey()}
@@ -152,11 +161,18 @@ function ArticleMindmapPanel() {
           />
         </TabsContent>
 
-        <TabsContent value="mindmap" className="overflow-hidden mt-2">
+        <TabsContent 
+          value="mindmap" 
+          forceMount={true}
+          className={cn(
+            "overflow-hidden mt-2",
+            activeTab !== "mindmap" && "hidden"
+          )}>
           <MindmapDisplay
             panelRef={panelRef}
             generateConfig={mindmapGenerateConfig}
             cacheKey={getMindmapCacheKey()}
+            show={activeTab === "mindmap"}
           />
         </TabsContent>
       </Tabs>
