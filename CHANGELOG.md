@@ -7,20 +7,13 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **SPA Navigation Support**: Implemented single-page application (SPA) navigation support for Bilibili and YouTube. Using interval-based URL polling and history tracking, the extension now reliably reloads content scripts when navigating between videos without a full page refresh.
 - **Mindmap Generation Prompts**: Integrated the video title into AI prompts, ensuring the generated mindmap's root node and content are more contextually accurate.
-- **Horizontal Rule Support**: Added rendering support for markdown horizontal rules (`---`, `***`) within mindmap nodes.
 - **Auto-scroll for Summary**: The SummaryDisplay component now automatically scrolls to the bottom as new content streams in.
 - **Performance Optimization**: Introduced controlled tab states and force-mounted content for the MindmapDisplay to improve rendering speed and prevent state loss.
-- **Firefox Compatibility**: Added `browser_specific_settings` for Gecko in `wxt.config.ts` to support Firefox-specific requirements.
 
 ### Fixed
 - **Reliable Title Retrieval**: Added a `waitForElement` utility to ensure the YouTube video title is correctly captured even if the page loads slowly.
 - **Interaction Blocking**: Fixed an issue where the Download dropdown in the MindmapDisplay would block user interaction by setting `modal={false}` on the Radix UI component.
 - **UI Polishing**: Removed an unwanted bottom margin from the quick action container in the popup interface.
-
-### Changed
-- **Core Upgrades**: 
-  - Upgraded `mind-elixir` to `5.11.1-beta.4`.
-  - Updated `@mind-elixir/export-mindmap` and `@mind-elixir/open-desktop` to their latest versions.
 
 ---
 
