@@ -502,5 +502,33 @@
   "meProviderRecharge": {
     "message": "Recharge Stars:",
     "description": "Mind Elixir provider recharge label"
+  },
+  "userProfile": {
+    "message": "User Profile",
+    "description": "User profile section title"
+  },
+  "notLoggedIn": {
+    "message": "Not logged in",
+    "description": "Not logged in status description"
+  },
+  "clickToLogin": {
+    "message": "Login to Mind Elixir",
+    "description": "Button to log in to Mind Elixir"
+  },
+  "starBalance": {
+    "message": "Star Balance",
+    "description": "User star balance label"
+  },
+  "refreshBalance": {
+    "message": "Refresh",
+    "description": "Button to refresh balance"
+  },
+  "loginDescription": {
+    "message": "Log in to check your star balance and use default models.",
+    "description": "Prompt for user to log in"
+  },
+  "logout": {
+    "message": "Logout",
+    "description": "Logout button text"
   }
 }

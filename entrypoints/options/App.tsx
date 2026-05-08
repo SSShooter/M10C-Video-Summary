@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, Search } from "lucide-react"
+import { Check, ChevronsUpDown, Search, Star, RefreshCw, LogOut, LogIn, User } from "lucide-react"
 import { useEffect, useState } from "react"
 import { storage } from "@wxt-dev/storage"
 
@@ -108,6 +108,19 @@ interface AIConfig {
   replyLanguage?: string
 }
 
+interface UserData {
+  _id?: string
+  id?: string
+  name?: string
+  email?: string
+  image?: string
+  star?: number
+}
+
+const BACKEND_BASE_URL = import.meta.env.DEV
+  ? "http://localhost:7001"
+  : "https://mind-elixir-backend.fly.dev"
+
 function OptionsPage() {
   const [aiConfig, setAiConfig] = useState<AIConfig>({
     provider: "mind-elixir",
@@ -126,8 +139,53 @@ function OptionsPage() {
   const [openModelSelect, setOpenModelSelect] = useState(false)
   const [modelSearchQuery, setModelSearchQuery] = useState("")
 
+  const [user, setUser] = useState<UserData | null>(null)
+  const [loadingUser, setLoadingUser] = useState(false)
+
+  const fetchUser = async () => {
+    setLoadingUser(true)
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/user`, {
+        credentials: "include"
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.data) {
+          setUser(data.data)
+        } else {
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
+    } catch (error) {
+      console.error("Fetch user failed:", error)
+      setUser(null)
+    } finally {
+      setLoadingUser(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${BACKEND_BASE_URL}/api/user/logout`, {
+        method: "POST",
+        credentials: "include"
+      })
+    } catch (error) {
+      console.error("Logout failed:", error)
+    } finally {
+      setUser(null)
+    }
+  }
+
+  const handleLogin = () => {
+    window.open(`${BACKEND_BASE_URL}/oauth/authme/login/cloud`, "_blank")
+  }
+
   useEffect(() => {
     loadConfig()
+    fetchUser()
   }, [])
 
   const loadConfig = async () => {
@@ -345,20 +403,106 @@ function OptionsPage() {
 
           {/* Mind Elixir built-in provider panel */}
           {isMindElixir ? (
-            <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-5 space-y-3">
+            <div className="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-5 space-y-4">
               <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
                 {t("meProviderDesc")}
               </p>
-              <p className="text-sm text-amber-800 dark:text-amber-300">
-                {t("meProviderRecharge")}{" "}
-                <a
-                  href="https://app.mind-elixir.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
-                >
-                  app.mind-elixir.com
-                </a>
+
+              <div className="border-t border-amber-200 dark:border-amber-800/60 pt-4">
+                {loadingUser ? (
+                  <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-300">
+                    <RefreshCw className="h-4 w-4 animate-spin text-amber-600 dark:text-amber-400" />
+                    <span>{t("loading")}</span>
+                  </div>
+                ) : user ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt={user.name || ""}
+                          className="h-10 w-10 rounded-full border border-amber-200 dark:border-amber-800/50 shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-800 dark:text-amber-200 font-bold border border-amber-200 dark:border-amber-800/50 shadow-sm">
+                          {user.name?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
+                        </div>
+                      )}
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-amber-950 dark:text-amber-100 truncate">
+                          {user.name}
+                        </span>
+                        <span className="text-xs text-amber-800/70 dark:text-amber-300/70 truncate">
+                          {user.email}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-950/40 px-3.5 py-2 rounded-xl border border-yellow-200/60 dark:border-yellow-800/20 shadow-sm">
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 animate-pulse" />
+                        <span className="text-sm font-bold text-yellow-700 dark:text-yellow-400">
+                          {user.star?.toFixed(2) || "0.00"}
+                        </span>
+                        <span className="text-xs font-medium text-yellow-600/80 dark:text-yellow-500/80">
+                          {t("starBalance")}
+                        </span>
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={fetchUser}
+                        className="h-9 gap-1.5 text-amber-800 hover:text-amber-950 hover:bg-amber-100/50 dark:text-amber-200 dark:hover:text-amber-50 dark:hover:bg-amber-900/30"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <span>{t("refreshBalance")}</span>
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="h-9 gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/20"
+                      >
+                        <LogOut className="h-3.5 w-3.5" />
+                        <span>{t("logout")}</span>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                        {t("notLoggedIn")}
+                      </p>
+                      <p className="text-xs text-amber-800/70 dark:text-amber-300/70">
+                        {t("loginDescription")}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleLogin}
+                      className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 h-10 px-4 rounded-xl shadow-sm border border-amber-700/20"
+                    >
+                      <LogIn className="h-4 w-4" />
+                      <span>{t("clickToLogin")}</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-amber-800/60 dark:text-amber-300/60 border-t border-amber-200/50 dark:border-amber-800/30 pt-3 flex items-center justify-between">
+                <span>
+                  {t("meProviderRecharge")}{" "}
+                  <a
+                    href="https://app.mind-elixir.com/recharge"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
+                  >
+                    app.mind-elixir.com
+                  </a>
+                </span>
               </p>
             </div>
           ) : (
