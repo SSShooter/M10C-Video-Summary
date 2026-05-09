@@ -99,17 +99,13 @@ jobs:
           tag_name: ${{ env.TAG }}
           name: Release ${{ env.TAG }}
           body: |
-            ## 🚀 Extension Release ${{ env.TAG }}
-            
-            This is an automated release built for **Chrome** and **Firefox** browser extensions.
-            
-            ### 📦 Download & Install:
+            ## Extension Release ${{ env.TAG }}
+                        
+            ### Download & Install:
             - **Chrome Version (MV3):** `wxt-react-starter-${{ env.VERSION }}-chrome.zip`
             - **Firefox Version (MV2):** `wxt-react-starter-${{ env.VERSION }}-firefox.zip`
             - **Sources (Firefox submission):** `wxt-react-starter-${{ env.VERSION }}-sources.zip`
             
-            ---
-            *Automatically compiled and packaged via GitHub Actions on manually triggered release.*
           files: |
             .output/*.zip
           draft: false

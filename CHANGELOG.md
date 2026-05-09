@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2026-05-09
+
+### Added
+- **Mind Elixir Built-in AI Provider**: Added Mind Elixir as a built-in AI provider with zero-configuration support. Users can now generate video summaries and mindmaps instantly without setting up personal third-party API keys (OpenAI, Gemini, Claude, etc.), falling back to a pre-configured OpenAI-compatible hosted model.
+- **User Authentication**: Integrated Mind Elixir account login directly into the extension options page.
+- **Star Balance Display**: Real-time display of user profile details and Star balance. Added features to manually refresh balance, log out, and easily navigate to recharge Stars on `app.mind-elixir.com`.
+
+---
+
 ## [2.1.0] - 2026-05-04
 
 ### Added
