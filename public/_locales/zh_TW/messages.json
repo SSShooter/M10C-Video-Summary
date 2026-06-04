@@ -530,5 +530,9 @@
   "logout": {
     "message": "登出",
     "description": "登出按鈕"
+  },
+  "drag": {
+    "message": "拖拽移動",
+    "description": "拖拽按鈕提示"
   }
 }

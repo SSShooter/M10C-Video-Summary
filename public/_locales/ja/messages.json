@@ -530,5 +530,9 @@
   "logout": {
     "message": "ログアウト",
     "description": "ログアウトボタンのテキスト"
+  },
+  "drag": {
+    "message": "ドラッグ",
+    "description": "Drag button tooltip"
   }
 }

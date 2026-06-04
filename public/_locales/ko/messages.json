@@ -530,5 +530,9 @@
   "logout": {
     "message": "로그아웃",
     "description": "로그아웃 버튼"
+  },
+  "drag": {
+    "message": "드래그",
+    "description": "Drag button tooltip"
   }
 }

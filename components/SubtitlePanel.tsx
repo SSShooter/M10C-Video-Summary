@@ -1,10 +1,12 @@
 import React, { useRef, useState } from "react";
+import { GripVertical } from "lucide-react";
 
 import { Button } from "~components/ui/button";
 import { Toaster } from "~components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
 import { t } from "~utils/i18n";
+import { useDraggable } from "~hooks/useDraggable";
 
 import { MindmapDisplay, type MindmapGenerateConfig } from "./MindmapDisplay";
 import { SummaryDisplay, type SummaryGenerateConfig } from "./SummaryDisplay";
@@ -41,6 +43,7 @@ export function SubtitlePanel({
   onClose,
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const { onMouseDown } = useDraggable(panelRef, "video_panel_pos");
   const [activeTab, setActiveTab] = useState("subtitles");
 
   // 获取思维导图缓存键
@@ -121,32 +124,43 @@ export function SubtitlePanel({
     >
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
-          <h3 className="m-0 text-[16px] font-semibold text-gray-900">
+          <h3 className="m-0 text-[16px] font-semibold text-gray-900 select-none">
             {platform === "bilibili"
               ? t("videoAssistant")
               : t("youtubeSubtitle")}
           </h3>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="p-1 h-6 w-6"
-            title={t("close")}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-1 h-6 w-6 cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-700"
+              onMouseDown={onMouseDown}
+              title={t("drag")}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </Button>
+              <GripVertical className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
+              className="p-1 h-6 w-6"
+              title={t("close")}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Button>
+          </div>
         </div>
         {videoInfo && (
           <div className="text-[12px] text-gray-600 leading-relaxed">

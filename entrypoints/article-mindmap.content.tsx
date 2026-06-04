@@ -12,6 +12,8 @@ import {
 import { Button } from "~/components/ui/button"
 import { Toaster } from "~/components/ui/sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
+import { GripVertical } from "lucide-react"
+import { useDraggable } from "~/hooks/useDraggable"
 import { detectArticle, type ArticleInfo } from "~/utils/article-detector"
 import { detectAndConvertArticle } from "~/utils/html-to-markdown"
 import { t } from "~/utils/i18n"
@@ -25,6 +27,7 @@ function ArticleMindmapPanel() {
   const [isVisible, setIsVisible] = useState(false)
   const [activeTab, setActiveTab] = useState("summary")
   const panelRef = useRef<HTMLDivElement>(null)
+  const { onMouseDown } = useDraggable(panelRef, "article_panel_pos")
 
   // 获取文章内容
   const getArticleContent = () => {
@@ -109,28 +112,38 @@ function ArticleMindmapPanel() {
       className="w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col">
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
-          <h3 className="m-0 text-[16px] font-semibold text-gray-900">
+          <h3 className="m-0 text-[16px] font-semibold text-gray-900 select-none">
             {t("articleAssistant")}
           </h3>
-          <Button
-            onClick={() => setIsVisible(false)}
-            variant="ghost"
-            size="sm"
-            className="p-1 h-6 w-6"
-            title={t("close")}>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-1 h-6 w-6 cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-700"
+              onMouseDown={onMouseDown}
+              title={t("drag")}>
+              <GripVertical className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={() => setIsVisible(false)}
+              variant="ghost"
+              size="sm"
+              className="p-1 h-6 w-6"
+              title={t("close")}>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Button>
+          </div>
         </div>
         <div className="text-[12px] text-gray-600 leading-relaxed">
           {articleInfo.title}
