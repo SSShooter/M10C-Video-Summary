@@ -456,7 +456,7 @@
     "description": "AI回覆語言選擇標籤"
   },
   "aiReplyLanguageTip": {
-    "message": "選擇 AI 回覆時使用的語言，自動偵測將根據瀏覽器語言設定",
+    "message": "選擇 AI 回覆時使用的語言。預設是瀏覽器語言（未匹配到則預設英語）",
     "description": "AI回覆語言選擇提示"
   },
   "clickToGenerateVideoSummary": {
@@ -536,7 +536,19 @@
     "description": "需要登錄 Mind Elixir 的提示"
   },
   "mindElixirInsufficientBalance": {
-    "message": "Mind Elixir 星星餘額不足，請加值，或在設定頁面配置自己的 AI API Key",
+    "message": "Mind Elixir 星星餘額不足，請加値，或在設定頁面配置自己的 AI API Key",
     "description": "Mind Elixir 星星餘額不足的提示"
+  },
+  "contentReady": {
+    "message": "內容已準備好",
+    "description": "當伺服器有快取心智圖時的按鈕文字"
+  },
+  "downloadQuotaExceeded": {
+    "message": "本月免費下載次數已達上限（每月 5 次），仍可消耗星星重新生成",
+    "description": "用戶當月免費快取心智圖下載次數用盡時的錯誤提示"
+  },
+  "fetchingCachedMindmap": {
+    "message": "載入快取心智圖...",
+    "description": "從伺服器獲取快取心智圖時的按鈕文字"
   }
 }

@@ -456,7 +456,7 @@
     "description": "AI返答言語選択ラベル"
   },
   "aiReplyLanguageTip": {
-    "message": "AIが返答する言語を選択します。「自動検出」はブラウザの言語設定を使用します",
+    "message": "AIが返答する言語を選択します。デフォルトはブラウザの言語です（一致しない場合は英語がデフォルトになります）",
     "description": "AI返答言語選択のヒント"
   },
   "clickToGenerateVideoSummary": {
@@ -538,5 +538,17 @@
   "mindElixirInsufficientBalance": {
     "message": "Mind Elixir のスター残高が不足しています。チャージするか、設定ページで自分の AI API Key を設定してください。",
     "description": "Mind Elixir のスター残高不足のメッセージ"
+  },
+  "contentReady": {
+    "message": "コンテンツ準備完了",
+    "description": "サーバーにキャッシュ済みマインドマップがある場合のボタンラベル"
+  },
+  "downloadQuotaExceeded": {
+    "message": "今月の無料ダウンロード回数が上限に達しました（毎月 5 回）。スターを消費して再生成することもできます。",
+    "description": "ユーザーの当月の無料キャッシュマインドマップダウンロード回数を使い切った際のエラーメッセージ"
+  },
+  "fetchingCachedMindmap": {
+    "message": "キャッシュ済みマインドマップを読み込み中...",
+    "description": "サーバーからキャッシュ済みマインドマップを取得中のボタンラベル"
   }
 }

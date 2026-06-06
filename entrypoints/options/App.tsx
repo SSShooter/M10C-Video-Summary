@@ -21,7 +21,7 @@ import {
   SelectValue
 } from "~/components/ui/select"
 import { cn } from "~/lib/utils"
-import { t } from "~/utils/i18n"
+import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 
 interface AIProvider {
   id: string
@@ -74,7 +74,6 @@ const AI_PROVIDERS: AIProvider[] = [
 ]
 
 const REPLY_LANGUAGES = [
-  { id: "auto", name: "Auto Detect" },
   { id: "en", name: "English" },
   { id: "zh-CN", name: "中文" },
   { id: "zh-TW", name: "繁體中文" },
@@ -128,7 +127,7 @@ function OptionsPage() {
     apiKeys: {},
     model: "",
     baseUrls: {},
-    replyLanguage: "auto"
+    replyLanguage: getMatchedBrowserLanguage(navigator.language)
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -248,6 +247,9 @@ function OptionsPage() {
     try {
       const config = await storage.getItem<AIConfig>("local:aiConfig")
       if (config) {
+        if (!config.replyLanguage || config.replyLanguage === "auto") {
+          config.replyLanguage = getMatchedBrowserLanguage(navigator.language)
+        }
         setAiConfig(config)
         // 检查是否使用自定义模型
         if (config.customModel) {
@@ -770,7 +772,7 @@ function OptionsPage() {
           <div className="space-y-2">
             <Label htmlFor="reply-language" className="text-lg font-semibold">{t("aiReplyLanguage")}</Label>
             <Select
-              value={aiConfig.replyLanguage || "auto"}
+              value={aiConfig.replyLanguage || getMatchedBrowserLanguage(navigator.language)}
               onValueChange={(value) =>
                 setAiConfig({ ...aiConfig, replyLanguage: value })
               }>

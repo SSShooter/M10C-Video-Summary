@@ -38,6 +38,10 @@ interface MindmapDisplayProps {
   generateConfig?: MindmapGenerateConfig
   cacheKey?: string
   show?: boolean
+  // 服务端缓存检测
+  videoUrl?: string
+  isByok?: boolean
+  language?: string
 }
 
 export function MindmapDisplay({
@@ -46,7 +50,10 @@ export function MindmapDisplay({
   noMindmapText,
   generateConfig,
   cacheKey,
-  show
+  show,
+  videoUrl,
+  isByok,
+  language
 }: MindmapDisplayProps) {
   const mindmapRef = useRef<MindElixirReactRef>(null)
   const [mindElixirLoading, setMindElixirLoading] = useState(false)
@@ -54,6 +61,13 @@ export function MindmapDisplay({
   const [mindmapData, setMindmapData] = useState<MindElixirData | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const [reasoning, setReasoning] = useState("")
+  // Server-side cache state (Mind Elixir model only, non-BYOK)
+  const [serverCacheAvailable, setServerCacheAvailable] = useState<boolean | null>(null)
+  const [serverCacheFetching, setServerCacheFetching] = useState(false)
+  const [quotaExceeded, setQuotaExceeded] = useState(false)
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null)
+
+  const BACKEND_BASE_URL = import.meta.env.WXT_BACKEND_BASE_URL as string
 
 
   // tab hidden cause render error, so refresh to fix it when tab is shown
@@ -63,6 +77,39 @@ export function MindmapDisplay({
       mindmapRef.current?.instance?.toCenter()
     }
   }, [show])
+
+  // Check server cache on mount (non-BYOK video mindmap only)
+  useEffect(() => {
+    if (isByok || !videoUrl || !BACKEND_BASE_URL) return
+    // Only check for video platform URLs (YouTube / Bilibili)
+    const isVideoUrl =
+      videoUrl.includes("youtube.com") ||
+      videoUrl.includes("youtu.be") ||
+      videoUrl.includes("bilibili.com")
+    if (!isVideoUrl) return
+
+    chrome.runtime.sendMessage(
+      {
+        action: "checkMindmapCache",
+        videoUrl,
+        language
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn("[MindmapDisplay] checkMindmapCache message failed:", chrome.runtime.lastError)
+          return
+        }
+        if (response && response.success) {
+          if (response.data?.available) {
+            setServerCacheAvailable(true)
+          }
+          if (typeof response.data?.remaining === "number") {
+            setRemainingAttempts(response.data.remaining)
+          }
+        }
+      }
+    )
+  }, [videoUrl, isByok])
 
   // 加载缓存数据
   const loadCacheData = async () => {
@@ -234,9 +281,96 @@ export function MindmapDisplay({
     loadCacheData()
   }, [cacheKey])
 
+  // 从服务端获取已缓存的思维导图
+  const fetchCachedMindmap = async () => {
+    if (!videoUrl || !BACKEND_BASE_URL) return
+    setServerCacheFetching(true)
+    try {
+      chrome.runtime.sendMessage(
+        {
+          action: "fetchCachedMindmap",
+          videoUrl,
+          language
+        },
+        async (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("[MindmapDisplay] fetchCachedMindmap message failed:", chrome.runtime.lastError)
+            toast.error(t("generateMindmapFailed"))
+            setServerCacheFetching(false)
+            return
+          }
+
+          if (!response || !response.success) {
+            if (response?.status === 429) {
+              setQuotaExceeded(true)
+              toast.error(t("downloadQuotaExceeded"))
+            } else if (response?.status === 404) {
+              setServerCacheAvailable(false)
+            } else {
+              toast.error(response?.error || t("generateMindmapFailed"))
+            }
+            setServerCacheFetching(false)
+            return
+          }
+
+          try {
+            const data = response.data
+            const cleaned = ResponseParser.cleanMindmapResponse(data.mindmapText)
+            const parsed = plaintextToMindElixir(cleaned)
+            setMindmapData(parsed)
+            setServerCacheAvailable(false) // hide Content Ready button once loaded
+            if (typeof data.remaining === "number") {
+              setRemainingAttempts(data.remaining)
+            }
+            await saveCacheData(parsed)
+          } catch (err) {
+            console.error("[MindmapDisplay] parsing fetched cached mindmap failed:", err)
+            toast.error(t("generateMindmapFailed"))
+          } finally {
+            setServerCacheFetching(false)
+          }
+        }
+      )
+    } catch (err) {
+      console.error("[MindmapDisplay] fetchCachedMindmap failed:", err)
+      toast.error(t("generateMindmapFailed"))
+      setServerCacheFetching(false)
+    }
+  }
+
   // 生成思维导图
   const handleGenerate = () => {
     if (generateConfig) {
+      generateMindmap(!!mindmapData)
+    }
+  }
+
+  // Determine button label and action
+  // Priority: loading > has local data > server cache available > empty
+  const showContentReadyButton =
+    !isByok &&
+    serverCacheAvailable &&
+    !mindmapData &&
+    !mindmapLoading &&
+    !quotaExceeded
+
+  const mainButtonLabel = (() => {
+    if (mindmapLoading) return t("generating")
+    if (serverCacheFetching) return t("fetchingCachedMindmap")
+    if (showContentReadyButton) {
+      const baseLabel = t("contentReady")
+      return remainingAttempts !== null ? `${baseLabel} (${remainingAttempts})` : baseLabel
+    }
+    if (mindmapData) return t("regenerate")
+    return generateButtonText || t("generateMindmapBtn")
+  })()
+
+  const mainButtonDisabled = mindmapLoading || serverCacheFetching || (quotaExceeded && !mindmapData)
+
+  const handleMainButtonClick = () => {
+    if (showContentReadyButton) {
+      fetchCachedMindmap()
+    } else if (generateConfig) {
       generateMindmap(!!mindmapData)
     }
   }
@@ -246,21 +380,11 @@ export function MindmapDisplay({
       <div className="flex mb-2 gap-2 justify-between">
         <Button
           className="flex-grow"
-          onClick={handleGenerate}
-          disabled={mindmapLoading}
+          onClick={handleMainButtonClick}
+          disabled={mainButtonDisabled}
           size="sm"
-          title={
-            mindmapLoading
-              ? t("generating")
-              : mindmapData
-                ? t("regenerate")
-                : generateButtonText || t("generateMindmapBtn")
-          }>
-          {mindmapLoading
-            ? t("generating")
-            : mindmapData
-              ? t("regenerate")
-              : generateButtonText || t("generateMindmapBtn")}
+          title={mainButtonLabel}>
+          {mainButtonLabel}
         </Button>
 
         {!mindmapLoading && mindmapData && (

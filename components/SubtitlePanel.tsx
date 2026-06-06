@@ -1,11 +1,12 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { GripVertical } from "lucide-react";
+import { storage } from "@wxt-dev/storage";
 
 import { Button } from "~components/ui/button";
 import { Toaster } from "~components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
-import { t } from "~utils/i18n";
+import { t, getMatchedBrowserLanguage } from "~utils/i18n";
 import { useDraggable } from "~hooks/useDraggable";
 
 import { MindmapDisplay, type MindmapGenerateConfig } from "./MindmapDisplay";
@@ -45,6 +46,27 @@ export function SubtitlePanel({
   const panelRef = useRef<HTMLDivElement>(null);
   const { onMouseDown, isPositionLoaded } = useDraggable(panelRef, "video_panel_pos");
   const [activeTab, setActiveTab] = useState("subtitles");
+  const [isByok, setIsByok] = useState(false);
+  const [configuredLanguage, setConfiguredLanguage] = useState<string>("en");
+  const currentUrl = window.location.href;
+
+  // Detect BYOK and get configured reply language
+  useEffect(() => {
+    storage.getItem<any>("local:aiConfig").then((config) => {
+      if (!config) return;
+      const provider = config.provider;
+      if (provider && provider !== "mind-elixir") {
+        const key = config.apiKeys?.[provider];
+        if (key) setIsByok(true);
+      }
+
+      let lang = config.replyLanguage;
+      if (!lang || lang === "auto") {
+        lang = getMatchedBrowserLanguage();
+      }
+      setConfiguredLanguage(lang);
+    }).catch(() => {});
+  }, []);
 
   // 获取思维导图缓存键
   const getMindmapCacheKey = () => {
@@ -114,7 +136,12 @@ export function SubtitlePanel({
     action: "generateMindmapStream",
     getContent: getAllSubtitlesText,
     getTitle: () => videoInfo?.title || "",
-    additionalData: {},
+    additionalData: {
+      // Passed to background script so it can include in the LLM request body
+      // for backend caching (only used by Mind Elixir model, stripped otherwise)
+      videoUrl: currentUrl,
+      language: configuredLanguage,
+    },
   };
 
   return (
@@ -273,6 +300,9 @@ export function SubtitlePanel({
             generateConfig={mindmapGenerateConfig}
             cacheKey={getMindmapCacheKey()}
             show={activeTab === "mindmap"}
+            videoUrl={currentUrl}
+            isByok={isByok}
+            language={configuredLanguage}
           />
         </TabsContent>
       </Tabs>

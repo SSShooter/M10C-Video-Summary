@@ -3,11 +3,12 @@
  * 包含所有用于AI分析的系统提示词和用户提示词模板
  */
 import { storage } from "@wxt-dev/storage"
+import { getMatchedBrowserLanguage } from "~/utils/i18n"
 
 // 语言映射表
 const LANGUAGE_MAP: Record<string, string> = {
-  auto: chrome.i18n.getUILanguage(),
   "zh-CN": "中文",
+  "zh-TW": "繁體中文",
   en: "English",
   ja: "日本語",
   ko: "한국어",
@@ -38,15 +39,18 @@ interface AIConfig {
   replyLanguage?: string
 }
 
-// 获取用户设置的回复语言
+// 获取用户设置 of 回复语言
 async function getReplyLanguage(): Promise<string> {
   try {
     const config = await storage.getItem<AIConfig>("local:aiConfig")
-    const languageCode = config?.replyLanguage || "auto"
-    return LANGUAGE_MAP[languageCode] || LANGUAGE_MAP["auto"]
+    let languageCode = config?.replyLanguage
+    if (!languageCode || languageCode === "auto") {
+      languageCode = getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
+    }
+    return LANGUAGE_MAP[languageCode] || LANGUAGE_MAP["en"]
   } catch (error) {
     console.error("Failed to get reply language:", error)
-    return LANGUAGE_MAP["auto"]
+    return LANGUAGE_MAP["en"]
   }
 }
 

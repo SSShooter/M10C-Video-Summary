@@ -456,7 +456,7 @@
     "description": "AI reply language selection label"
   },
   "aiReplyLanguageTip": {
-    "message": "Select the language for AI replies, auto detect will use browser language settings",
+    "message": "Select the language for AI replies. Default is browser language (or English if not matched)",
     "description": "AI reply language selection tip"
   },
   "clickToGenerateVideoSummary": {
@@ -538,5 +538,17 @@
   "mindElixirInsufficientBalance": {
     "message": "Insufficient Mind Elixir Star balance. Please recharge, or configure your own AI API Key in settings.",
     "description": "Mind Elixir insufficient balance message"
+  },
+  "contentReady": {
+    "message": "Content Ready",
+    "description": "Button label when cached mindmap content is available from server"
+  },
+  "downloadQuotaExceeded": {
+    "message": "Monthly download limit (5/month) reached. You can still regenerate using Stars.",
+    "description": "Error shown when user has used all monthly free cached mindmap downloads"
+  },
+  "fetchingCachedMindmap": {
+    "message": "Loading cached mindmap...",
+    "description": "Button label while fetching cached mindmap from server"
   }
 }

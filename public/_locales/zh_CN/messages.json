@@ -456,7 +456,7 @@
     "description": "AI回复语言选择标签"
   },
   "aiReplyLanguageTip": {
-    "message": "选择AI回复时使用的语言，自动检测将根据浏览器语言设置",
+    "message": "选择AI回复时使用的语言。默认是浏览器语言（未匹配到则默认英语）",
     "description": "AI回复语言选择提示"
   },
   "clickToGenerateVideoSummary": {
@@ -538,5 +538,17 @@
   "mindElixirInsufficientBalance": {
     "message": "Mind Elixir 星星余额不足，请充值，或在设置页面配置自己的 AI API Key",
     "description": "Mind Elixir 星星余额不足的提示"
+  },
+  "contentReady": {
+    "message": "内容已准备好",
+    "description": "当服务器有缓存思维导图时的按钮文字"
+  },
+  "downloadQuotaExceeded": {
+    "message": "本月免费下载次数已达上限（每月 5 次），仍可消耗星星重新生成",
+    "description": "用户当月免费缓存思维导图下载次数用尽时的错误提示"
+  },
+  "fetchingCachedMindmap": {
+    "message": "加载缓存思维导图...",
+    "description": "从服务器获取缓存思维导图时的按钮文字"
   }
 }

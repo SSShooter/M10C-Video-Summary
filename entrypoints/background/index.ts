@@ -1,6 +1,6 @@
 import { PROMPTS } from "./prompts"
 import { storage } from "@wxt-dev/storage"
-import { t } from "~/utils/i18n"
+import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 
 interface AIConfig {
   provider: string
@@ -238,7 +238,13 @@ class BackgroundAIService {
   async getConfig(): Promise<AIConfig | null> {
     try {
       const config = await storage.getItem<AIConfig>("local:aiConfig")
-      return config || null
+      if (config) {
+        if (!config.replyLanguage || config.replyLanguage === "auto") {
+          config.replyLanguage = getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
+        }
+        return config
+      }
+      return null
     } catch (error) {
       console.error("获取AI配置失败:", error)
       return null
@@ -254,7 +260,8 @@ class BackgroundAIService {
     onChunk: (chunk: StreamChunk) => void,
     onDone: () => void,
     onError: (error: string) => void,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    extraBodyFields?: Record<string, string>
   ): Promise<void> {
     try {
       let config = await this.getConfig()
@@ -267,7 +274,10 @@ class BackgroundAIService {
       const isMindElixir = !config || !apiKey || originalProvider === "mind-elixir"
 
       if (isMindElixir) {
-        config = DEFAULT_MIND_ELIXIR_CONFIG
+        config = {
+          ...DEFAULT_MIND_ELIXIR_CONFIG,
+          replyLanguage: getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
+        }
         apiKey = DEFAULT_MIND_ELIXIR_CONFIG.apiKeys["mind-elixir"]!
       }
 
@@ -297,7 +307,11 @@ class BackgroundAIService {
       const response = await fetch(requestConfig.url, {
         method: "POST",
         headers: requestConfig.headers,
-        body: JSON.stringify(requestConfig.body),
+        body: JSON.stringify(
+          isMindElixir && extraBodyFields
+            ? { ...requestConfig.body, ...extraBodyFields }
+            : requestConfig.body
+        ),
         signal // Pass signal to fetch
       })
 
@@ -483,6 +497,60 @@ export default defineBackground(() => {
       capturedSubtitleUrl = null
       sendResponse({ success: true })
     }
+
+    if (request.action === "checkMindmapCache") {
+      const { videoUrl, language } = request
+      const checkUrl = new URL(`${BACKEND_BASE_URL}/api/public/mindmap/check`)
+      checkUrl.searchParams.set("videoUrl", videoUrl)
+      if (language) checkUrl.searchParams.set("language", language)
+
+      fetch(checkUrl.toString(), {
+        credentials: "include"
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`)
+          }
+          const data = await res.json()
+          sendResponse({ success: true, data })
+        })
+        .catch((err) => {
+          console.warn("[Background] checkMindmapCache failed:", err)
+          sendResponse({ success: false, error: err.message })
+        })
+      return true // Keep the message channel open for async response
+    }
+
+    if (request.action === "fetchCachedMindmap") {
+      const { videoUrl, language } = request
+      const fetchUrl = new URL(`${BACKEND_BASE_URL}/api/v1/mindmap/fetch`)
+      fetchUrl.searchParams.set("videoUrl", videoUrl)
+      if (language) fetchUrl.searchParams.set("language", language)
+
+      fetch(fetchUrl.toString(), {
+        credentials: "include"
+      })
+        .then(async (res) => {
+          if (res.status === 429) {
+            sendResponse({ success: false, status: 429 })
+            return
+          }
+          if (res.status === 404) {
+            sendResponse({ success: false, status: 404 })
+            return
+          }
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`)
+          }
+          const data = await res.json()
+          sendResponse({ success: true, data })
+        })
+        .catch((err) => {
+          console.warn("[Background] fetchCachedMindmap failed:", err)
+          sendResponse({ success: false, error: err.message })
+        })
+      return true // Keep the message channel open for async response
+    }
   })
 
   // Handle streaming connections
@@ -562,6 +630,17 @@ export default defineBackground(() => {
                 ? PROMPTS.MINDMAP_VIDEO_USER(msg.subtitles, msg.title)
                 : PROMPTS.MINDMAP_ARTICLE_USER(msg.content, msg.title)
 
+            // Build extra body fields for backend mindmap caching.
+            // Only injected when using Mind Elixir model and a video URL is provided
+            // (article mindmaps are not cached on the backend).
+            const extraBodyFields: Record<string, string> | undefined =
+              msg.videoUrl && msg.action === "generateMindmapStream"
+                ? {
+                    _videoUrl: msg.videoUrl,
+                    _language: msg.language || getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
+                  }
+                : undefined
+
             await backgroundAIService.streamAI(
               mindmapPrompt,
               userPrompt,
@@ -581,7 +660,8 @@ export default defineBackground(() => {
                 safePostMessage({ type: "error", error })
                 controller = null
               },
-              signal
+              signal,
+              extraBodyFields
             )
           } catch (error) {
             if (signal.aborted) return

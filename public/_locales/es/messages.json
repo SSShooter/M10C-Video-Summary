@@ -456,7 +456,7 @@
     "description": "AI reply language selection label"
   },
   "aiReplyLanguageTip": {
-    "message": "Selecciona el idioma para las respuestas de la IA; la detección automática usará la configuración de idioma del navegador",
+    "message": "Selecciona el idioma para las respuestas de la IA. El predeterminado es el idioma del navegador (o inglés si no coincide)",
     "description": "AI reply language selection tip"
   },
   "clickToGenerateVideoSummary": {
@@ -538,5 +538,17 @@
   "mindElixirInsufficientBalance": {
     "message": "Saldo de estrellas de Mind Elixir insuficiente. Por favor, recarga, o configura tu propia clave API de IA en la configuración.",
     "description": "Mensaje de saldo insuficiente de Mind Elixir"
+  },
+  "contentReady": {
+    "message": "Contenido listo",
+    "description": "Etiqueta del botón cuando hay un mapa mental en caché disponible en el servidor"
+  },
+  "downloadQuotaExceeded": {
+    "message": "Límite de descargas mensuales alcanzado (5/mes). Aún puedes regenerar usando Estrellas.",
+    "description": "Error que se muestra cuando el usuario ha agotado sus descargas mensuales gratuitas de mapa mental en caché"
+  },
+  "fetchingCachedMindmap": {
+    "message": "Cargando mapa mental en caché...",
+    "description": "Etiqueta del botón mientras se obtiene el mapa mental en caché del servidor"
   }
 }
