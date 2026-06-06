@@ -127,6 +127,10 @@
     "message": "AI 服務商",
     "description": "AI服務商標籤"
   },
+  "apiKey": {
+    "message": "API 金鑰",
+    "description": "API 金鑰輸入標籤"
+  },
   "modelSelection": {
     "message": "模型選擇",
     "description": "模型選擇標籤"

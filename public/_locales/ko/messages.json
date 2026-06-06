@@ -127,6 +127,10 @@
     "message": "AI 서비스 제공업체",
     "description": "AI 서비스 제공업체 라벨"
   },
+  "apiKey": {
+    "message": "API 키",
+    "description": "API 키 입력 레이블"
+  },
   "modelSelection": {
     "message": "모델 선택",
     "description": "모델 선택 라벨"

@@ -127,6 +127,10 @@
     "message": "AIプロバイダー",
     "description": "AIプロバイダーラベル"
   },
+  "apiKey": {
+    "message": "API キー",
+    "description": "API キー入力ラベル"
+  },
   "modelSelection": {
     "message": "モデルの選択",
     "description": "モデル選択ラベル"

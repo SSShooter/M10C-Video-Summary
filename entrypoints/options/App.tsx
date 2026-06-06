@@ -25,7 +25,6 @@ import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 interface AIProvider {
   id: string
   name: string
-  apiKeyLabel: string
   baseUrl?: string
   modelsEndpoint?: string
 }
@@ -33,40 +32,34 @@ interface AIProvider {
 const AI_PROVIDERS: AIProvider[] = [
   {
     id: "mind-elixir",
-    name: "Mind Elixir ⭐",
-    apiKeyLabel: ""
+    name: "Mind Elixir ⭐"
   },
   {
     id: "openai",
     name: "OpenAI",
-    apiKeyLabel: "API Key",
     baseUrl: "https://api.openai.com/v1",
     modelsEndpoint: "/models"
   },
   {
     id: "gemini",
     name: "Google Gemini",
-    apiKeyLabel: "API Key",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     modelsEndpoint: "/models"
   },
   {
     id: "claude",
     name: "Anthropic Claude",
-    apiKeyLabel: "API Key",
     baseUrl: "https://api.anthropic.com/v1"
   },
   {
     id: "openai-compatible",
     name: "OpenAI Compatible API",
-    apiKeyLabel: "API Key",
     baseUrl: "https://api.example.com/v1",
     modelsEndpoint: "/models"
   },
   {
     id: "openrouter",
     name: "OpenRouter",
-    apiKeyLabel: "OpenRouter API Key",
     baseUrl: "https://openrouter.ai/api/v1",
     modelsEndpoint: "/models"
   }
@@ -588,7 +581,7 @@ function OptionsPage() {
 
             <div className="space-y-1">
               <Label htmlFor="api-key" className="text-sm font-medium text-foreground">
-                {currentProvider?.apiKeyLabel || "API Key"}
+                {t("apiKey")}
               </Label>
               <Input
                 id="api-key"

@@ -127,6 +127,10 @@
     "message": "Proveedor de IA",
     "description": "AI provider label"
   },
+  "apiKey": {
+    "message": "Clave API",
+    "description": "Etiqueta de entrada de clave API"
+  },
   "modelSelection": {
     "message": "Selección de modelo",
     "description": "Model selection label"

@@ -127,6 +127,10 @@
     "message": "AI Provider",
     "description": "AI provider label"
   },
+  "apiKey": {
+    "message": "API Key",
+    "description": "API Key input label"
+  },
   "modelSelection": {
     "message": "Model Selection",
     "description": "Model selection label"
