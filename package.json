@@ -2,7 +2,7 @@
   "name": "m10c-video-summary-extension",
   "description": "Video Summary with AI",
   "private": true,
-  "version": "3.1.2",
+  "version": "3.2.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",

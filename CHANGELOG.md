@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.0] - 2026-06-06
+
+### Added
+- **AI Provider Configuration Support**: Added Mind Elixir and OpenRouter support to the AI provider configuration.
+- **Environment Configuration**: Externalized backend base URL into environment variables via `WXT_BACKEND_BASE_URL`.
+- **Microsoft Edge Support**: Updated publishing and release workflow documentation to include Microsoft Edge support.
+
+### Fixed
+- **UI Flickering**: Prevented UI flickering of draggable panels on mount.
+- **Mindmap View Validation**: Prevented rendering the "Open in Mind Elixir" button when mindmap data is missing.
+- **API Error & Balance Handling**: Improved API error handling, adding localized messages for service authorization and insufficient balance errors for Mind Elixir service.
+- **Icon Button Styling**: Standardized icon button colors and removed hover states in `SubtitlePanel` and article mindmap.
+
+### Refactored / Chore
+- **Build Optimization**: Strip console and debugger statements during production build in `wxt.config.ts`.
+- **Cleanups**: Simplified toast notifications in `MindmapDisplay`, removed i18n keys for subtitle logs, and updated placeholder format in locales.
+- **Chore**: Updated `.gitignore` to ignore environment files.
+
+---
+
 ## [3.1.2] - 2026-06-04
 
 ### Added
