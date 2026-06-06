@@ -271,7 +271,7 @@ export function MindmapDisplay({
               : generateButtonText || t("generateMindmapBtn")}
         </Button>
 
-        {!mindmapLoading && (
+        {!mindmapLoading && mindmapData && (
           <>
             <Button
               onClick={openInMindElixir}
