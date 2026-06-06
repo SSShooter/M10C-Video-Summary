@@ -108,7 +108,7 @@
     "description": "一键跳转功能"
   },
   "optionsTitle": {
-    "message": "视频字幕AI总结 - 配置",
+    "message": "设定",
     "description": "选项页面标题"
   },
   "aiServiceConfig": {

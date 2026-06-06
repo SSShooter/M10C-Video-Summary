@@ -108,7 +108,7 @@
     "description": "원클릭 시간 이동 기능"
   },
   "optionsTitle": {
-    "message": "동영상 자막 AI 요약 - 설정",
+    "message": "설정",
     "description": "설정 페이지 제목"
   },
   "aiServiceConfig": {

@@ -428,7 +428,7 @@ function OptionsPage() {
   const isMindElixir = aiConfig.provider === "mind-elixir"
 
   return (
-    <div className="min-w-[800px] max-w-5xl mx-auto p-10">
+    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 md:p-10">
       <div className="mb-6">
         <h1 className="text-4xl font-bold tracking-tight">
           {t("optionsTitle")}

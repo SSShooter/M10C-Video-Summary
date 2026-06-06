@@ -108,7 +108,7 @@
     "description": "ワンクリックジャンプ機能"
   },
   "optionsTitle": {
-    "message": "動画字幕AI要約 - 設定",
+    "message": "設定",
     "description": "オプションページのタイトル"
   },
   "aiServiceConfig": {

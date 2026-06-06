@@ -108,7 +108,7 @@
     "description": "一鍵跳转功能"
   },
   "optionsTitle": {
-    "message": "影片字幕 AI 總結 - 配置",
+    "message": "設定",
     "description": "選項頁面標題"
   },
   "aiServiceConfig": {

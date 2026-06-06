@@ -108,7 +108,7 @@
     "description": "One-click jump feature"
   },
   "optionsTitle": {
-    "message": "Video Subtitle AI Summary - Configuration",
+    "message": "Settings",
     "description": "Options page title"
   },
   "aiServiceConfig": {
