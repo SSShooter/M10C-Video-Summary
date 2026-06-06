@@ -56,8 +56,9 @@ export function SubtitlePanel({
       if (!config) return;
       const provider = config.provider;
       if (provider && provider !== "mind-elixir") {
-        const key = config.apiKeys?.[provider];
-        if (key) setIsByok(true);
+        setIsByok(true);
+      } else {
+        setIsByok(false);
       }
 
       let lang = config.replyLanguage;

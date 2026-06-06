@@ -271,7 +271,7 @@ class BackgroundAIService {
       // Fall back to the built-in Mind Elixir endpoint when:
       // (a) the user has not configured any provider, or
       // (b) the user explicitly selected the "mind-elixir" provider.
-      const isMindElixir = !config || !apiKey || originalProvider === "mind-elixir"
+      const isMindElixir = !config || originalProvider === "mind-elixir"
 
       if (isMindElixir) {
         config = {
@@ -285,7 +285,7 @@ class BackgroundAIService {
         throw new Error("AI configuration is missing")
       }
 
-      if (!apiKey) {
+      if (!apiKey || !apiKey.trim()) {
         throw new Error("API Key is missing")
       }
 
