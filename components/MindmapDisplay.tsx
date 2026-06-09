@@ -67,6 +67,12 @@ export function MindmapDisplay({
   const [serverCacheFetching, setServerCacheFetching] = useState(false)
   const [quotaExceeded, setQuotaExceeded] = useState(false)
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null)
+  const [checkingCache, setCheckingCache] = useState(false)
+  const [freeGenerationQuota, setFreeGenerationQuota] = useState<{
+    remaining: number
+    expiresAt: string
+    campaignName: string
+  } | null>(null)
 
   const BACKEND_BASE_URL = import.meta.env.WXT_BACKEND_BASE_URL as string
 
@@ -89,6 +95,7 @@ export function MindmapDisplay({
       videoUrl.includes("bilibili.com")
     if (!isVideoUrl) return
 
+    setCheckingCache(true)
     chrome.runtime.sendMessage(
       {
         action: "checkMindmapCache",
@@ -96,6 +103,7 @@ export function MindmapDisplay({
         language
       },
       (response) => {
+        setCheckingCache(false)
         if (chrome.runtime.lastError) {
           console.warn("[MindmapDisplay] checkMindmapCache message failed:", chrome.runtime.lastError)
           return
@@ -106,6 +114,9 @@ export function MindmapDisplay({
           }
           if (typeof response.data?.remaining === "number") {
             setRemainingAttempts(response.data.remaining)
+          }
+          if (response.data?.freeGeneration) {
+            setFreeGenerationQuota(response.data.freeGeneration)
           }
         }
       }
@@ -161,7 +172,7 @@ export function MindmapDisplay({
 
     const content = generateConfig.getContent()
     if (!content) {
-      toast.error(t("generateMindmapFailed"))
+      toast.error(t("noContentAvailable"))
       return
     }
 
@@ -247,6 +258,17 @@ export function MindmapDisplay({
           toast.error(msg.error || t("generateMindmapFailed"))
           setMindmapLoading(false)
           port.disconnect()
+        } else if (msg.type === "freeGenerationUsed") {
+          // Decrement the free generation quota display
+          setFreeGenerationQuota((prev) => {
+            if (!prev) return null
+            const newRemaining = prev.remaining - 1
+            if (newRemaining <= 0) {
+              toast.info(t("freeGenerationExhausted"))
+              return null
+            }
+            return { ...prev, remaining: newRemaining }
+          })
         }
       })
     } catch (error) {
@@ -346,8 +368,7 @@ export function MindmapDisplay({
     }
   }
 
-  // Determine button label and action
-  // Priority: loading > has local data > server cache available > empty
+  // Generate button (shown when no mindmap data)
   const showContentReadyButton =
     !isByok &&
     serverCacheAvailable &&
@@ -355,47 +376,60 @@ export function MindmapDisplay({
     !mindmapLoading &&
     !quotaExceeded
 
-  const mainButtonLabel = (() => {
+  const generateButtonLabel = (() => {
     if (mindmapLoading) return t("generating")
-    if (serverCacheFetching) return t("fetchingCachedMindmap")
-    if (showContentReadyButton) {
-      return t("contentReady")
+    if (serverCacheFetching || checkingCache) return t("fetchingCachedMindmap")
+    if (showContentReadyButton) return t("contentReady")
+    if (!isByok && freeGenerationQuota && freeGenerationQuota.remaining > 0) {
+      return t("freeGenerationBtn")
     }
-    if (mindmapData) return t("regenerate")
     return generateButtonText || t("generateMindmapBtn")
   })()
 
-  const tooltipContent =
-    showContentReadyButton && remainingAttempts !== null
-      ? t("remainingAttemptsTooltip", String(remainingAttempts))
-      : null
+  const generateTooltipContent = (() => {
+    if (showContentReadyButton && remainingAttempts !== null) {
+      return t("remainingAttemptsTooltip", String(remainingAttempts))
+    }
+    if (!isByok && freeGenerationQuota && freeGenerationQuota.remaining > 0) {
+      const expiryDate = new Date(freeGenerationQuota.expiresAt).toLocaleDateString()
+      return t("freeGenerationAvailable", [String(freeGenerationQuota.remaining), expiryDate])
+    }
+    return null
+  })()
 
-  const mainButtonDisabled = mindmapLoading || serverCacheFetching || (quotaExceeded && !mindmapData)
+  const generateButtonDisabled = mindmapLoading || serverCacheFetching || checkingCache || quotaExceeded
 
-  const handleMainButtonClick = () => {
+  const handleGenerateClick = () => {
     if (showContentReadyButton) {
       fetchCachedMindmap()
     } else if (generateConfig) {
-      generateMindmap(!!mindmapData)
+      generateMindmap(false)
     }
   }
 
   return (
     <div className="flex-1 flex flex-col h-full">
       <div className="flex mb-2 gap-2 justify-between">
-        <Tooltip content={tooltipContent} className="flex-grow">
-          <Button
-            className="flex-grow w-full"
-            onClick={handleMainButtonClick}
-            disabled={mainButtonDisabled}
-            size="sm"
-            title={tooltipContent ? undefined : mainButtonLabel}>
-            {mainButtonLabel}
-          </Button>
-        </Tooltip>
-
-        {!mindmapLoading && mindmapData && (
+        {!mindmapData ? (
+          <Tooltip content={generateTooltipContent} className="flex-grow">
+            <Button
+              className="flex-grow w-full"
+              onClick={handleGenerateClick}
+              disabled={generateButtonDisabled}
+              size="sm"
+              title={generateTooltipContent ? undefined : generateButtonLabel}>
+              {generateButtonLabel}
+            </Button>
+          </Tooltip>
+        ) : (
           <>
+            <Button
+              className="flex-grow w-full"
+              onClick={() => generateMindmap(true)}
+              disabled={mindmapLoading}
+              size="sm">
+              {mindmapLoading ? t("generating") : t("regenerate")}
+            </Button>
             <Button
               onClick={openInMindElixir}
               disabled={mindElixirLoading}

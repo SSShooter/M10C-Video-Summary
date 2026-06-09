@@ -395,6 +395,10 @@
     "message": "Summary failed, please check AI configuration",
     "description": "Summary failed error message"
   },
+  "noContentAvailable": {
+    "message": "No content available",
+    "description": "Shown when there is no content to process"
+  },
   "generateMindmapFailed": {
     "message": "Failed to generate mindmap",
     "description": "Generate mindmap failed error message"
@@ -558,5 +562,17 @@
   "remainingAttemptsTooltip": {
     "message": "$1 attempts remaining this month",
     "description": "Hover button tooltip showing remaining attempts"
+  },
+  "freeGenerationAvailable": {
+    "message": "Free generation: $1 remaining (expires $2)",
+    "description": "Tooltip showing free generation quota available"
+  },
+  "freeGenerationBtn": {
+    "message": "Free Generate",
+    "description": "Button text when free generation is available"
+  },
+  "freeGenerationExhausted": {
+    "message": "Free generation quota used up. Will consume Stars.",
+    "description": "Toast when free generation quota is exhausted"
   }
 }

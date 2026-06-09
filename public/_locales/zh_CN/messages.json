@@ -395,6 +395,10 @@
     "message": "总结失败，请检查AI配置",
     "description": "总结失败错误消息"
   },
+  "noContentAvailable": {
+    "message": "未获取到内容",
+    "description": "没有可处理的内容时的提示"
+  },
   "generateMindmapFailed": {
     "message": "生成思维导图失败",
     "description": "生成思维导图失败错误消息"
@@ -558,5 +562,17 @@
   "remainingAttemptsTooltip": {
     "message": "本月剩余 $1 次",
     "description": "Hover button tooltip showing remaining attempts"
+  },
+  "freeGenerationAvailable": {
+    "message": "可免费生成 $1 次（有效期至 $2）",
+    "description": "显示免费生成次数的工具提示"
+  },
+  "freeGenerationBtn": {
+    "message": "免费生成",
+    "description": "有免费生成次数时的按钮文字"
+  },
+  "freeGenerationExhausted": {
+    "message": "免费生成次数已用完，将消耗星星",
+    "description": "免费生成次数用完时的提示"
   }
 }

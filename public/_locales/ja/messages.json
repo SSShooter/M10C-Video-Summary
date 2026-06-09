@@ -395,6 +395,10 @@
     "message": "要約に失敗しました。AI設定を確認してください",
     "description": "要約失敗错误消息"
   },
+  "noContentAvailable": {
+    "message": "コンテンツを取得できませんでした",
+    "description": "処理できるコンテンツがない場合のメッセージ"
+  },
   "generateMindmapFailed": {
     "message": "マインドマップの作成に失敗しました",
     "description": "マインドマップ作成失敗エラーメッセージ"
@@ -554,5 +558,17 @@
   "fetchingCachedMindmap": {
     "message": "キャッシュ済みマインドマップを読み込み中...",
     "description": "サーバーからキャッシュ済みマインドマップを取得中のボタンラベル"
+  },
+  "freeGenerationAvailable": {
+    "message": "無料生成: 残り$1回（$2まで有効）",
+    "description": "無料生成枠の残りを表示するツールチップ"
+  },
+  "freeGenerationBtn": {
+    "message": "無料生成",
+    "description": "無料生成枠がある場合のボタンテキスト"
+  },
+  "freeGenerationExhausted": {
+    "message": "無料生成枠を使い切りました。スターを消費します。",
+    "description": "無料生成枠がなくなった時のトースト"
   }
 }

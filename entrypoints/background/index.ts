@@ -261,7 +261,8 @@ class BackgroundAIService {
     onDone: () => void,
     onError: (error: string) => void,
     signal?: AbortSignal,
-    extraBodyFields?: Record<string, string>
+    extraBodyFields?: Record<string, string>,
+    onFreeGeneration?: () => void
   ): Promise<void> {
     try {
       let config = await this.getConfig()
@@ -314,6 +315,12 @@ class BackgroundAIService {
         ),
         signal // Pass signal to fetch
       })
+
+      // Check if this was a free generation
+      const isFreeGeneration = isMindElixir && response.headers.get("X-Free-Generation") === "true"
+      if (isFreeGeneration && onFreeGeneration) {
+        onFreeGeneration()
+      }
 
       if (!response.ok) {
         const text = await response.text()
@@ -661,7 +668,11 @@ export default defineBackground(() => {
                 controller = null
               },
               signal,
-              extraBodyFields
+              extraBodyFields,
+              () => {
+                // Notify content script that this was a free generation
+                safePostMessage({ type: "freeGenerationUsed" })
+              }
             )
           } catch (error) {
             if (signal.aborted) return

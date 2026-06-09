@@ -395,6 +395,10 @@
     "message": "Error en el resumen, por favor verifica la configuración de IA",
     "description": "Summary failed error message"
   },
+  "noContentAvailable": {
+    "message": "No se obtuvo contenido",
+    "description": "Se muestra cuando no hay contenido para procesar"
+  },
   "generateMindmapFailed": {
     "message": "Error al generar el mapa mental",
     "description": "Generate mindmap failed error message"
@@ -558,5 +562,17 @@
   "remainingAttemptsTooltip": {
     "message": "$1 intentos restantes este mes",
     "description": "Hover button tooltip showing remaining attempts"
+  },
+  "freeGenerationAvailable": {
+    "message": "Generación gratis: $1 restantes (expira $2)",
+    "description": "Tooltip showing free generation quota available"
+  },
+  "freeGenerationBtn": {
+    "message": "Generar gratis",
+    "description": "Button text when free generation is available"
+  },
+  "freeGenerationExhausted": {
+    "message": "Cuota de generación gratis agotada. Se consumirán Stars.",
+    "description": "Toast when free generation quota is exhausted"
   }
 }

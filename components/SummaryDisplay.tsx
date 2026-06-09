@@ -106,7 +106,7 @@ export function SummaryDisplay({
 
     const content = generateConfig.getContent()
     if (!content) {
-      toast.error("没有内容可以生成总结")
+      toast.error(t("noContentAvailable"))
       return
     }
 
