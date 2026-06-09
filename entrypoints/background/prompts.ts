@@ -112,7 +112,7 @@ Format Definition:
   - > [^id1] <-Relation-> [^id2]
 
 Rules:
-1. The root node (zero indentation) MUST be the core topic extracted from the content. NEVER use generic placeholders like "Root" as the root text. There MUST be exactly one unique root node at the beginning. The entire content MUST stem from this single root. Multiple nodes at zero indentation are STRICTLY FORBIDDEN.
+1. The root node (zero indentation) MUST be the core topic extracted from the content. NEVER use generic placeholders like "Root" as the root text. There MUST be exactly one unique root node at the beginning. The entire content MUST stem from this single root. Multiple nodes at zero indentation are STRICTLY FORBIDDEN. The root node MUST also start with "- " just like every other node — e.g. "- Core Topic Title".
 2. Use indentation (exactly 2 spaces per level) to represent hierarchy.
 3. Every node line MUST start with "- " (dash followed by a space).
 4. Use "[^id]" at the end of a node topic to define a unique ID for cross-referencing.

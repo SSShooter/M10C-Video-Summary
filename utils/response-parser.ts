@@ -8,9 +8,16 @@ export class ResponseParser {
   static cleanMindmapResponse(content: string): string {
     if (!content) return ""
     // 移除开头和结尾的 ```, ```plaintext, ```json 等
-    return content
+    let cleaned = content
       .replace(/^```[\w]*\n?/gm, "") // Remove starting ```tag
       .replace(/```$/gm, "") // Remove ending ```
       .trim()
+
+    // Fix root node: LLM often omits "- " on the first line
+    if (cleaned && !cleaned.startsWith("- ")) {
+      cleaned = "- " + cleaned
+    }
+
+    return cleaned
   }
 }
