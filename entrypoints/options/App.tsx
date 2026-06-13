@@ -631,6 +631,7 @@ function OptionsPage() {
                   <div className="ml-6 space-y-2">
                     <div className="flex gap-2 items-center">
                       <DropdownMenu
+                        modal={false}
                         open={openModelSelect}
                         onOpenChange={setOpenModelSelect}>
                         <DropdownMenuTrigger asChild>
