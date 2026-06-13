@@ -106,7 +106,7 @@ function IndexPopup() {
   }
 
   const openOptionsPage = () => {
-    chrome.runtime.openOptionsPage()
+    chrome.tabs.create({ url: chrome.runtime.getURL("options.html") })
   }
 
   const getPageTypeInfo = () => {

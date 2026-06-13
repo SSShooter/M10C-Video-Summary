@@ -422,14 +422,18 @@ function OptionsPage() {
   const isMindElixir = aiConfig.provider === "mind-elixir"
 
   return (
-    <div className="w-full max-w-xl mx-auto py-6 px-4 sm:px-6">
-      <div className="mb-6 pb-3 border-b border-border">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t("optionsTitle")}
-        </h1>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="w-[680px] mx-auto py-10 px-4 sm:px-6">
+        <div className="mb-8 pb-4 border-b border-border">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {t("optionsTitle")}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Video Mindmap - {t("optionsTitle")}
+          </p>
+        </div>
 
-      <div className="space-y-5">
+        <div className="space-y-5">
         <div className="space-y-1">
           <Label htmlFor="ai-provider" className="text-sm font-medium text-foreground">{t("aiProvider")}</Label>
           <Select
@@ -824,6 +828,7 @@ function OptionsPage() {
               <span>{t("articleMindmap")}</span>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
