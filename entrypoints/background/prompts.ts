@@ -4,6 +4,7 @@
  */
 import { storage } from "@wxt-dev/storage"
 import { getMatchedBrowserLanguage } from "~/utils/i18n"
+import type { AIConfig } from "~/utils/ai-service"
 
 // 语言映射表
 const LANGUAGE_MAP: Record<string, string> = {
@@ -19,31 +20,12 @@ const LANGUAGE_MAP: Record<string, string> = {
   ru: "Русский"
 }
 
-interface AIConfig {
-  provider: string
-  apiKeys: {
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-  }
-  model: string
-  baseUrl?: string
-  baseUrls?: {
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-  }
-  customModel?: string
-  replyLanguage?: string
-}
-
 // 获取用户设置 of 回复语言
 async function getReplyLanguage(): Promise<string> {
   try {
-    const config = await storage.getItem<AIConfig>("local:aiConfig")
-    let languageCode = config?.replyLanguage
+    const config = await storage.getItem<AIConfig>("local:aiConfigV2")
+    if (!config) return LANGUAGE_MAP["en"]
+    let languageCode = config.replyLanguage
     if (!languageCode || languageCode === "auto") {
       languageCode = getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
     }

@@ -47,14 +47,14 @@ export function SubtitlePanel({
   const { onMouseDown, isPositionLoaded } = useDraggable(panelRef, "video_panel_pos");
   const [activeTab, setActiveTab] = useState("subtitles");
   const [isByok, setIsByok] = useState(false);
-  const [configuredLanguage, setConfiguredLanguage] = useState<string>("en");
+  const [configuredLanguage, setConfiguredLanguage] = useState<string | null>(null);
   const currentUrl = window.location.href;
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
-    storage.getItem<any>("local:aiConfig").then((config) => {
+    storage.getItem<any>("local:aiConfigV2").then((config) => {
       if (!config) return;
-      const provider = config.provider;
+      const provider = config.activeProvider;
       if (provider && provider !== "mind-elixir") {
         setIsByok(true);
       } else {

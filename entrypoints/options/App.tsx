@@ -1,17 +1,10 @@
-import { Check, ChevronsUpDown, Search, Star, RefreshCw, LogOut, LogIn, User } from "lucide-react"
+import { Check, Star, RefreshCw, LogOut, LogIn, User } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 import { storage } from "@wxt-dev/storage"
 
 import { Button } from "~/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "~/components/ui/dropdown-menu"
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -21,6 +14,7 @@ import {
 } from "~/components/ui/select"
 import { cn } from "~/lib/utils"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
+import type { AIConfig, ProviderConfig } from "~/utils/ai-service"
 
 interface AIProvider {
   id: string
@@ -78,30 +72,6 @@ const REPLY_LANGUAGES = [
   { id: "ru", name: "Русский" }
 ]
 
-interface AIConfig {
-  provider: string
-  apiKeys: {
-    "mind-elixir"?: string
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-    openrouter?: string
-  }
-  model: string
-  baseUrl?: string
-  baseUrls?: {
-    "mind-elixir"?: string
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-    openrouter?: string
-  }
-  customModel?: string
-  replyLanguage?: string
-}
-
 interface UserData {
   _id?: string
   id?: string
@@ -115,11 +85,9 @@ const BACKEND_BASE_URL = import.meta.env.WXT_BACKEND_BASE_URL
 
 function OptionsPage() {
   const [aiConfig, setAiConfig] = useState<AIConfig>({
-    provider: "mind-elixir",
-    apiKeys: {},
-    model: "",
-    baseUrls: {},
-    replyLanguage: getMatchedBrowserLanguage(navigator.language)
+    activeProvider: "mind-elixir",
+    replyLanguage: getMatchedBrowserLanguage(navigator.language),
+    providers: {}
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -127,9 +95,8 @@ function OptionsPage() {
     [key: string]: string[]
   }>({})
   const [fetchingModels, setFetchingModels] = useState(false)
-  const [useCustomModel, setUseCustomModel] = useState(false)
-  const [openModelSelect, setOpenModelSelect] = useState(false)
-  const [modelSearchQuery, setModelSearchQuery] = useState("")
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
+  const modelInputRef = useRef<HTMLInputElement>(null)
 
   const [user, setUser] = useState<UserData | null>(null)
   const [loadingUser, setLoadingUser] = useState(false)
@@ -237,28 +204,18 @@ function OptionsPage() {
 
   const loadConfig = async () => {
     try {
-      const config = await storage.getItem<AIConfig>("local:aiConfig")
+      const config = await storage.getItem<AIConfig>("local:aiConfigV2")
       if (config) {
         if (!config.replyLanguage || config.replyLanguage === "auto") {
           config.replyLanguage = getMatchedBrowserLanguage(navigator.language)
         }
         setAiConfig(config)
-        // 检查是否使用自定义模型
-        if (config.customModel) {
-          setUseCustomModel(true)
-        }
 
         // 如果有API Key且支持获取模型，尝试获取模型列表
-        const provider = AI_PROVIDERS.find((p) => p.id === config.provider)
-        const apiKey =
-          config.apiKeys?.[config.provider as keyof typeof config.apiKeys]
-        if (provider && apiKey) {
-          fetchModels(
-            provider,
-            apiKey,
-            config.baseUrl ||
-              config.baseUrls?.[provider.id as keyof typeof config.baseUrls]
-          ).then((models) => {
+        const provider = AI_PROVIDERS.find((p) => p.id === config.activeProvider)
+        const providerCfg = config.providers[config.activeProvider]
+        if (provider && providerCfg?.apiKey) {
+          fetchModels(provider, providerCfg.apiKey, providerCfg.baseUrl).then((models) => {
             setAvailableModels((prev) => ({
               ...prev,
               [provider.id]: models
@@ -275,18 +232,7 @@ function OptionsPage() {
     try {
       setSaving(true)
 
-      // 构建要保存的配置
-      const configToSave = {
-        ...aiConfig,
-        customModel: useCustomModel ? aiConfig.model : undefined,
-        // 保存当前服务商的baseUrl到baseUrls对象中
-        baseUrls: {
-          ...aiConfig.baseUrls,
-          [aiConfig.provider]: aiConfig.baseUrl
-        }
-      }
-
-      await storage.setItem("local:aiConfig", configToSave)
+      await storage.setItem("local:aiConfigV2", aiConfig)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (error) {
@@ -307,7 +253,7 @@ function OptionsPage() {
 
     try {
       setFetchingModels(true)
-      const baseUrl = baseUrlOverride || aiConfig.baseUrl || provider.baseUrl
+      const baseUrl = baseUrlOverride || aiConfig.providers[aiConfig.activeProvider]?.baseUrl || provider.baseUrl
       const url = `${baseUrl}${provider.modelsEndpoint}`
 
       const headers: Record<string, string> = {
@@ -351,29 +297,28 @@ function OptionsPage() {
     stopPolling()
     const provider = AI_PROVIDERS.find((p) => p.id === providerId)
     if (provider) {
-      // 从存储中加载完整配置，以获取该服务商之前保存的baseUrl
-      const savedConfig = await storage.getItem<AIConfig>("local:aiConfig")
+      // 从存储中加载完整配置，以获取该服务商之前保存的配置
+      const savedConfig = await storage.getItem<AIConfig>("local:aiConfigV2")
+      const savedProviderCfg = savedConfig?.providers?.[providerId]
 
       // 优先使用该服务商之前保存的baseUrl，否则使用默认的baseUrl
-      let newBaseUrl = provider.baseUrl
-      if (
-        savedConfig?.baseUrls?.[providerId as keyof typeof savedConfig.baseUrls]
-      ) {
-        newBaseUrl =
-          savedConfig.baseUrls[providerId as keyof typeof savedConfig.baseUrls]
-      }
+      const newBaseUrl = savedProviderCfg?.baseUrl || provider.baseUrl
 
+      const existingCfg = aiConfig.providers[providerId] || {}
       setAiConfig({
         ...aiConfig,
-        provider: providerId,
-        model: "",
-        baseUrl: newBaseUrl
+        activeProvider: providerId,
+        providers: {
+          ...aiConfig.providers,
+          [providerId]: {
+            ...existingCfg,
+            baseUrl: existingCfg.baseUrl || provider.baseUrl
+          }
+        }
       })
-      setUseCustomModel(false)
 
       // 如果有API Key，尝试获取模型列表
-      const apiKey =
-        aiConfig.apiKeys?.[providerId as keyof typeof aiConfig.apiKeys]
+      const apiKey = aiConfig.providers[providerId]?.apiKey
       if (apiKey) {
         fetchModels(provider, apiKey, newBaseUrl).then((models) => {
           setAvailableModels((prev) => ({
@@ -383,7 +328,13 @@ function OptionsPage() {
           if (models.length > 0) {
             setAiConfig((prev) => ({
               ...prev,
-              model: models[0]
+              providers: {
+                ...prev.providers,
+                [providerId]: {
+                  ...prev.providers[providerId],
+                  model: models[0]
+                }
+              }
             }))
           }
         })
@@ -392,13 +343,17 @@ function OptionsPage() {
   }
 
   const handleApiKeyChange = (apiKey: string) => {
-    const newApiKeys = {
-      ...aiConfig.apiKeys,
-      [aiConfig.provider]: apiKey
-    }
-    setAiConfig({ ...aiConfig, apiKeys: newApiKeys })
+    const activeId = aiConfig.activeProvider
+    const currentCfg = aiConfig.providers[activeId] || {}
+    setAiConfig({
+      ...aiConfig,
+      providers: {
+        ...aiConfig.providers,
+        [activeId]: { ...currentCfg, apiKey }
+      }
+    })
 
-    const provider = AI_PROVIDERS.find((p) => p.id === aiConfig.provider)
+    const provider = AI_PROVIDERS.find((p) => p.id === activeId)
     if (provider && apiKey) {
       fetchModels(provider, apiKey).then((models) => {
         setAvailableModels((prev) => ({
@@ -410,16 +365,24 @@ function OptionsPage() {
   }
 
   const handleModelChange = (model: string) => {
+    const activeId = aiConfig.activeProvider
+    const currentCfg = aiConfig.providers[activeId] || {}
     setAiConfig({
       ...aiConfig,
-      model,
-      customModel: useCustomModel ? model : undefined
+      providers: {
+        ...aiConfig.providers,
+        [activeId]: {
+          ...currentCfg,
+          model
+        }
+      }
     })
   }
 
-  const currentProvider = AI_PROVIDERS.find((p) => p.id === aiConfig.provider)
+  const currentProvider = AI_PROVIDERS.find((p) => p.id === aiConfig.activeProvider)
+  const currentProviderCfg = aiConfig.providers[aiConfig.activeProvider] || {}
 
-  const isMindElixir = aiConfig.provider === "mind-elixir"
+  const isMindElixir = aiConfig.activeProvider === "mind-elixir"
 
   return (
     <div className="min-h-screen bg-background">
@@ -437,7 +400,7 @@ function OptionsPage() {
         <div className="space-y-1">
           <Label htmlFor="ai-provider" className="text-sm font-medium text-foreground">{t("aiProvider")}</Label>
           <Select
-            value={aiConfig.provider}
+            value={aiConfig.activeProvider}
             onValueChange={handleProviderChange}>
             <SelectTrigger className="h-10 text-sm">
               <SelectValue />
@@ -568,13 +531,18 @@ function OptionsPage() {
                   id="api-address"
                   type="text"
                   className="h-10 text-sm"
-                  value={aiConfig.baseUrl || ""}
-                  onChange={(e) =>
+                  value={currentProviderCfg.baseUrl || ""}
+                  onChange={(e) => {
+                    const activeId = aiConfig.activeProvider
+                    const cfg = aiConfig.providers[activeId] || {}
                     setAiConfig({
                       ...aiConfig,
-                      baseUrl: e.target.value || undefined
+                      providers: {
+                        ...aiConfig.providers,
+                        [activeId]: { ...cfg, baseUrl: e.target.value || undefined }
+                      }
                     })
-                  }
+                  }}
                   placeholder={currentProvider.baseUrl}
                 />
                 <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -591,11 +559,7 @@ function OptionsPage() {
                 id="api-key"
                 type="password"
                 className="h-10 text-sm"
-                value={
-                  aiConfig.apiKeys?.[
-                    aiConfig.provider as keyof typeof aiConfig.apiKeys
-                  ] || ""
-                }
+                value={currentProviderCfg.apiKey || ""}
                 onChange={(e) => handleApiKeyChange(e.target.value)}
                 placeholder={t(
                   "enterApiKeyPlaceholder",
@@ -615,148 +579,93 @@ function OptionsPage() {
               {t("modelSelection")}
             </Label>
 
-            <RadioGroup
-              value={useCustomModel ? "custom" : "preset"}
-              onValueChange={(value) => setUseCustomModel(value === "custom")}
-              className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="preset" id="preset-model" />
-                  <Label htmlFor="preset-model" className="cursor-pointer text-xs font-medium">
-                    {t("usePresetModel")}
-                  </Label>
-                </div>
-
-                {!useCustomModel && (
-                  <div className="ml-6 space-y-2">
-                    <div className="flex gap-2 items-center">
-                      <DropdownMenu
-                        modal={false}
-                        open={openModelSelect}
-                        onOpenChange={setOpenModelSelect}>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openModelSelect}
-                            className="flex-1 justify-between text-left font-normal h-9 text-xs"
-                            disabled={fetchingModels}>
-                            {aiConfig.model || t("modelSelection")}
-                            <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="p-0" align="start">
-                          <div className="flex items-center border-b px-2.5">
-                            <Search className="mr-2 h-3.5 w-3.5 shrink-0 opacity-50" />
-                            <input
-                              className="flex h-8 w-full rounded-md bg-transparent py-2 text-xs outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                              placeholder={t("searchModels")}
-                              value={modelSearchQuery}
-                              onChange={(e) =>
-                                setModelSearchQuery(e.target.value)
-                              }
-                            />
-                          </div>
-                          <div className="max-h-[180px] overflow-y-auto p-1">
-                            {(availableModels[aiConfig.provider] || [])
-                              .filter((model) =>
-                                model
-                                  .toLowerCase()
-                                  .includes(modelSearchQuery.toLowerCase())
-                              )
-                              .map((model) => (
-                                <DropdownMenuItem
-                                  key={model}
-                                  className="text-xs"
-                                  onSelect={() => {
-                                    handleModelChange(model)
-                                    setOpenModelSelect(false)
-                                    setModelSearchQuery("")
-                                  }}>
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-3.5 w-3.5",
-                                      aiConfig.model === model
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {model}
-                                </DropdownMenuItem>
-                              ))}
-                            {(availableModels[aiConfig.provider] || []).filter(
-                              (model) =>
-                                model
-                                  .toLowerCase()
-                                  .includes(modelSearchQuery.toLowerCase())
-                            ).length === 0 && (
-                              <div className="py-4 text-center text-xs text-muted-foreground">
-                                No models found.
-                              </div>
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <Input
+                  ref={modelInputRef}
+                  className="h-9 text-xs"
+                  value={currentProviderCfg.model || ""}
+                  onChange={(e) => {
+                    handleModelChange(e.target.value)
+                    setModelDropdownOpen(true)
+                  }}
+                  onFocus={() => setModelDropdownOpen(true)}
+                  onBlur={() => {
+                    // 延迟关闭，让 click 事件先触发
+                    setTimeout(() => setModelDropdownOpen(false), 150)
+                  }}
+                  placeholder={t("modelSelection")}
+                />
+                {modelDropdownOpen && (availableModels[aiConfig.activeProvider] || []).length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-md">
+                    <div className="max-h-[180px] overflow-y-auto p-1">
+                      {(availableModels[aiConfig.activeProvider] || [])
+                        .filter((m) =>
+                          m.toLowerCase().includes((currentProviderCfg.model || "").toLowerCase())
+                        )
+                        .map((m) => (
+                          <div
+                            key={m}
+                            className={cn(
+                              "flex items-center px-2 py-1.5 text-xs rounded-sm cursor-pointer hover:bg-accent",
+                              currentProviderCfg.model === m && "bg-accent"
                             )}
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              handleModelChange(m)
+                              setModelDropdownOpen(false)
+                            }}>
+                            <Check
+                              className={cn(
+                                "mr-2 h-3.5 w-3.5",
+                                currentProviderCfg.model === m ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {m}
                           </div>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {aiConfig.apiKeys?.[
-                        aiConfig.provider as keyof typeof aiConfig.apiKeys
-                      ] && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 text-xs"
-                          onClick={() => {
-                            const provider = AI_PROVIDERS.find(
-                              (p) => p.id === aiConfig.provider
-                            )
-                            const apiKey =
-                              aiConfig.apiKeys?.[
-                                aiConfig.provider as keyof typeof aiConfig.apiKeys
-                              ]
-                            if (provider && apiKey) {
-                              fetchModels(provider, apiKey).then((models) => {
-                                setAvailableModels((prev) => ({
-                                  ...prev,
-                                  [provider.id]: models
-                                }))
-                              })
-                            }
-                          }}
-                          disabled={fetchingModels}>
-                          {fetchingModels ? t("refreshing") : t("refresh")}
-                        </Button>
+                        ))}
+                      {(availableModels[aiConfig.activeProvider] || [])
+                        .filter((m) =>
+                          m.toLowerCase().includes((currentProviderCfg.model || "").toLowerCase())
+                        ).length === 0 && (
+                        <div className="py-4 text-center text-xs text-muted-foreground">
+                          No models found.
+                        </div>
                       )}
                     </div>
-
-                    {fetchingModels && (
-                      <p className="text-[10px] text-muted-foreground ml-0">
-                        {t("fetchingModels")}
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="custom-model" />
-                  <Label htmlFor="custom-model" className="cursor-pointer text-xs font-medium">
-                    {t("useCustomModel")}
-                  </Label>
-                </div>
+              {currentProviderCfg.apiKey && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-xs"
+                  onClick={() => {
+                    const provider = AI_PROVIDERS.find(
+                      (p) => p.id === aiConfig.activeProvider
+                    )
+                    if (provider && currentProviderCfg.apiKey) {
+                      fetchModels(provider, currentProviderCfg.apiKey).then((models) => {
+                        setAvailableModels((prev) => ({
+                          ...prev,
+                          [provider.id]: models
+                        }))
+                      })
+                    }
+                  }}
+                  disabled={fetchingModels}>
+                  {fetchingModels ? t("refreshing") : t("refresh")}
+                </Button>
+              )}
+            </div>
 
-                {useCustomModel && (
-                  <div className="ml-6">
-                    <Input
-                      className="h-9 text-xs"
-                      value={aiConfig.customModel || aiConfig.model}
-                      onChange={(e) => handleModelChange(e.target.value)}
-                      placeholder={t("enterCustomModelName")}
-                    />
-                  </div>
-                )}
-              </div>
-            </RadioGroup>
+            {fetchingModels && (
+              <p className="text-[10px] text-muted-foreground ml-0">
+                {t("fetchingModels")}
+              </p>
+            )}
 
             <p className="text-[10px] text-muted-foreground">
               {t("supportsAutoFetchModels")}

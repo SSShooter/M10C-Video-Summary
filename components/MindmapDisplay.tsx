@@ -42,7 +42,7 @@ interface MindmapDisplayProps {
   // 服务端缓存检测
   videoUrl?: string
   isByok?: boolean
-  language?: string
+  language?: string | null
 }
 
 export function MindmapDisplay({
@@ -87,7 +87,7 @@ export function MindmapDisplay({
 
   // Check server cache on mount (non-BYOK video mindmap only)
   useEffect(() => {
-    if (isByok || !videoUrl || !BACKEND_BASE_URL) return
+    if (isByok || !videoUrl || !BACKEND_BASE_URL || language == null) return
     // Only check for video platform URLs (YouTube / Bilibili)
     const isVideoUrl =
       videoUrl.includes("youtube.com") ||
@@ -121,7 +121,7 @@ export function MindmapDisplay({
         }
       }
     )
-  }, [videoUrl, isByok])
+  }, [videoUrl, isByok, language])
 
   // 加载缓存数据
   const loadCacheData = async () => {

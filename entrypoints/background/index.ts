@@ -1,30 +1,7 @@
 import { PROMPTS } from "./prompts"
 import { storage } from "@wxt-dev/storage"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
-
-interface AIConfig {
-  provider: string
-  apiKeys: {
-    "mind-elixir"?: string
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-    openrouter?: string
-  }
-  model: string
-  baseUrl?: string
-  baseUrls?: {
-    "mind-elixir"?: string
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-    openrouter?: string
-  }
-  customModel?: string
-  replyLanguage?: string
-}
+import type { AIConfig } from "~/utils/ai-service"
 
 interface APIRequestConfig {
   url: string
@@ -37,10 +14,10 @@ interface StreamChunk {
   reasoning: string | null
 }
 
-interface ProviderConfig {
+interface ProviderHandler {
   getDefaultBaseUrl(): string
   buildRequestConfig(
-    config: AIConfig,
+    baseUrl: string,
     systemPrompt: string,
     userPrompt: string,
     model: string,
@@ -56,20 +33,19 @@ interface ProviderConfig {
 }
 
 // 提供商配置类
-class OpenAIProvider implements ProviderConfig {
+class OpenAIProvider implements ProviderHandler {
   getDefaultBaseUrl(): string {
     return "https://api.openai.com/v1"
   }
 
   buildRequestConfig(
-    config: AIConfig,
+    baseUrl: string,
     systemPrompt: string,
     userPrompt: string,
     model: string,
     apiKey: string,
     stream: boolean = false
   ): APIRequestConfig {
-    const baseUrl = config.baseUrl || this.getDefaultBaseUrl()
 
     const messages = []
     if (systemPrompt) {
@@ -107,20 +83,19 @@ class OpenAIProvider implements ProviderConfig {
   }
 }
 
-class GeminiProvider implements ProviderConfig {
+class GeminiProvider implements ProviderHandler {
   getDefaultBaseUrl(): string {
     return "https://generativelanguage.googleapis.com/v1beta"
   }
 
   buildRequestConfig(
-    config: AIConfig,
+    baseUrl: string,
     systemPrompt: string,
     userPrompt: string,
     model: string,
     apiKey: string,
     stream: boolean = false
   ): APIRequestConfig {
-    const baseUrl = config.baseUrl || this.getDefaultBaseUrl()
     const fullModelName = model.startsWith("models/")
       ? model
       : `models/${model}`
@@ -164,20 +139,19 @@ class GeminiProvider implements ProviderConfig {
   }
 }
 
-class ClaudeProvider implements ProviderConfig {
+class ClaudeProvider implements ProviderHandler {
   getDefaultBaseUrl(): string {
     return "https://api.anthropic.com/v1"
   }
 
   buildRequestConfig(
-    config: AIConfig,
+    baseUrl: string,
     systemPrompt: string,
     userPrompt: string,
     model: string,
     apiKey: string,
     stream: boolean = false
   ): APIRequestConfig {
-    const baseUrl = config.baseUrl || this.getDefaultBaseUrl()
 
     return {
       url: `${baseUrl}/messages`,
@@ -215,18 +189,19 @@ const BACKEND_BASE_URL = import.meta.env.WXT_BACKEND_BASE_URL
 // Default fallback endpoint powered by Mind Elixir Star balance.
 // Used when the user has not configured a personal AI provider.
 const DEFAULT_MIND_ELIXIR_CONFIG: AIConfig = {
-  provider: "mind-elixir",
-  apiKeys: { "mind-elixir": "mind-elixir" },
-  model: "MindElixirStar",
-  baseUrl: `${BACKEND_BASE_URL}/api/v1`,
-  baseUrls: {
-    "mind-elixir": `${BACKEND_BASE_URL}/api/v1`
-  },
-  replyLanguage: "auto"
+  activeProvider: "mind-elixir",
+  replyLanguage: "auto",
+  providers: {
+    "mind-elixir": {
+      apiKey: "mind-elixir",
+      model: "MindElixirStar",
+      baseUrl: `${BACKEND_BASE_URL}/api/v1`
+    }
+  }
 }
 
 class BackgroundAIService {
-  private providers: Record<string, ProviderConfig> = {
+  private providerHandlers: Record<string, ProviderHandler> = {
     "mind-elixir": new OpenAIProvider(),
     openai: new OpenAIProvider(),
     "openai-compatible": new OpenAIProvider(),
@@ -237,14 +212,12 @@ class BackgroundAIService {
 
   async getConfig(): Promise<AIConfig | null> {
     try {
-      const config = await storage.getItem<AIConfig>("local:aiConfig")
-      if (config) {
-        if (!config.replyLanguage || config.replyLanguage === "auto") {
-          config.replyLanguage = getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
-        }
-        return config
+      const config = await storage.getItem<AIConfig>("local:aiConfigV2")
+      if (!config) return null
+      if (!config.replyLanguage || config.replyLanguage === "auto") {
+        config.replyLanguage = getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
       }
-      return null
+      return config
     } catch (error) {
       console.error("获取AI配置失败:", error)
       return null
@@ -266,20 +239,23 @@ class BackgroundAIService {
   ): Promise<void> {
     try {
       let config = await this.getConfig()
-      const originalProvider = config?.provider || "mind-elixir"
-      let apiKey = config && config.provider ? config.apiKeys?.[config.provider as keyof typeof config.apiKeys] : undefined
+      const originalProvider = config?.activeProvider || "mind-elixir"
+      let providerCfg = config?.providers?.[originalProvider]
+      let apiKey = providerCfg?.apiKey
 
       // Fall back to the built-in Mind Elixir endpoint when:
-      // (a) the user has not configured any provider, or
-      // (b) the user explicitly selected the "mind-elixir" provider.
-      const isMindElixir = !config || originalProvider === "mind-elixir"
+      // (a) the user has not configured any provider,
+      // (b) the user explicitly selected the "mind-elixir" provider, or
+      // (c) the active provider has no saved config.
+      const isMindElixir = !config || !providerCfg || originalProvider === "mind-elixir"
 
       if (isMindElixir) {
         config = {
           ...DEFAULT_MIND_ELIXIR_CONFIG,
           replyLanguage: getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
         }
-        apiKey = DEFAULT_MIND_ELIXIR_CONFIG.apiKeys["mind-elixir"]!
+        providerCfg = config.providers["mind-elixir"]
+        apiKey = providerCfg.apiKey!
       }
 
       if (!config) {
@@ -290,14 +266,15 @@ class BackgroundAIService {
         throw new Error("API Key is missing")
       }
 
-      const provider = this.providers[config.provider]
-      if (!provider) {
-        throw new Error(`不支持的AI服务商: ${config.provider}`)
+      const handler = this.providerHandlers[config.activeProvider]
+      if (!handler) {
+        throw new Error(`不支持的AI服务商: ${config.activeProvider}`)
       }
 
-      const model = config.customModel || config.model
-      const requestConfig = provider.buildRequestConfig(
-        config,
+      const model = providerCfg?.model || ""
+      const baseUrl = providerCfg?.baseUrl || handler.getDefaultBaseUrl()
+      const requestConfig = handler.buildRequestConfig(
+        baseUrl,
         systemPrompt,
         userPrompt,
         model,
@@ -369,7 +346,7 @@ class BackgroundAIService {
 
             try {
               const data = JSON.parse(dataStr)
-              const chunkData = provider.parseStreamChunk(data)
+              const chunkData = handler.parseStreamChunk(data)
               if (chunkData.content || chunkData.reasoning) {
                 onChunk(chunkData)
               }
@@ -511,7 +488,9 @@ export default defineBackground(() => {
       checkUrl.searchParams.set("videoUrl", videoUrl)
       if (language) checkUrl.searchParams.set("language", language)
 
-      fetch(checkUrl.toString(), {
+      const finalUrl = checkUrl.toString()
+
+      fetch(finalUrl, {
         credentials: "include"
       })
         .then(async (res) => {
@@ -534,7 +513,9 @@ export default defineBackground(() => {
       fetchUrl.searchParams.set("videoUrl", videoUrl)
       if (language) fetchUrl.searchParams.set("language", language)
 
-      fetch(fetchUrl.toString(), {
+      const finalFetchUrl = fetchUrl.toString()
+
+      fetch(finalFetchUrl, {
         credentials: "include"
       })
         .then(async (res) => {

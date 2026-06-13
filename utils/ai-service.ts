@@ -1,34 +1,21 @@
 import { storage } from "@wxt-dev/storage"
 
-export interface AIConfig {
-  provider: string
-  apiKeys: {
-    "mind-elixir"?: string
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-    openrouter?: string
-  }
-  model: string
+export interface ProviderConfig {
+  apiKey?: string
   baseUrl?: string
-  baseUrls?: {
-    "mind-elixir"?: string
-    openai?: string
-    gemini?: string
-    claude?: string
-    "openai-compatible"?: string
-    openrouter?: string
-  }
+  model?: string
+}
 
-  customModel?: string
+export interface AIConfig {
+  activeProvider: string
   replyLanguage?: string
+  providers: Record<string, ProviderConfig>
 }
 
 class AIService {
   async getConfig(): Promise<AIConfig | null> {
     try {
-      return await storage.getItem<AIConfig>("local:aiConfig")
+      return await storage.getItem<AIConfig>("local:aiConfigV2")
     } catch (error) {
       console.error("获取AI配置失败:", error)
       return null
