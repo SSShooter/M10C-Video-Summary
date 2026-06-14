@@ -16,6 +16,7 @@ import {
 import { cn } from "~/lib/utils"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig, ProviderConfig } from "~/utils/ai-service"
+import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
 
 interface AIProvider {
   id: string
@@ -121,7 +122,11 @@ function OptionsPage() {
     pollingIntervalRef.current = setInterval(async () => {
       attempts++
       const userData = await fetchUser(true) // Silent check
-      if (userData || attempts >= maxAttempts) {
+      if (userData) {
+        stopPolling()
+        ensureMindElixirSaved()
+      }
+      if (attempts >= maxAttempts) {
         stopPolling()
       }
     }, 5000)
@@ -241,6 +246,21 @@ function OptionsPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  // Ensure mind-elixir provider config exists and persist it.
+  // Called after login so the popup sees the extension as configured.
+  const ensureMindElixirSaved = () => {
+    if (aiConfig.providers["mind-elixir"]) return
+    const updated = {
+      ...aiConfig,
+      providers: {
+        ...aiConfig.providers,
+        "mind-elixir": DEFAULT_MIND_ELIXIR_PROVIDER
+      }
+    }
+    setAiConfig(updated)
+    storage.setItem("local:aiConfigV2", updated)
   }
 
   const fetchModels = async (

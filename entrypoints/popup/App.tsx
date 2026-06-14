@@ -4,6 +4,7 @@ import { storage } from "@wxt-dev/storage"
 
 import { Button } from "~/components/ui/button"
 import type { AIConfig } from "~/utils/ai-service"
+import { isAIConfigured } from "~/utils/ai-service"
 import { t } from "~/utils/i18n"
 
 function IndexPopup() {
@@ -22,19 +23,8 @@ function IndexPopup() {
 
   const loadAIStatus = async () => {
     try {
-      console.log("Loading AI status...");
       const config = await storage.getItem<AIConfig>("local:aiConfigV2")
-      console.log("AI Config:", config);
-      if (!config) return;
-      // mind-elixir provider uses the built-in backend — no API key needed.
-      // If there is no saved config at all, background also falls back to the
-      // built-in endpoint, so treat that as enabled too.
-      const isMindElixirProvider =
-        !config || config.activeProvider === "mind-elixir"
-      // 检查是否有配置的API密钥
-      const hasApiKey =
-        config?.providers?.[config.activeProvider]?.apiKey
-      setAiEnabled(isMindElixirProvider || !!hasApiKey)
+      setAiEnabled(isAIConfigured(config))
     } catch (error) {
       console.error("加载AI配置失败:", error)
     } finally {
@@ -220,7 +210,7 @@ function IndexPopup() {
         <div className="space-y-2">
           <Button
             onClick={triggerPanel}
-            disabled={!pageInfo.available || panelTriggering}
+            disabled={!pageInfo.available || panelTriggering || !aiEnabled}
             variant={pageInfo.available ? "default" : "secondary"}
             className="w-full">
             {panelTriggering ? (

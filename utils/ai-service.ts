@@ -40,3 +40,17 @@ class AIService {
 }
 
 export const aiService = new AIService()
+
+// Shared default config for the built-in Mind Elixir provider.
+// No API key required — the backend uses the project's own balance.
+export const DEFAULT_MIND_ELIXIR_PROVIDER: ProviderConfig = {
+  apiKey: "mind-elixir",
+  model: "MindElixirStar",
+  baseUrl: `${import.meta.env.WXT_BACKEND_BASE_URL}/api/v1`
+}
+
+export function isAIConfigured(config: AIConfig | null): boolean {
+  if (!config) return false
+  if (config.activeProvider === "mind-elixir") return true
+  return !!config.providers?.[config.activeProvider]?.apiKey
+}

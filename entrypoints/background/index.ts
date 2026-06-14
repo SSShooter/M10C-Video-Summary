@@ -2,6 +2,7 @@ import { PROMPTS } from "./prompts"
 import { storage } from "@wxt-dev/storage"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig } from "~/utils/ai-service"
+import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
 
 interface APIRequestConfig {
   url: string
@@ -192,11 +193,7 @@ const DEFAULT_MIND_ELIXIR_CONFIG: AIConfig = {
   activeProvider: "mind-elixir",
   replyLanguage: "auto",
   providers: {
-    "mind-elixir": {
-      apiKey: "mind-elixir",
-      model: "MindElixirStar",
-      baseUrl: `${BACKEND_BASE_URL}/api/v1`
-    }
+    "mind-elixir": DEFAULT_MIND_ELIXIR_PROVIDER
   }
 }
 
