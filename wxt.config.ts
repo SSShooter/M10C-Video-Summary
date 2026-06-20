@@ -16,12 +16,20 @@ export default defineConfig({
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
-    permissions: ['activeTab', 'storage', 'webRequest'],
+    permissions: ['activeTab', 'storage', 'webRequest', 'declarativeNetRequest'],
+    declarative_net_request: {
+      rule_resources: [{
+        id: 'ruleset_1',
+        enabled: true,
+        path: 'rules.json'
+      }]
+    },
     host_permissions: [
       'https://*/*',
       'http://*/*',
       'https://api.bilibili.com/*',
       'https://www.bilibili.com/*',
+      'https://*.bilivideo.com/*',
       'https://www.youtube.com/*',
       'https://youtube.com/*',
     ],

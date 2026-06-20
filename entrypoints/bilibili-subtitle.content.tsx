@@ -19,6 +19,13 @@ interface VideoInfo {
   title: string
 }
 
+interface AudioStatus {
+  state: "idle" | "extracting" | "downloading" | "done" | "error"
+  url?: string
+  size?: number
+  error?: string
+}
+
 function BilibiliSubtitlePanel() {
   const [subtitles, setSubtitles] = useState<SubtitleItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -26,6 +33,7 @@ function BilibiliSubtitlePanel() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [currentBvid, setCurrentBvid] = useState<string | null>(null)
+  const [audioStatus, setAudioStatus] = useState<AudioStatus>({ state: "idle" })
 
   // 从URL中提取BVID
   const extractBVID = (): string | null => {
@@ -65,6 +73,105 @@ function BilibiliSubtitlePanel() {
   // 获取用户cookies和必要的认证信息
   const getCookies = (): string => {
     return document.cookie
+  }
+
+  // 从页面 __playinfo__ 中提取音频 URL
+  const getAudioUrlFromPlayInfo = (): string | null => {
+    try {
+      // 方式1：直接读 window.__playinfo__（content script 可访问页面设置的 window 属性）
+      let playInfo = (window as any).__playinfo__
+
+      // 方式2：从 script 标签解析（兜底）
+      if (!playInfo) {
+        console.log("[Audio] window.__playinfo__ 为空，尝试从 script 标签解析...")
+        const scripts = Array.from(document.querySelectorAll("script"))
+        const playInfoScript = scripts.find((script) =>
+          script.textContent?.includes("__playinfo__")
+        )
+        console.log("[Audio] 包含 __playinfo__ 的 script 标签:", playInfoScript ? "找到" : "未找到")
+
+        if (playInfoScript?.textContent) {
+          // 打印前200字符帮助调试
+          console.log("[Audio] script 内容前200字符:", playInfoScript.textContent.substring(0, 200))
+
+          // 尝试安全且快速的截取方式，避免灾难性回溯 (catastrophic backtracking)
+          const match = playInfoScript.textContent.match(/window\.__playinfo__\s*=\s*(\{.*)/s)
+          if (match?.[1]) {
+            let jsonStr = match[1].replace(/;\s*$/, "")
+            try {
+              playInfo = JSON.parse(jsonStr)
+            } catch (e) {
+              console.log("[Audio] JSON.parse 失败，尝试截取...")
+              // 可能有多余内容，尝试找到完整 JSON
+              const endIdx = jsonStr.lastIndexOf("}")
+              if (endIdx > 0) {
+                try {
+                  playInfo = JSON.parse(jsonStr.substring(0, endIdx + 1))
+                } catch (err) {
+                  console.error("[Audio] 截取后仍无法解析 JSON")
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (!playInfo) {
+        console.log("[Audio] 所有方式均未获取到 __playinfo__")
+        return null
+      }
+
+      console.log("[Audio] __playinfo__ 顶层 key:", Object.keys(playInfo))
+      const dash = playInfo?.data?.dash
+      if (!dash) {
+        console.log("[Audio] 无 dash 数据，data keys:", Object.keys(playInfo?.data || {}))
+        return null
+      }
+
+      const audioList = dash.audio
+      console.log("[Audio] audio 数组长度:", audioList?.length)
+
+      if (!audioList || audioList.length === 0) {
+        console.log("[Audio] 无音频流，dash keys:", Object.keys(dash))
+        return null
+      }
+
+      const audioUrl = audioList[0].baseUrl || audioList[0].base_url
+      console.log("✅ 成功提取 B 站音频直链:", audioUrl)
+      return audioUrl
+    } catch (error) {
+      console.error("[Audio] 解析 __playinfo__ 失败:", error)
+      return null
+    }
+  }
+
+  // 通过 background 下载音频
+  const fetchAudioViaBackground = (audioUrl: string): Promise<{ success: boolean; size?: number; error?: string }> => {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        { action: "FETCH_AUDIO_BLOB", url: audioUrl },
+        (response) => {
+          resolve(response || { success: false, error: "No response" })
+        }
+      )
+    })
+  }
+
+  // 手动触发音频提取
+  const handleExtractAudio = async () => {
+    setAudioStatus({ state: "extracting" })
+    const audioUrl = getAudioUrlFromPlayInfo()
+    if (!audioUrl) {
+      setAudioStatus({ state: "error", error: "未找到 __playinfo__ 或无音频流，请查看 Console 日志" })
+      return
+    }
+    setAudioStatus({ state: "downloading", url: audioUrl })
+    const result = await fetchAudioViaBackground(audioUrl)
+    if (result.success) {
+      setAudioStatus({ state: "done", url: audioUrl, size: result.size })
+    } else {
+      setAudioStatus({ state: "error", url: audioUrl, error: result.error })
+    }
   }
 
   // 获取字幕数据
@@ -115,7 +222,9 @@ function BilibiliSubtitlePanel() {
 
       // 获取第一个字幕文件
       if (!subtitleList || subtitleList.length === 0) {
+        console.log("[Bilibili] 无字幕，设置提示信息")
         setError(t("noSubtitleOrLoginRequired"))
+        setLoading(false)
         return
       }
 
@@ -255,6 +364,57 @@ function BilibiliSubtitlePanel() {
       }
     : null
 
+  const handlePlayAudio = () => {
+    const url = audioStatus.url
+    if (!url) return
+    const audio = new Audio(url)
+    audio.play().catch((e) => console.error("[Audio] 播放失败:", e))
+  }
+
+  const audioStatusDisplay = audioStatus.state !== "idle" && (
+    <div className="mt-2 text-left text-xs">
+      {audioStatus.state === "extracting" && (
+        <div className="text-gray-500">正在从页面提取音频 URL...</div>
+      )}
+      {audioStatus.state === "downloading" && (
+        <div className="text-gray-500">正在下载音频...</div>
+      )}
+      {audioStatus.state === "done" && (
+        <div className="text-green-600">
+          音频下载完成 {(audioStatus.size! / 1024 / 1024).toFixed(2)} MB
+        </div>
+      )}
+      {audioStatus.state === "error" && (
+        <div className="text-red-500">音频提取失败: {audioStatus.error}</div>
+      )}
+    </div>
+  )
+
+  const audioExtractButtonNode = (
+    <div className="mb-3">
+      <div className="flex gap-2">
+        <button
+          onClick={handleExtractAudio}
+          disabled={audioStatus.state === "extracting" || audioStatus.state === "downloading"}
+          className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+        >
+          {audioStatus.state === "extracting" || audioStatus.state === "downloading"
+            ? "提取中..."
+            : "提取音频"}
+        </button>
+        {audioStatus.url && (
+          <button
+            onClick={handlePlayAudio}
+            className="px-3 py-1.5 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            播放音频
+          </button>
+        )}
+      </div>
+      {audioStatusDisplay}
+    </div>
+  )
+
   return (
     <SubtitlePanel
       key={videoInfo?.bvid || 'no-video'}
@@ -265,6 +425,7 @@ function BilibiliSubtitlePanel() {
       onJumpToTime={jumpToTime}
       platform="bilibili"
       onClose={handleClose}
+      audioExtractButton={audioExtractButtonNode}
     />
   )
 }

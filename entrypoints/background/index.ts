@@ -479,6 +479,44 @@ export default defineBackground(() => {
       sendResponse({ success: true })
     }
 
+    if (request.action === "FETCH_AUDIO_BLOB") {
+      console.log("[Background] FETCH_AUDIO_BLOB start, url:", request.url?.substring(0, 100))
+      const fetchUrl = request.url
+      try {
+        fetch(fetchUrl, {
+          method: "GET",
+          headers: {
+            Referer: "https://www.bilibili.com"
+          }
+        })
+          .then((res) => {
+            console.log("[Background] fetch response status:", res.status)
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res.arrayBuffer()
+          })
+          .then((buffer) => {
+            console.log("[Background] download done, bytes:", buffer.byteLength)
+            try {
+              sendResponse({ success: true, size: buffer.byteLength })
+            } catch (e) {
+              console.error("[Background] sendResponse error:", e)
+            }
+          })
+          .catch((err) => {
+            console.error("[Background] fetch error:", err.message)
+            try {
+              sendResponse({ success: false, error: err.message })
+            } catch (e) {
+              console.error("[Background] sendResponse error:", e)
+            }
+          })
+      } catch (err) {
+        console.error("[Background] sync error:", err)
+        sendResponse({ success: false, error: String(err) })
+      }
+      return true
+    }
+
     if (request.action === "checkMindmapCache") {
       const { videoUrl, language } = request
       const checkUrl = new URL(`${BACKEND_BASE_URL}/api/public/mindmap/check`)

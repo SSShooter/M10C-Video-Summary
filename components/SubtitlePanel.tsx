@@ -32,6 +32,7 @@ export interface SubtitlePanelProps {
   onJumpToTime: (time: number) => void;
   platform: "bilibili" | "youtube";
   onClose: () => void;
+  audioExtractButton?: React.ReactNode;
 }
 
 export function SubtitlePanel({
@@ -42,6 +43,7 @@ export function SubtitlePanel({
   onJumpToTime,
   platform,
   onClose,
+  audioExtractButton,
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const { onMouseDown, isPositionLoaded } = useDraggable(panelRef, "video_panel_pos");
@@ -118,7 +120,9 @@ export function SubtitlePanel({
 
   // 获取所有字幕文本
   const getAllSubtitlesText = () => {
-    if (subtitles.length === 0) return null;
+    if (subtitles.length === 0) {
+      return null;
+    }
     return subtitles
       .map((subtitle) => getSubtitleContent(subtitle))
       .join(" ")
@@ -226,6 +230,7 @@ export function SubtitlePanel({
           {error && (
             <div className="text-center p-[20px]">
               <div className="text-red-500 mb-4">{error}</div>
+              {audioExtractButton}
               <Button
                 onClick={() => window.location.reload()}
                 variant="outline"
