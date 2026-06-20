@@ -570,5 +570,65 @@
   "freeGenerationExhausted": {
     "message": "無料生成枠を使い切りました。スターを消費します。",
     "description": "無料生成枠がなくなった時のトースト"
+  },
+  "sttSettings": {
+    "message": "ローカル音声認識",
+    "description": "STT settings section title"
+  },
+  "sttModel": {
+    "message": "モデル",
+    "description": "STT model selection label"
+  },
+  "sttLanguage": {
+    "message": "認識言語",
+    "description": "STT language selection label"
+  },
+  "sttDownloadModel": {
+    "message": "モデルをダウンロード",
+    "description": "STT download model button"
+  },
+  "sttDeleteModel": {
+    "message": "モデルを削除",
+    "description": "STT delete model button"
+  },
+  "sttDownloading": {
+    "message": "ダウンロード中...",
+    "description": "STT model downloading status"
+  },
+  "sttInitializing": {
+    "message": "モデル初期化中...",
+    "description": "STT model initializing after download"
+  },
+  "sttInitializingTip": {
+    "message": "初回セットアップには1〜2分かかる場合があります",
+    "description": "STT model initializing tip shown after 15s"
+  },
+  "sttReset": {
+    "message": "リセット",
+    "description": "STT reset button to recover from stuck state"
+  },
+  "sttModelReady": {
+    "message": "モデル準備完了",
+    "description": "STT model ready status"
+  },
+  "sttNotDownloaded": {
+    "message": "未ダウンロード",
+    "description": "STT model not downloaded status"
+  },
+  "sttModelDeleted": {
+    "message": "モデルを削除しました",
+    "description": "STT model deleted toast"
+  },
+  "sttAutoDetect": {
+    "message": "自動検出",
+    "description": "STT auto detect language option"
+  },
+  "sttModelSizeTip": {
+    "message": "モデルが大きいほど正確ですが遅くなります。一般用途には 'Base' を推奨します。",
+    "description": "STT model size selection tip"
+  },
+  "sttLanguageTip": {
+    "message": "音声の主要言語を選択してください。'自動検出' はほとんどの場合うまく動作します。",
+    "description": "STT language selection tip"
   }
 }

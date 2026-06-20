@@ -574,5 +574,65 @@
   "freeGenerationExhausted": {
     "message": "免费生成次数已用完，将消耗星星",
     "description": "免费生成次数用完时的提示"
+  },
+  "sttSettings": {
+    "message": "本地语音识别",
+    "description": "STT settings section title"
+  },
+  "sttModel": {
+    "message": "模型",
+    "description": "STT model selection label"
+  },
+  "sttLanguage": {
+    "message": "识别语言",
+    "description": "STT language selection label"
+  },
+  "sttDownloadModel": {
+    "message": "下载模型",
+    "description": "STT download model button"
+  },
+  "sttDeleteModel": {
+    "message": "删除模型",
+    "description": "STT delete model button"
+  },
+  "sttDownloading": {
+    "message": "下载中...",
+    "description": "STT model downloading status"
+  },
+  "sttInitializing": {
+    "message": "模型初始化中...",
+    "description": "STT model initializing after download"
+  },
+  "sttInitializingTip": {
+    "message": "首次初始化可能需要 1~2 分钟，请耐心等待",
+    "description": "STT model initializing tip shown after 15s"
+  },
+  "sttReset": {
+    "message": "重置",
+    "description": "STT reset button to recover from stuck state"
+  },
+  "sttModelReady": {
+    "message": "模型就绪",
+    "description": "STT model ready status"
+  },
+  "sttNotDownloaded": {
+    "message": "未下载",
+    "description": "STT model not downloaded status"
+  },
+  "sttModelDeleted": {
+    "message": "模型已删除",
+    "description": "STT model deleted toast"
+  },
+  "sttAutoDetect": {
+    "message": "自动检测",
+    "description": "STT auto detect language option"
+  },
+  "sttModelSizeTip": {
+    "message": "模型越大越准确但速度越慢。推荐使用 'Base' 模型。",
+    "description": "STT model size selection tip"
+  },
+  "sttLanguageTip": {
+    "message": "选择音频的主要语言。'自动检测' 在大多数情况下效果良好。",
+    "description": "STT language selection tip"
   }
 }

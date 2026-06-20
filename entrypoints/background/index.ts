@@ -3,6 +3,7 @@ import { storage } from "@wxt-dev/storage"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig } from "~/utils/ai-service"
 import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
+import { MSG } from "~/utils/stt-config"
 
 interface APIRequestConfig {
   url: string
@@ -421,6 +422,43 @@ class BackgroundAIService {
   }
 }
 
+let creatingOffscreen: Promise<void> | null = null
+
+async function ensureOffscreenDocument() {
+  try {
+    // @ts-ignore - getContexts API type may be incomplete in @types/chrome
+    const existingContexts = await (chrome.runtime as any).getContexts({
+      contextTypes: ['OFFSCREEN_DOCUMENT']
+    })
+    if (Array.isArray(existingContexts) && existingContexts.length > 0) return
+  } catch {
+    // getContexts may not be available in all Chrome versions, try to create anyway
+  }
+
+  // Prevent concurrent creation
+  if (creatingOffscreen) {
+    await creatingOffscreen
+    return
+  }
+
+  creatingOffscreen = new Promise<void>((resolve) => {
+    chrome.offscreen.createDocument({
+      url: '/offscreen.html',
+      reasons: ['AUDIO_PLAYBACK' as chrome.offscreen.Reason],
+      justification: 'Run Whisper STT locally using Web Audio API and WASM/WebGPU'
+    }, () => {
+      if (chrome.runtime.lastError) {
+        // Document may already exist, that's fine
+        console.log('[STT] offscreen createDocument:', chrome.runtime.lastError.message)
+      }
+      resolve()
+    })
+  })
+
+  await creatingOffscreen
+  creatingOffscreen = null
+}
+
 export default defineBackground(() => {
   const backgroundAIService = new BackgroundAIService()
   let capturedSubtitleUrl: string | null = null
@@ -463,6 +501,55 @@ export default defineBackground(() => {
 
   // Listen for messages from content scripts
   chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+    // Loop prevention: skip messages that were already forwarded by background,
+    // and skip STT progress/result/error messages from offscreen (meant for options page).
+    // chrome.runtime.sendMessage from background is received by background itself too,
+    // so the _forwarded flag prevents infinite loops.
+    if (request._forwarded) return
+    if (request.type && (
+      request.type === MSG.STT_PROGRESS ||
+      request.type === MSG.STT_RESULT ||
+      request.type === MSG.STT_ERROR
+    )) {
+      return
+    }
+
+    // STT model management messages - forward to offscreen document
+    if (request.type === MSG.STT_LOAD_MODEL) {
+      ensureOffscreenDocument().then(() => {
+        chrome.runtime.sendMessage({
+          _forwarded: true,
+          type: MSG.STT_LOAD_MODEL,
+          modelRepo: request.modelRepo
+        })
+      })
+      sendResponse({ received: true })
+      return
+    }
+
+    if (request.type === MSG.STT_CHECK_MODEL) {
+      ensureOffscreenDocument().then(() => {
+        chrome.runtime.sendMessage(
+          { _forwarded: true, type: MSG.STT_CHECK_MODEL },
+          (response) => {
+            sendResponse(response || { ready: false })
+          }
+        )
+      })
+      return true
+    }
+
+    if (request.type === MSG.STT_DELETE_MODEL) {
+      ensureOffscreenDocument().then(() => {
+        chrome.runtime.sendMessage({
+          _forwarded: true,
+          type: MSG.STT_DELETE_MODEL,
+          modelRepo: request.modelRepo
+        })
+      })
+      sendResponse({ received: true })
+      return
+    }
     if (request.action === "formatSubtitles") {
       const formatted = backgroundAIService.formatSubtitlesForAI(
         request.subtitles

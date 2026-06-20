@@ -574,5 +574,65 @@
   "freeGenerationExhausted": {
     "message": "무료 생성 할당량을 모두 사용했습니다. Star가 소모됩니다.",
     "description": "무료 생성 할당량이 소진되었을 때 토스트"
+  },
+  "sttSettings": {
+    "message": "로컬 음성 인식",
+    "description": "STT settings section title"
+  },
+  "sttModel": {
+    "message": "모델",
+    "description": "STT model selection label"
+  },
+  "sttLanguage": {
+    "message": "인식 언어",
+    "description": "STT language selection label"
+  },
+  "sttDownloadModel": {
+    "message": "모델 다운로드",
+    "description": "STT download model button"
+  },
+  "sttDeleteModel": {
+    "message": "모델 삭제",
+    "description": "STT delete model button"
+  },
+  "sttDownloading": {
+    "message": "다운로드 중...",
+    "description": "STT model downloading status"
+  },
+  "sttInitializing": {
+    "message": "모델 초기화 중...",
+    "description": "STT model initializing after download"
+  },
+  "sttInitializingTip": {
+    "message": "첫 번째 초기화는 1~2분 정도 걸릴 수 있습니다",
+    "description": "STT model initializing tip shown after 15s"
+  },
+  "sttReset": {
+    "message": "초기화",
+    "description": "STT reset button to recover from stuck state"
+  },
+  "sttModelReady": {
+    "message": "모델 준비 완료",
+    "description": "STT model ready status"
+  },
+  "sttNotDownloaded": {
+    "message": "다운로드 안 됨",
+    "description": "STT model not downloaded status"
+  },
+  "sttModelDeleted": {
+    "message": "모델이 삭제되었습니다",
+    "description": "STT model deleted toast"
+  },
+  "sttAutoDetect": {
+    "message": "자동 감지",
+    "description": "STT auto detect language option"
+  },
+  "sttModelSizeTip": {
+    "message": "모델이 클수록 정확하지만 느립니다. 일반적인 사용에는 'Base'를 권장합니다.",
+    "description": "STT model size selection tip"
+  },
+  "sttLanguageTip": {
+    "message": "오디오의 주요 언어를 선택하세요. '자동 감지'는 대부분의 경우 잘 작동합니다.",
+    "description": "STT language selection tip"
   }
 }

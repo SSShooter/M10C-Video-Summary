@@ -574,5 +574,65 @@
   "freeGenerationExhausted": {
     "message": "Cuota de generación gratis agotada. Se consumirán Stars.",
     "description": "Toast when free generation quota is exhausted"
+  },
+  "sttSettings": {
+    "message": "Reconocimiento de voz local",
+    "description": "STT settings section title"
+  },
+  "sttModel": {
+    "message": "Modelo",
+    "description": "STT model selection label"
+  },
+  "sttLanguage": {
+    "message": "Idioma de reconocimiento",
+    "description": "STT language selection label"
+  },
+  "sttDownloadModel": {
+    "message": "Descargar modelo",
+    "description": "STT download model button"
+  },
+  "sttDeleteModel": {
+    "message": "Eliminar modelo",
+    "description": "STT delete model button"
+  },
+  "sttDownloading": {
+    "message": "Descargando...",
+    "description": "STT model downloading status"
+  },
+  "sttInitializing": {
+    "message": "Inicializando modelo...",
+    "description": "STT model initializing after download"
+  },
+  "sttInitializingTip": {
+    "message": "La configuración inicial puede tardar 1-2 minutos",
+    "description": "STT model initializing tip shown after 15s"
+  },
+  "sttReset": {
+    "message": "Restablecer",
+    "description": "STT reset button to recover from stuck state"
+  },
+  "sttModelReady": {
+    "message": "Modelo listo",
+    "description": "STT model ready status"
+  },
+  "sttNotDownloaded": {
+    "message": "No descargado",
+    "description": "STT model not downloaded status"
+  },
+  "sttModelDeleted": {
+    "message": "Modelo eliminado",
+    "description": "STT model deleted toast"
+  },
+  "sttAutoDetect": {
+    "message": "Detección automática",
+    "description": "STT auto detect language option"
+  },
+  "sttModelSizeTip": {
+    "message": "Los modelos más grandes son más precisos pero más lentos. Se recomienda 'Base' para uso general.",
+    "description": "STT model size selection tip"
+  },
+  "sttLanguageTip": {
+    "message": "Seleccione el idioma principal del audio. 'Detección automática' funciona bien en la mayoría de los casos.",
+    "description": "STT language selection tip"
   }
 }
