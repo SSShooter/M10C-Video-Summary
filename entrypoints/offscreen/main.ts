@@ -1,7 +1,12 @@
 import { pipeline, env } from '@huggingface/transformers'
 import { MSG } from '~/utils/stt-config'
+import { getOrtUrls } from '~/utils/ort-cache'
 
 env.allowLocalModels = false
+
+const { mjsUrl, wasmUrl } = getOrtUrls()
+env.backends.onnx.wasm.numThreads = 1
+env.backends.onnx.wasm.wasmPaths = { mjs: mjsUrl, wasm: wasmUrl }
 
 // ─── Critical: Patch WebGPU before any ONNX/transformers initialization ────────
 //
