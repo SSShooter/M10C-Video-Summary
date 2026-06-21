@@ -58,6 +58,7 @@ async function base64ToFloat32Array(base64String: string): Promise<Float32Array>
 
 export default function SidePanelApp() {
   const [lastResult, setLastResult] = useState<string | null>(null)
+  const [lastChunks, setLastChunks] = useState<{ text: string; timestamp: [number, number] }[]>([])
 
   const loadModel = useCallback(async (modelRepo: string) => {
     if (isModelReady && currentModelRepo === modelRepo) {
@@ -156,11 +157,14 @@ export default function SidePanelApp() {
         ...options,
         chunk_length_s: 30,
         stride_length_s: 5,
+        return_timestamps: true,
       })
       const text = result?.text || ''
-      console.log('[STT] Transcription complete, length:', text.length, 'preview:', text.substring(0, 100))
-      broadcast({ type: MSG.STT_RESULT, text })
+      const chunks = result?.chunks || []
+      console.log('[STT] Transcription complete, length:', text.length, 'chunks:', chunks.length)
+      broadcast({ type: MSG.STT_RESULT, text, chunks })
       setLastResult(text)
+      setLastChunks(chunks)
     } catch (err: any) {
       console.error('[STT] Transcription failed:', err)
       broadcast({ type: MSG.STT_ERROR, error: err.message })
@@ -231,8 +235,8 @@ export default function SidePanelApp() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4">
-      <div className="mb-4">
+    <div className="h-screen bg-background text-foreground p-4 flex flex-col overflow-hidden">
+      <div className="mb-4 flex-shrink-0">
         <h1 className="text-lg font-bold">{t('extensionName')}</h1>
         <p className="text-xs text-muted-foreground">{t('sttSettings')}</p>
       </div>
@@ -242,10 +246,30 @@ export default function SidePanelApp() {
       </STTEngineContext.Provider>
 
       {lastResult && (
-        <div className="mt-4 space-y-2">
-          <h3 className="text-sm font-semibold">{t('sttTranscribe')}</h3>
-          <ScrollArea className="h-[300px] rounded border p-3">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{lastResult}</p>
+        <div className="mt-4 flex-1 flex flex-col overflow-hidden min-h-0">
+          <h3 className="text-sm font-semibold mb-2 flex-shrink-0">{t('sttTranscribe')}</h3>
+          <ScrollArea className="flex-1 rounded border p-3 min-h-0">
+            {lastChunks.length > 0 ? (
+              lastChunks.map((chunk, i) => {
+                const fmt = (t: number) => {
+                  const m = Math.floor(t / 60)
+                  const s = Math.floor(t % 60)
+                  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+                }
+                return (
+                  <div key={i} className="py-2 border-b border-gray-100">
+                    <div className="text-xs text-blue-500 mb-1 font-medium">
+                      {fmt(chunk.timestamp[0])} - {fmt(chunk.timestamp[1])}
+                    </div>
+                    <div className="text-sm text-gray-900 leading-relaxed">
+                      {chunk.text}
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{lastResult}</p>
+            )}
           </ScrollArea>
         </div>
       )}

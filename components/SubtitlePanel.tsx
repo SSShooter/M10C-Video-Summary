@@ -55,7 +55,8 @@ export function SubtitlePanel({
   const [configuredLanguage, setConfiguredLanguage] = useState<string | null>(null);
   const currentUrl = window.location.href;
 
-  const { status: sttStatus, result: sttResult, error: sttError, transcribe } = useSTT(getAudioUrl || (() => null));
+  const sttVideoId = videoInfo?.bvid || videoInfo?.videoId || null;
+  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, transcribe, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
@@ -237,7 +238,6 @@ export function SubtitlePanel({
           {error && (
             <div className="text-center p-[20px]">
               <div className="text-red-500 mb-4">{error}</div>
-              {audioExtractButton}
               <Button
                 onClick={() => window.location.reload()}
                 variant="outline"
@@ -262,8 +262,9 @@ export function SubtitlePanel({
             </div>
           )}
 
-          {/* STT button */}
-          <div className="mb-2 flex items-center gap-2">
+          {/* STT button + audio extract */}
+          <div className="mb-2 flex items-center gap-2 flex-shrink-0">
+            {audioExtractButton}
             <Button
               onClick={() => transcribe()}
               disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking" || !getAudioUrl}
@@ -296,34 +297,35 @@ export function SubtitlePanel({
             )}
           </div>
 
-          {sttStatus === "recording" && (
-            <div className="text-xs text-orange-500 mb-2">{t("sttRecordingTip")}</div>
-          )}
-
-          {sttStatus === "loading" && (
-            <div className="text-xs text-blue-500 mb-2">{t("sttInitializingTip")}</div>
-          )}
-
           {sttStatus === "transcribing" && (
-            <div className="flex items-center gap-2 text-xs text-blue-500 mb-2">
+            <div className="flex items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
               <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
               <span>{t("sttTranscribing")}</span>
             </div>
           )}
 
           {sttError && (
-            <div className="text-xs text-red-500 mb-2">{sttError}</div>
+            <div className="text-xs text-red-500 mb-2 flex-shrink-0">{sttError}</div>
           )}
 
-          {sttResult && (
-            <div className="p-2 bg-gray-50 rounded text-sm text-gray-900 leading-relaxed whitespace-pre-wrap mb-2">
-              {sttResult}
-            </div>
-          )}
-
-          {subtitles.length > 0 && (
-            <ScrollArea className="flex-1">
-              {subtitles.map((subtitle, index) => {
+          <ScrollArea className="flex-1">
+            {sttChunks.length > 0 ? (
+              sttChunks.map((chunk, i) => (
+                <div
+                  key={i}
+                  className="py-[8px] border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50"
+                  onClick={() => onJumpToTime(chunk.timestamp[0])}
+                >
+                  <div className="text-[12px] text-blue-500 mb-[4px] font-medium">
+                    {formatTime(chunk.timestamp[0])} - {formatTime(chunk.timestamp[1])}
+                  </div>
+                  <div className="text-[14px] text-gray-900 leading-relaxed">
+                    {chunk.text}
+                  </div>
+                </div>
+              ))
+            ) : subtitles.length > 0 ? (
+              subtitles.map((subtitle, index) => {
                 const time = getSubtitleTime(subtitle);
                 const content = getSubtitleContent(subtitle);
                 return (
@@ -340,9 +342,9 @@ export function SubtitlePanel({
                     </div>
                   </div>
                 );
-              })}
-            </ScrollArea>
-          )}
+              })
+            ) : null}
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent

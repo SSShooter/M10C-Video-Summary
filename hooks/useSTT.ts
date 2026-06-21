@@ -4,13 +4,20 @@ import { MSG, STT_STORAGE_KEY, DEFAULT_STT_CONFIG, type STTConfig } from '~/util
 
 export type STTStatus = 'idle' | 'checking' | 'loading' | 'model-not-ready' | 'recording' | 'transcribing' | 'done' | 'error'
 
+export interface STTChunk {
+  text: string
+  timestamp: [number, number]
+}
+
 /**
  * @param getAudioUrl - function that returns the audio stream URL from page data,
  *                       or null if not available
+ * @param videoId - optional video ID for caching transcription results
  */
-export function useSTT(getAudioUrl: () => string | null) {
+export function useSTT(getAudioUrl: () => string | null, videoId?: string | null) {
   const [status, setStatus] = useState<STTStatus>('checking')
   const [result, setResult] = useState<string | null>(null)
+  const [chunks, setChunks] = useState<STTChunk[]>([])
   const [error, setError] = useState<string | null>(null)
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -53,13 +60,36 @@ export function useSTT(getAudioUrl: () => string | null) {
     })
   }, [])
 
+  const getCacheKey = () => videoId ? `local:stt_cache_${videoId}` : null
+
+  const loadCache = useCallback(async () => {
+    const key = getCacheKey()
+    if (!key) return false
+    const data = await storage.getItem<{ text: string; chunks: STTChunk[] }>(key)
+    if (data?.text) {
+      setResult(data.text)
+      setChunks(data.chunks || [])
+      setStatus('done')
+      return true
+    }
+    return false
+  }, [videoId])
+
+  const saveCache = useCallback(async (text: string, chunks: STTChunk[]) => {
+    const key = getCacheKey()
+    if (!key) return
+    await storage.setItem(key, { text, chunks })
+  }, [videoId])
+
   useEffect(() => {
     const listener = (msg: any) => {
       if (msg.type === MSG.STT_RESULT) {
         clearWatchdog()
         setResult(msg.text)
+        setChunks(msg.chunks || [])
         setStatus('done')
         setError(null)
+        saveCache(msg.text, msg.chunks || [])
       }
       if (msg.type === MSG.STT_ERROR) {
         clearWatchdog()
@@ -79,14 +109,22 @@ export function useSTT(getAudioUrl: () => string | null) {
     }
     chrome.runtime.onMessage.addListener(listener)
 
-    checkModel()
+    // Check cache first, then model status
+    loadCache().then((cached) => {
+      if (!cached) checkModel()
+    })
 
     return () => {
       clearWatchdog()
       stopPolling()
       chrome.runtime.onMessage.removeListener(listener)
     }
-  }, [checkModel])
+  }, [checkModel, loadCache])
+
+  const clearCache = useCallback(async () => {
+    const key = getCacheKey()
+    if (key) await storage.removeItem(key)
+  }, [videoId])
 
   const transcribe = useCallback(async () => {
     const audioUrl = getAudioUrl()
@@ -97,6 +135,7 @@ export function useSTT(getAudioUrl: () => string | null) {
     }
 
     try {
+      await clearCache()
       setStatus('recording')
       setResult(null)
       setError(null)
@@ -126,7 +165,7 @@ export function useSTT(getAudioUrl: () => string | null) {
       setError(err.message)
       setStatus('error')
     }
-  }, [getAudioUrl])
+  }, [getAudioUrl, clearCache])
 
-  return { status, result, error, transcribe }
+  return { status, result, chunks, error, transcribe, clearCache }
 }
