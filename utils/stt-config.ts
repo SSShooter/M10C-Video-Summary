@@ -3,7 +3,7 @@ export interface STTConfig {
   language: string
 }
 
-export type STTModelStatus = 'not-downloaded' | 'downloading' | 'loading' | 'ready'
+export type STTModelStatus = 'not-downloaded' | 'downloading' | 'loading' | 'ready' | 'transcribing'
 
 export interface STTModelInfo {
   id: string

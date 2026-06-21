@@ -634,5 +634,37 @@
   "sttLanguageTip": {
     "message": "Select the primary language of the audio. 'Auto Detect' works well for most cases.",
     "description": "STT language selection tip"
+  },
+  "sttTab": {
+    "message": "STT",
+    "description": "STT tab label in subtitle panel"
+  },
+  "sttTranscribe": {
+    "message": "Transcribe",
+    "description": "STT transcribe button text"
+  },
+  "sttTranscribing": {
+    "message": "Transcribing...",
+    "description": "STT transcribing status"
+  },
+  "sttRecording": {
+    "message": "Recording...",
+    "description": "STT recording status"
+  },
+  "sttRecordingTip": {
+    "message": "Recording audio for 30 seconds, then transcribing...",
+    "description": "STT recording tip"
+  },
+  "sttModelNotReady": {
+    "message": "Please download a model in settings first",
+    "description": "STT model not ready message"
+  },
+  "sttNoVideo": {
+    "message": "No video found on this page",
+    "description": "STT no video element message"
+  },
+  "sttConfigureModel": {
+    "message": "Configure Model",
+    "description": "STT configure model link text"
   }
 }

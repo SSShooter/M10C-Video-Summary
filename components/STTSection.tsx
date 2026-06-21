@@ -14,6 +14,8 @@ import {
 } from "~/components/ui/select"
 import { cn } from "~/lib/utils"
 import { t } from "~/utils/i18n"
+import { useSTTEngine } from "~/contexts/stt-engine"
+import { sttEvents } from "~/utils/stt-events"
 import {
   STT_MODELS,
   STT_LANGUAGES,
@@ -29,6 +31,7 @@ export function STTSection() {
   const [status, setStatus] = useState<STTModelStatus>('not-downloaded')
   const [progress, setProgress] = useState(0)
   const [loadingSeconds, setLoadingSeconds] = useState(0)
+  const engine = useSTTEngine()
 
   // Load saved config on mount
   useEffect(() => {
@@ -36,18 +39,27 @@ export function STTSection() {
       if (saved) setConfig(saved)
     })
 
-    // Check if model is already loaded in offscreen
-    chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL }, (response) => {
-      if (response?.ready) {
-        setStatus('ready')
-        setProgress(100)
-      }
-    })
+    // Check if model is already loaded
+    if (engine) {
+      engine.checkModel().then((res) => {
+        if (res.ready) {
+          setStatus('ready')
+          setProgress(100)
+        }
+      })
+    } else {
+      chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL }, (response) => {
+        if (response?.ready) {
+          setStatus('ready')
+          setProgress(100)
+        }
+      })
+    }
   }, [])
 
   // Listen for STT progress messages
   useEffect(() => {
-    const listener = (msg: any) => {
+    const handleMsg = (msg: any) => {
       if (msg.type === MSG.STT_PROGRESS) {
         if (msg.status === 'ready' || msg.status === 'deleted') {
           setStatus(msg.status === 'ready' ? 'ready' : 'not-downloaded')
@@ -58,7 +70,12 @@ export function STTSection() {
         } else if (msg.status === 'loading') {
           setStatus('loading')
           setProgress(100)
+        } else if (msg.status === 'transcribing') {
+          setStatus('transcribing')
         }
+      }
+      if (msg.type === MSG.STT_RESULT) {
+        setStatus('ready')
       }
       if (msg.type === MSG.STT_ERROR) {
         setStatus('not-downloaded')
@@ -66,13 +83,20 @@ export function STTSection() {
         toast.error(msg.error || 'STT error')
       }
     }
-    chrome.runtime.onMessage.addListener(listener)
-    return () => chrome.runtime.onMessage.removeListener(listener)
+    // In side panel: listen to local events (chrome.runtime.sendMessage
+    // doesn't deliver to the sender, so we need sttEvents)
+    const unsub = engine ? sttEvents.on(handleMsg) : () => {}
+    // In options page: listen to chrome.runtime messages from side panel
+    chrome.runtime.onMessage.addListener(handleMsg)
+    return () => {
+      unsub()
+      chrome.runtime.onMessage.removeListener(handleMsg)
+    }
   }, [])
 
-  // Elapsed timer while model is initializing
+  // Elapsed timer while model is initializing or transcribing
   useEffect(() => {
-    if (status !== 'loading') {
+    if (status !== 'loading' && status !== 'transcribing') {
       setLoadingSeconds(0)
       return
     }
@@ -104,7 +128,11 @@ export function STTSection() {
 
     setStatus('downloading')
     setProgress(0)
-    chrome.runtime.sendMessage({ type: MSG.STT_LOAD_MODEL, modelRepo: model.repo })
+    if (engine) {
+      engine.loadModel(model.repo)
+    } else {
+      chrome.runtime.sendMessage({ type: MSG.STT_LOAD_MODEL, modelRepo: model.repo })
+    }
     toast.loading(t('sttDownloading'))
   }
 
@@ -112,14 +140,18 @@ export function STTSection() {
     const model = STT_MODELS.find(m => m.id === config.modelSize)
     if (!model) return
 
-    chrome.runtime.sendMessage({ type: MSG.STT_DELETE_MODEL, modelRepo: model.repo })
+    if (engine) {
+      engine.deleteModel(model.repo)
+    } else {
+      chrome.runtime.sendMessage({ type: MSG.STT_DELETE_MODEL, modelRepo: model.repo })
+    }
     setStatus('not-downloaded')
     setProgress(0)
     toast.success(t('sttModelDeleted'))
   }
 
   const handleReset = () => {
-    // Force UI back to not-downloaded without touching the offscreen cache
+    // Force UI back to not-downloaded without touching the model cache
     // User can then retry download with fresh state
     setStatus('not-downloaded')
     setProgress(0)
@@ -159,6 +191,14 @@ export function STTSection() {
         </div>
       )
     }
+    if (status === 'transcribing') {
+      return (
+        <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <span className="text-xs font-medium">{t('sttTranscribing')} {loadingSeconds > 0 ? `${loadingSeconds}s` : ''}</span>
+        </div>
+      )
+    }
     return (
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <Circle className="h-3.5 w-3.5" />
@@ -175,14 +215,15 @@ export function STTSection() {
       </div>
 
       {/* Progress bar */}
-      {(status === 'downloading' || status === 'loading') && (
+      {(status === 'downloading' || status === 'loading' || status === 'transcribing') && (
         <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
           <div
             className={cn(
               "h-full transition-all duration-300 ease-out rounded-full",
+              status === 'transcribing' ? "bg-amber-500 animate-pulse" :
               status === 'loading' ? "bg-blue-500 animate-pulse" : "bg-primary"
             )}
-            style={{ width: `${progress}%` }}
+            style={{ width: status === 'transcribing' ? '100%' : `${progress}%` }}
           />
         </div>
       )}
@@ -233,10 +274,10 @@ export function STTSection() {
           <>
             <Button
               onClick={handleDownload}
-              disabled={status === 'downloading' || status === 'loading'}
+              disabled={status === 'downloading' || status === 'loading' || status === 'transcribing'}
               className="gap-1.5 h-9 text-xs"
             >
-              {(status === 'downloading' || status === 'loading') ? (
+              {(status === 'downloading' || status === 'loading' || status === 'transcribing') ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Download className="h-3.5 w-3.5" />
@@ -244,10 +285,11 @@ export function STTSection() {
               <span>
                 {status === 'downloading' ? t('sttDownloading')
                   : status === 'loading' ? t('sttInitializing')
+                  : status === 'transcribing' ? t('sttTranscribing')
                   : t('sttDownloadModel')}
               </span>
             </Button>
-            {(status === 'downloading' || status === 'loading') && (
+            {(status === 'downloading' || status === 'loading' || status === 'transcribing') && (
               <Button
                 variant="outline"
                 onClick={handleReset}

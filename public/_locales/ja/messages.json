@@ -630,5 +630,37 @@
   "sttLanguageTip": {
     "message": "音声の主要言語を選択してください。'自動検出' はほとんどの場合うまく動作します。",
     "description": "STT language selection tip"
+  },
+  "sttTab": {
+    "message": "音声認識",
+    "description": "STT tab label in subtitle panel"
+  },
+  "sttTranscribe": {
+    "message": "文字起こし",
+    "description": "STT transcribe button text"
+  },
+  "sttTranscribing": {
+    "message": "文字起こし中...",
+    "description": "STT transcribing status"
+  },
+  "sttRecording": {
+    "message": "録音中...",
+    "description": "STT recording status"
+  },
+  "sttRecordingTip": {
+    "message": "音声を30秒間録音し、文字起こしします...",
+    "description": "STT recording tip"
+  },
+  "sttModelNotReady": {
+    "message": "設定でモデルを先にダウンロードしてください",
+    "description": "STT model not ready message"
+  },
+  "sttNoVideo": {
+    "message": "ページにビデオが見つかりません",
+    "description": "STT no video element message"
+  },
+  "sttConfigureModel": {
+    "message": "モデルを設定",
+    "description": "STT configure model link text"
   }
 }

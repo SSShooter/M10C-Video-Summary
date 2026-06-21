@@ -15,7 +15,7 @@ export default defineConfig({
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
-    permissions: ['activeTab', 'storage', 'webRequest', 'declarativeNetRequest', 'offscreen'],
+    permissions: ['activeTab', 'storage', 'webRequest', 'declarativeNetRequest', 'sidePanel'],
     // Allow WASM execution for @huggingface/transformers ONNX runtime.
     content_security_policy: {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

@@ -634,5 +634,37 @@
   "sttLanguageTip": {
     "message": "오디오의 주요 언어를 선택하세요. '자동 감지'는 대부분의 경우 잘 작동합니다.",
     "description": "STT language selection tip"
+  },
+  "sttTab": {
+    "message": "음성 인식",
+    "description": "STT tab label in subtitle panel"
+  },
+  "sttTranscribe": {
+    "message": "변환",
+    "description": "STT transcribe button text"
+  },
+  "sttTranscribing": {
+    "message": "변환 중...",
+    "description": "STT transcribing status"
+  },
+  "sttRecording": {
+    "message": "녹음 중...",
+    "description": "STT recording status"
+  },
+  "sttRecordingTip": {
+    "message": "오디오를 30초간 녹음한 후 변환합니다...",
+    "description": "STT recording tip"
+  },
+  "sttModelNotReady": {
+    "message": "설정에서 모델을 먼저 다운로드하세요",
+    "description": "STT model not ready message"
+  },
+  "sttNoVideo": {
+    "message": "페이지에서 비디오를 찾을 수 없습니다",
+    "description": "STT no video element message"
+  },
+  "sttConfigureModel": {
+    "message": "모델 설정",
+    "description": "STT configure model link text"
   }
 }

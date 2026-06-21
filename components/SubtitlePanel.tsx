@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
 import { t, getMatchedBrowserLanguage } from "~utils/i18n";
 import { useDraggable } from "~hooks/useDraggable";
+import { useSTT } from "~hooks/useSTT";
 
 import { MindmapDisplay, type MindmapGenerateConfig } from "./MindmapDisplay";
 import { SummaryDisplay, type SummaryGenerateConfig } from "./SummaryDisplay";
@@ -33,6 +34,7 @@ export interface SubtitlePanelProps {
   platform: "bilibili" | "youtube";
   onClose: () => void;
   audioExtractButton?: React.ReactNode;
+  getAudioUrl?: () => string | null;
 }
 
 export function SubtitlePanel({
@@ -44,6 +46,7 @@ export function SubtitlePanel({
   platform,
   onClose,
   audioExtractButton,
+  getAudioUrl,
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const { onMouseDown, isPositionLoaded } = useDraggable(panelRef, "video_panel_pos");
@@ -51,6 +54,8 @@ export function SubtitlePanel({
   const [isByok, setIsByok] = useState(false);
   const [configuredLanguage, setConfiguredLanguage] = useState<string | null>(null);
   const currentUrl = window.location.href;
+
+  const { status: sttStatus, result: sttResult, error: sttError, transcribe } = useSTT(getAudioUrl || (() => null));
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
@@ -149,6 +154,8 @@ export function SubtitlePanel({
     },
   };
 
+  const isSttBusy = sttStatus === "recording" || sttStatus === "transcribing" || sttStatus === "loading";
+
   return (
     <div
       ref={panelRef}
@@ -217,7 +224,7 @@ export function SubtitlePanel({
           value="subtitles"
           forceMount={true}
           className={cn(
-            "overflow-hidden mt-2",
+            "overflow-hidden mt-2 flex-1 flex flex-col",
             activeTab !== "subtitles" && "hidden",
           )}
         >
@@ -255,8 +262,67 @@ export function SubtitlePanel({
             </div>
           )}
 
+          {/* STT button */}
+          <div className="mb-2 flex items-center gap-2">
+            <Button
+              onClick={() => transcribe()}
+              disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking" || !getAudioUrl}
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+            >
+              {isSttBusy ? (
+                <>
+                  <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  {sttStatus === "loading" ? t("sttInitializing") : sttStatus === "recording" ? t("sttRecording") : t("sttTranscribing")}
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                  {t("sttTranscribe")}
+                </>
+              )}
+            </Button>
+            {sttStatus === "model-not-ready" && (
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); chrome.runtime.openOptionsPage(); }}
+                className="text-xs text-blue-500 hover:underline"
+              >
+                {t("sttConfigureModel")}
+              </a>
+            )}
+          </div>
+
+          {sttStatus === "recording" && (
+            <div className="text-xs text-orange-500 mb-2">{t("sttRecordingTip")}</div>
+          )}
+
+          {sttStatus === "loading" && (
+            <div className="text-xs text-blue-500 mb-2">{t("sttInitializingTip")}</div>
+          )}
+
+          {sttStatus === "transcribing" && (
+            <div className="flex items-center gap-2 text-xs text-blue-500 mb-2">
+              <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+              <span>{t("sttTranscribing")}</span>
+            </div>
+          )}
+
+          {sttError && (
+            <div className="text-xs text-red-500 mb-2">{sttError}</div>
+          )}
+
+          {sttResult && (
+            <div className="p-2 bg-gray-50 rounded text-sm text-gray-900 leading-relaxed whitespace-pre-wrap mb-2">
+              {sttResult}
+            </div>
+          )}
+
           {subtitles.length > 0 && (
-            <ScrollArea className="h-full">
+            <ScrollArea className="flex-1">
               {subtitles.map((subtitle, index) => {
                 const time = getSubtitleTime(subtitle);
                 const content = getSubtitleContent(subtitle);

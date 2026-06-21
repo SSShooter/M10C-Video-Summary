@@ -634,5 +634,37 @@
   "sttLanguageTip": {
     "message": "选择音频的主要语言。'自动检测' 在大多数情况下效果良好。",
     "description": "STT language selection tip"
+  },
+  "sttTab": {
+    "message": "语音识别",
+    "description": "STT tab label in subtitle panel"
+  },
+  "sttTranscribe": {
+    "message": "开始转录",
+    "description": "STT transcribe button text"
+  },
+  "sttTranscribing": {
+    "message": "转录中...",
+    "description": "STT transcribing status"
+  },
+  "sttRecording": {
+    "message": "录音中...",
+    "description": "STT recording status"
+  },
+  "sttRecordingTip": {
+    "message": "正在录制音频（30秒），录制完成后自动转录...",
+    "description": "STT recording tip"
+  },
+  "sttModelNotReady": {
+    "message": "请先在设置中下载语音识别模型",
+    "description": "STT model not ready message"
+  },
+  "sttNoVideo": {
+    "message": "未找到视频元素",
+    "description": "STT no video element message"
+  },
+  "sttConfigureModel": {
+    "message": "配置模型",
+    "description": "STT configure model link text"
   }
 }

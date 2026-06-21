@@ -634,5 +634,37 @@
   "sttLanguageTip": {
     "message": "選擇音訊的主要語言。'自動偵測' 在大多數情況下效果良好。",
     "description": "STT language selection tip"
+  },
+  "sttTab": {
+    "message": "語音辨識",
+    "description": "STT tab label in subtitle panel"
+  },
+  "sttTranscribe": {
+    "message": "開始轉錄",
+    "description": "STT transcribe button text"
+  },
+  "sttTranscribing": {
+    "message": "轉錄中...",
+    "description": "STT transcribing status"
+  },
+  "sttRecording": {
+    "message": "錄音中...",
+    "description": "STT recording status"
+  },
+  "sttRecordingTip": {
+    "message": "正在錄製音訊（30秒），錄製完成後自動轉錄...",
+    "description": "STT recording tip"
+  },
+  "sttModelNotReady": {
+    "message": "請先在設定中下載語音辨識模型",
+    "description": "STT model not ready message"
+  },
+  "sttNoVideo": {
+    "message": "未找到影片元素",
+    "description": "STT no video element message"
+  },
+  "sttConfigureModel": {
+    "message": "設定模型",
+    "description": "STT configure model link text"
   }
 }

@@ -3,7 +3,6 @@ import { storage } from "@wxt-dev/storage"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig } from "~/utils/ai-service"
 import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
-import { MSG } from "~/utils/stt-config"
 
 interface APIRequestConfig {
   url: string
@@ -422,46 +421,11 @@ class BackgroundAIService {
   }
 }
 
-let creatingOffscreen: Promise<void> | null = null
-
-async function ensureOffscreenDocument() {
-  try {
-    // @ts-ignore - getContexts API type may be incomplete in @types/chrome
-    const existingContexts = await (chrome.runtime as any).getContexts({
-      contextTypes: ['OFFSCREEN_DOCUMENT']
-    })
-    if (Array.isArray(existingContexts) && existingContexts.length > 0) return
-  } catch {
-    // getContexts may not be available in all Chrome versions, try to create anyway
-  }
-
-  // Prevent concurrent creation
-  if (creatingOffscreen) {
-    await creatingOffscreen
-    return
-  }
-
-  creatingOffscreen = new Promise<void>((resolve) => {
-    chrome.offscreen.createDocument({
-      url: '/offscreen.html',
-      reasons: ['AUDIO_PLAYBACK' as chrome.offscreen.Reason],
-      justification: 'Run Whisper STT locally using Web Audio API and WASM/WebGPU'
-    }, () => {
-      if (chrome.runtime.lastError) {
-        // Document may already exist, that's fine
-        console.log('[STT] offscreen createDocument:', chrome.runtime.lastError.message)
-      }
-      resolve()
-    })
-  })
-
-  await creatingOffscreen
-  creatingOffscreen = null
-}
 
 export default defineBackground(() => {
   const backgroundAIService = new BackgroundAIService()
   let capturedSubtitleUrl: string | null = null
+  let sttTranscribeTabId: number | null = null
 
   // 监听YouTube的timedtext API请求
   chrome.webRequest.onBeforeRequest.addListener(
@@ -499,57 +463,75 @@ export default defineBackground(() => {
     }
   )
 
-  // Listen for messages from content scripts
-  chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-    // Loop prevention: skip messages that were already forwarded by background,
-    // and skip STT progress/result/error messages from offscreen (meant for options page).
-    // chrome.runtime.sendMessage from background is received by background itself too,
-    // so the _forwarded flag prevents infinite loops.
-    if (request._forwarded) return
-    if (request.type && (
-      request.type === MSG.STT_PROGRESS ||
-      request.type === MSG.STT_RESULT ||
-      request.type === MSG.STT_ERROR
+  // Listen for messages from content scripts and extension pages
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // STT result/progress/error from the side panel — relay to the content
+    // script tab that initiated the transcription. chrome.runtime.sendMessage
+    // from extension pages does NOT reliably reach content scripts.
+    const isFromSidePanel = sender.url?.includes('sidepanel')
+    if (isFromSidePanel && (
+      request.type === 'STT_PROGRESS' ||
+      request.type === 'STT_RESULT' ||
+      request.type === 'STT_ERROR'
+    )) {
+      if (sttTranscribeTabId) {
+        chrome.tabs.sendMessage(sttTranscribeTabId, request).catch(() => {
+          // Tab may have been closed — clear stale ID
+          sttTranscribeTabId = null
+        })
+      }
+      return
+    }
+    // Block STT broadcasts that are neither from a content script nor from
+    // the side panel (e.g. echoed back from runtime.sendMessage).
+    if (!sender.tab && !isFromSidePanel && (
+      request.type === 'STT_PROGRESS' ||
+      request.type === 'STT_RESULT' ||
+      request.type === 'STT_ERROR'
     )) {
       return
     }
 
-    // STT model management messages - forward to offscreen document
-    if (request.type === MSG.STT_LOAD_MODEL) {
-      ensureOffscreenDocument().then(() => {
-        chrome.runtime.sendMessage({
-          _forwarded: true,
-          type: MSG.STT_LOAD_MODEL,
-          modelRepo: request.modelRepo
+    // STT command messages: auto-open side panel and store pending operation.
+    if (request.type && request.type.startsWith('STT_')) {
+      const openSidePanel = (tabId: number) => {
+        chrome.sidePanel.open({ tabId }).catch(() => {})
+      }
+
+      if (sender.tab?.id) {
+        openSidePanel(sender.tab.id)
+      } else {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]?.id) openSidePanel(tabs[0].id)
         })
-      })
+      }
+
+      if (request.type === 'STT_TRANSCRIBE') {
+        // Save the tab ID so we can relay progress/results back to it
+        if (sender.tab?.id) {
+          sttTranscribeTabId = sender.tab.id
+        }
+        // Audio data too large for storage — forward with retries
+        const fwdMsg = { _forwarded: true, ...request }
+        let retries = 0
+        const tryForward = () => {
+          chrome.runtime.sendMessage(fwdMsg, () => {
+            if (chrome.runtime.lastError && retries < 10) {
+              retries++
+              setTimeout(tryForward, 500)
+            }
+          })
+        }
+        setTimeout(tryForward, 800)
+      } else {
+        // Store in storage for the side panel to pick up on mount
+        chrome.storage.local.set({ sttPendingOp: request })
+      }
+
       sendResponse({ received: true })
       return
     }
 
-    if (request.type === MSG.STT_CHECK_MODEL) {
-      ensureOffscreenDocument().then(() => {
-        chrome.runtime.sendMessage(
-          { _forwarded: true, type: MSG.STT_CHECK_MODEL },
-          (response) => {
-            sendResponse(response || { ready: false })
-          }
-        )
-      })
-      return true
-    }
-
-    if (request.type === MSG.STT_DELETE_MODEL) {
-      ensureOffscreenDocument().then(() => {
-        chrome.runtime.sendMessage({
-          _forwarded: true,
-          type: MSG.STT_DELETE_MODEL,
-          modelRepo: request.modelRepo
-        })
-      })
-      sendResponse({ received: true })
-      return
-    }
     if (request.action === "formatSubtitles") {
       const formatted = backgroundAIService.formatSubtitlesForAI(
         request.subtitles
@@ -599,6 +581,36 @@ export default defineBackground(() => {
           })
       } catch (err) {
         console.error("[Background] sync error:", err)
+        sendResponse({ success: false, error: String(err) })
+      }
+      return true
+    }
+
+    if (request.action === "FETCH_AUDIO_BASE64") {
+      const fetchUrl = request.url
+      const referer = request.referer || ""
+      try {
+        const headers: Record<string, string> = {}
+        if (referer) headers["Referer"] = referer
+        fetch(fetchUrl, { method: "GET", headers })
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res.arrayBuffer()
+          })
+          .then((buffer) => {
+            const bytes = new Uint8Array(buffer)
+            let binary = ""
+            for (let i = 0; i < bytes.length; i++) {
+              binary += String.fromCharCode(bytes[i])
+            }
+            const base64 = btoa(binary)
+            const mime = "audio/webm"
+            sendResponse({ success: true, base64: `data:${mime};base64,${base64}` })
+          })
+          .catch((err) => {
+            sendResponse({ success: false, error: err.message })
+          })
+      } catch (err) {
         sendResponse({ success: false, error: String(err) })
       }
       return true

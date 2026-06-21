@@ -426,6 +426,7 @@ function BilibiliSubtitlePanel() {
       platform="bilibili"
       onClose={handleClose}
       audioExtractButton={audioExtractButtonNode}
+      getAudioUrl={getAudioUrlFromPlayInfo}
     />
   )
 }
