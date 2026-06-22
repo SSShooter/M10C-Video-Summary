@@ -62,6 +62,7 @@ export function STTSection() {
     const handleMsg = (msg: any) => {
       if (msg.type === MSG.STT_PROGRESS) {
         if (msg.status === 'ready' || msg.status === 'deleted') {
+          toast.dismiss()
           setStatus(msg.status === 'ready' ? 'ready' : 'not-downloaded')
           setProgress(msg.status === 'ready' ? 100 : 0)
         } else if (msg.status === 'downloading') {
@@ -75,9 +76,11 @@ export function STTSection() {
         }
       }
       if (msg.type === MSG.STT_RESULT) {
+        toast.dismiss()
         setStatus('ready')
       }
       if (msg.type === MSG.STT_ERROR) {
+        toast.dismiss()
         setStatus('not-downloaded')
         setProgress(0)
         toast.error(msg.error || 'STT error')
