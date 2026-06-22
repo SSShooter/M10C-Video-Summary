@@ -56,7 +56,7 @@ export function SubtitlePanel({
   const currentUrl = window.location.href;
 
   const sttVideoId = videoInfo?.bvid || videoInfo?.videoId || null;
-  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, transcribe, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
+  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, transcribe, checkModel, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
@@ -289,7 +289,7 @@ export function SubtitlePanel({
             {sttStatus === "model-not-ready" && (
               <a
                 href="#"
-                onClick={(e) => { e.preventDefault(); chrome.runtime.openOptionsPage(); }}
+                onClick={(e) => { e.preventDefault(); checkModel(); }}
                 className="text-xs text-blue-500 hover:underline"
               >
                 {t("sttConfigureModel")}

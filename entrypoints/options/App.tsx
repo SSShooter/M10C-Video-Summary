@@ -17,7 +17,6 @@ import { cn } from "~/lib/utils"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig, ProviderConfig } from "~/utils/ai-service"
 import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
-import { STTSection } from "~/components/STTSection"
 
 interface AIProvider {
   id: string
@@ -732,7 +731,6 @@ function OptionsPage() {
           </Button>
         </div>
 
-        <STTSection />
       </div>
 
       <div className="mt-8 pt-5 border-t border-border space-y-3">
