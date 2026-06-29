@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { pipeline, env } from '@huggingface/transformers'
 import { toast } from 'sonner'
 import { storage } from '@wxt-dev/storage'
 
@@ -12,39 +11,18 @@ import { getOrtUrls } from '~/utils/ort-cache'
 import { STTEngineContext, type STTEngine } from '~/contexts/stt-engine'
 import { sttEvents } from '~/utils/stt-events'
 
-// ─── ONNX Runtime setup ──────────────────────────────────────────────────────
-env.allowLocalModels = false
-const { mjsUrl, wasmUrl } = getOrtUrls()
-env.backends.onnx.wasm.numThreads = 1
-env.backends.onnx.wasm.wasmPaths = { mjs: mjsUrl, wasm: wasmUrl }
-
-// Patch WebGPU to prevent hangs in extension context
-try {
-  if ((navigator as any).gpu) {
-    const _originalGPU = (navigator as any).gpu
-    ;(navigator as any).gpu = {
-      ..._originalGPU,
-      requestAdapter: () => {
-        console.log('[STT] WebGPU requestAdapter() intercepted → returning null')
-        return Promise.resolve(null)
-      },
-    }
-  }
-} catch (e) {
-  // WebGPU not available, skip
-}
-
-// ─── Whisper engine ──────────────────────────────────────────────────────────
+// ─── Whisper engine (Web Worker) ─────────────────────────────────────────────
 // Broadcast to both local listeners (sttEvents) and other extension contexts (chrome.runtime)
 function broadcast(msg: any) {
   sttEvents.emit(msg)
   chrome.runtime.sendMessage(msg)
 }
 
-let transcriber: any = null
+// Mirror of Worker model state for synchronous checks from other extension contexts
 let isModelReady = false
 let currentModelRepo: string | null = null
 
+// AudioContext is not available in Workers, so audio decoding stays on the main thread
 async function base64ToFloat32Array(base64String: string): Promise<Float32Array> {
   const response = await fetch(base64String)
   const arrayBuffer = await response.arrayBuffer()
@@ -59,135 +37,91 @@ async function base64ToFloat32Array(base64String: string): Promise<Float32Array>
 export default function SidePanelApp() {
   const [lastResult, setLastResult] = useState<string | null>(null)
   const [lastChunks, setLastChunks] = useState<{ text: string; timestamp: [number, number] }[]>([])
+  const workerRef = useRef<Worker | null>(null)
 
-  const loadModel = useCallback(async (modelRepo: string) => {
-    if (isModelReady && currentModelRepo === modelRepo) {
-      broadcast({ type: MSG.STT_PROGRESS, status: 'ready', progress: 100 })
-      return
-    }
+  // Initialize Whisper Worker
+  useEffect(() => {
+    const worker = new Worker(
+      chrome.runtime.getURL('/whisper-worker.js')
+    )
 
-    if (transcriber && currentModelRepo !== modelRepo) {
-      transcriber = null
-      isModelReady = false
-    }
+    // Send ONNX Runtime WASM URLs to Worker (chrome.runtime.getURL not available in Workers)
+    const { mjsUrl, wasmUrl } = getOrtUrls()
+    worker.postMessage({ type: 'init', mjsUrl, wasmUrl })
 
-    try {
-      console.log('[STT] Starting model load:', modelRepo)
-      broadcast({ type: MSG.STT_PROGRESS, status: 'loading', progress: 0 })
+    // Handle messages from Worker
+    worker.onmessage = (e: MessageEvent) => {
+      const msg = e.data
 
-      let heartbeatInterval: ReturnType<typeof setInterval> | null = null
-      let done = false
-      heartbeatInterval = setInterval(() => {
-        if (done) return
-        broadcast({ type: MSG.STT_PROGRESS, status: 'loading', progress: 100 })
-      }, 2000)
-
-      const TIMEOUT_MS = 3 * 60 * 1000
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Model load timed out after 3 minutes')), TIMEOUT_MS)
-      )
-
-      try {
-        transcriber = await Promise.race([
-          pipeline('automatic-speech-recognition', modelRepo, {
-            dtype: 'q4',
-            device: 'wasm',
-            progress_callback: (progress: any) => {
-              if (progress.status === 'progress' && typeof progress.progress === 'number') {
-                broadcast({
-                  type: MSG.STT_PROGRESS,
-                  status: 'downloading',
-                  progress: Math.round(progress.progress),
-                })
-              } else if (progress.status === 'done') {
-                broadcast({
-                  type: MSG.STT_PROGRESS,
-                  status: 'loading',
-                  progress: 100,
-                })
-              }
-            },
-          }),
-          timeoutPromise,
-        ])
-      } finally {
-        done = true
-        if (heartbeatInterval) clearInterval(heartbeatInterval)
+      if (msg.type === 'progress') {
+        // Update mirrored state
+        if (msg.status === 'ready') {
+          isModelReady = true
+          if (msg.modelRepo) currentModelRepo = msg.modelRepo
+        } else if (msg.status === 'deleted') {
+          isModelReady = false
+          currentModelRepo = null
+        }
+        broadcast({ type: MSG.STT_PROGRESS, status: msg.status, progress: msg.progress })
+      } else if (msg.type === 'result') {
+        broadcast({ type: MSG.STT_RESULT, text: msg.text, chunks: msg.chunks })
+        setLastResult(msg.text)
+        setLastChunks(msg.chunks)
+      } else if (msg.type === 'error') {
+        // Only reset model state on fatal errors (e.g. model load failure),
+        // not on transient errors (e.g. transcription failure)
+        if (msg.fatal) isModelReady = false
+        broadcast({ type: MSG.STT_ERROR, error: msg.error })
+      } else if (msg.type === 'modelStatus') {
+        isModelReady = msg.ready
+        currentModelRepo = msg.modelRepo
       }
-
-      isModelReady = true
-      currentModelRepo = modelRepo
-      console.log('[STT] Model loaded successfully')
-      broadcast({ type: MSG.STT_PROGRESS, status: 'ready', progress: 100 })
-    } catch (err: any) {
-      console.error('[STT] Model load failed:', err?.message)
-      isModelReady = false
-      transcriber = null
-      broadcast({ type: MSG.STT_ERROR, error: err?.message || String(err) })
     }
+
+    worker.onerror = (err) => {
+      console.error('[STT] Worker error:', err)
+      broadcast({ type: MSG.STT_ERROR, error: 'Worker crashed: ' + (err.message || 'unknown error') })
+    }
+
+    workerRef.current = worker
+
+    return () => {
+      worker.terminate()
+      workerRef.current = null
+    }
+  }, [])
+
+  const loadModel = useCallback((modelRepo: string) => {
+    if (!workerRef.current) return
+    workerRef.current.postMessage({ type: 'loadModel', modelRepo })
   }, [])
 
   const transcribe = useCallback(async (audioBase64: string, language: string) => {
-    if (!isModelReady || !transcriber) {
-      broadcast({ type: MSG.STT_ERROR, error: 'Model not loaded' })
+    if (!workerRef.current) {
+      broadcast({ type: MSG.STT_ERROR, error: 'Worker not initialized' })
       return
     }
 
-    const keepAlive = setInterval(() => {
-      broadcast({ type: MSG.STT_PROGRESS, status: 'transcribing', progress: 100 })
-    }, 10000)
-
     try {
+      // Decode audio on main thread (AudioContext is not available in Workers)
       broadcast({ type: MSG.STT_PROGRESS, status: 'transcribing', progress: 0 })
       const audioData = await base64ToFloat32Array(audioBase64)
       console.log('[STT] Audio decoded, samples:', audioData.length, 'duration:', (audioData.length / 16000).toFixed(1), 's')
-      const options: any = {}
-      if (language && language !== 'auto') {
-        options.language = language
-      } else {
-        // Whisper auto-detection is heavily English-biased.
-        // Use browser language as a hint for better accuracy.
-        const browserLang = navigator.language?.split('-')[0]
-        if (browserLang && browserLang !== 'en') {
-          options.language = browserLang
-        }
-      }
-      console.log('[STT] Starting Whisper inference, language:', options.language || 'auto')
-      const result = await transcriber(audioData, {
-        ...options,
-        chunk_length_s: 30,
-        stride_length_s: 5,
-        return_timestamps: true,
-      })
-      const text = result?.text || ''
-      const chunks = result?.chunks || []
-      console.log('[STT] Transcription complete, length:', text.length, 'chunks:', chunks.length)
-      broadcast({ type: MSG.STT_RESULT, text, chunks })
-      setLastResult(text)
-      setLastChunks(chunks)
+
+      // Transfer Float32Array buffer to Worker (zero-copy)
+      workerRef.current.postMessage(
+        { type: 'transcribe', audioData, language },
+        [audioData.buffer]
+      )
     } catch (err: any) {
-      console.error('[STT] Transcription failed:', err)
-      broadcast({ type: MSG.STT_ERROR, error: err.message })
-    } finally {
-      clearInterval(keepAlive)
+      console.error('[STT] Audio decode failed:', err)
+      broadcast({ type: MSG.STT_ERROR, error: 'Audio decode failed: ' + err.message })
     }
   }, [])
 
-  const deleteModel = useCallback(async (modelRepo: string) => {
-    try {
-      const cacheNames = await caches.keys()
-      for (const name of cacheNames) {
-        if (name.includes('transformers') || name.includes(modelRepo)) {
-          await caches.delete(name)
-        }
-      }
-      transcriber = null
-      isModelReady = false
-      currentModelRepo = null
-      broadcast({ type: MSG.STT_PROGRESS, status: 'deleted', progress: 0 })
-    } catch (err: any) {
-      broadcast({ type: MSG.STT_ERROR, error: err.message })
-    }
+  const deleteModel = useCallback((modelRepo: string) => {
+    if (!workerRef.current) return
+    workerRef.current.postMessage({ type: 'deleteModel', modelRepo })
   }, [])
 
   // Listen for STT messages from content scripts (direct broadcast)
