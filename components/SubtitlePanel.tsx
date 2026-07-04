@@ -33,7 +33,6 @@ export interface SubtitlePanelProps {
   onJumpToTime: (time: number) => void;
   platform: "bilibili" | "youtube";
   onClose: () => void;
-  audioExtractButton?: React.ReactNode;
   getAudioUrl?: () => string | null;
 }
 
@@ -45,7 +44,6 @@ export function SubtitlePanel({
   onJumpToTime,
   platform,
   onClose,
-  audioExtractButton,
   getAudioUrl,
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -262,9 +260,8 @@ export function SubtitlePanel({
             </div>
           )}
 
-          {/* STT button + audio extract */}
+          {/* STT button */}
           <div className="mb-2 flex items-center gap-2 flex-shrink-0">
-            {audioExtractButton}
             <Button
               onClick={() => transcribe()}
               disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking" || !getAudioUrl}
