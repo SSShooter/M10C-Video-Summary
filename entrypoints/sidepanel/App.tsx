@@ -1,12 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { toast } from 'sonner'
-import { storage } from '@wxt-dev/storage'
+import { useEffect, useCallback, useRef } from 'react'
 
 import { STTSection } from '~/components/STTSection'
 import { Toaster } from '~/components/ui/sonner'
-import { ScrollArea } from '~/components/ui/scroll-area'
 import { t } from '~/utils/i18n'
-import { MSG, STT_STORAGE_KEY, DEFAULT_STT_CONFIG, type STTConfig } from '~/utils/stt-config'
+import { MSG } from '~/utils/stt-config'
 import { getOrtUrls } from '~/utils/ort-cache'
 import { STTEngineContext, type STTEngine } from '~/contexts/stt-engine'
 import { sttEvents } from '~/utils/stt-events'
@@ -35,8 +32,6 @@ async function base64ToFloat32Array(base64String: string): Promise<Float32Array>
 }
 
 export default function SidePanelApp() {
-  const [lastResult, setLastResult] = useState<string | null>(null)
-  const [lastChunks, setLastChunks] = useState<{ text: string; timestamp: [number, number] }[]>([])
   const workerRef = useRef<Worker | null>(null)
 
   // Initialize Whisper Worker
@@ -74,8 +69,6 @@ export default function SidePanelApp() {
         })
       } else if (msg.type === 'result') {
         broadcast({ type: MSG.STT_RESULT, text: msg.text, chunks: msg.chunks })
-        setLastResult(msg.text)
-        setLastChunks(msg.chunks)
       } else if (msg.type === 'error') {
         // Only reset model state on fatal errors (e.g. model load failure),
         // not on transient errors (e.g. transcription failure)
@@ -187,35 +180,6 @@ export default function SidePanelApp() {
       <STTEngineContext.Provider value={engine}>
         <STTSection />
       </STTEngineContext.Provider>
-
-      {lastResult && (
-        <div className="mt-4 flex-1 flex flex-col overflow-hidden min-h-0">
-          <h3 className="text-sm font-semibold mb-2 flex-shrink-0">{t('sttTranscribe')}</h3>
-          <ScrollArea className="flex-1 rounded border p-3 min-h-0">
-            {lastChunks.length > 0 ? (
-              lastChunks.map((chunk, i) => {
-                const fmt = (t: number) => {
-                  const m = Math.floor(t / 60)
-                  const s = Math.floor(t % 60)
-                  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-                }
-                return (
-                  <div key={i} className="py-2 border-b border-gray-100">
-                    <div className="text-xs text-blue-500 mb-1 font-medium">
-                      {fmt(chunk.timestamp[0])} - {fmt(chunk.timestamp[1])}
-                    </div>
-                    <div className="text-sm text-gray-900 leading-relaxed">
-                      {chunk.text}
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{lastResult}</p>
-            )}
-          </ScrollArea>
-        </div>
-      )}
 
       <Toaster />
     </div>
