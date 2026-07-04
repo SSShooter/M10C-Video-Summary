@@ -169,6 +169,10 @@ export default defineUnlistedScript(() => {
       console.log('[STT Worker] Starting Whisper inference, language:', options.language || 'auto')
 
       let chunkCount = 0
+      let audioChunkIdx = 0
+      const CHUNK_LENGTH_S = 30
+      const STRIDE_LENGTH_S = 5
+      const JUMP_S = CHUNK_LENGTH_S - 2 * STRIDE_LENGTH_S // 20s
 
       const streamer = new WhisperTextStreamer(transcriber.tokenizer as WhisperTokenizer, {
         skip_prompt: true,
@@ -177,16 +181,23 @@ export default defineUnlistedScript(() => {
           console.log('[STT Worker] 增量文本:', JSON.stringify(text))
         },
         on_chunk_start: (time: number) => {
-          console.log('[STT Worker] Chunk start, time:', time)
+          const absoluteTime = audioChunkIdx * JUMP_S + time
+          console.log('[STT Worker] Chunk start, relative:', time, 'absolute:', absoluteTime)
         },
         on_chunk_end: (time: number) => {
           chunkCount++
-          console.log('[STT Worker] Chunk end, time:', time, 'chunkCount:', chunkCount)
+          const absoluteTime = audioChunkIdx * JUMP_S + time
+          console.log('[STT Worker] Chunk end, relative:', time, 'absolute:', absoluteTime, 'chunkCount:', chunkCount)
           self.postMessage({
             type: 'progress',
             status: 'transcribing',
-            progress: chunkCount
+            progress: chunkCount,
+            time: absoluteTime
           })
+        },
+        on_finalize: () => {
+          audioChunkIdx++
+          console.log('[STT Worker] Audio chunk finalized, next chunk idx:', audioChunkIdx)
         },
       })
 

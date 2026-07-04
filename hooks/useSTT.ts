@@ -20,6 +20,7 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
   const [chunks, setChunks] = useState<STTChunk[]>([])
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<number>(0)
+  const [chunkTime, setChunkTime] = useState<number | null>(null)
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tabIdRef = useRef<number | null>(null)
@@ -108,6 +109,9 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
           if (typeof msg.progress === 'number') {
             setProgress(msg.progress)
           }
+          if (typeof msg.time === 'number') {
+            setChunkTime(msg.time)
+          }
         }
         if (msg.status === 'ready') {
           stopPolling()
@@ -193,5 +197,5 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
     }
   }, [getAudioUrl, clearCache])
 
-  return { status, result, chunks, error, progress, transcribe, checkModel, clearCache }
+  return { status, result, chunks, error, progress, chunkTime, transcribe, checkModel, clearCache }
 }

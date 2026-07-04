@@ -87,7 +87,8 @@ export default function SidePanelApp() {
           type: MSG.STT_PROGRESS,
           status: msg.status,
           progress: msg.progress,
-          chunks: msg.chunks
+          chunks: msg.chunks,
+          time: msg.time
         })
       } else if (msg.type === 'result') {
         broadcast({ type: MSG.STT_RESULT, text: msg.text, chunks: msg.chunks })

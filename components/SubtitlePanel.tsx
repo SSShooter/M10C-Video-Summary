@@ -54,7 +54,7 @@ export function SubtitlePanel({
   const currentUrl = window.location.href;
 
   const sttVideoId = videoInfo?.bvid || videoInfo?.videoId || null;
-  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, progress: sttProgress, transcribe, checkModel, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
+  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, progress: sttProgress, chunkTime: sttChunkTime, transcribe, checkModel, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
@@ -308,8 +308,7 @@ export function SubtitlePanel({
               <div className="flex items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
                 <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                 <span>
-                  {t("sttTranscribing")}
-                  {sttProgress > 0 ? ` (Chunk ${sttProgress})` : ""}
+                  {sttProgress > 0 ? ` (Chunk ${sttProgress}${sttChunkTime != null ? ` - ${formatTime(sttChunkTime)}` : ""})` : ""}
                 </span>
               </div>
             )}
