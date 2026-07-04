@@ -33,28 +33,46 @@ export function STTSection() {
   const [loadingSeconds, setLoadingSeconds] = useState(0)
   const engine = useSTTEngine()
 
-  // Load saved config on mount
+  // Load saved config on mount and auto-load model if previously downloaded
   useEffect(() => {
-    storage.getItem<STTConfig>(STT_STORAGE_KEY).then((saved) => {
-      if (saved) setConfig(saved)
-    })
+    let cancelled = false
 
-    // Check if model is already loaded
-    if (engine) {
-      engine.checkModel().then((res) => {
-        if (res.ready) {
-          setStatus('ready')
-          setProgress(100)
+    async function init() {
+      const [saved, modelCheck] = await Promise.all([
+        storage.getItem<STTConfig>(STT_STORAGE_KEY),
+        engine
+          ? engine.checkModel()
+          : chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL }),
+      ])
+
+      if (cancelled) return
+      if (saved) setConfig(saved)
+
+      if ((modelCheck as any)?.ready) {
+        setStatus('ready')
+        setProgress(100)
+        return
+      }
+
+      // Auto-load from cache if previously downloaded
+      const data = await chrome.storage.local.get(['sttModelDownloaded', 'sttModelRepo'])
+      if (cancelled || !data.sttModelDownloaded || !data.sttModelRepo) return
+
+      const modelSize = saved?.modelSize || DEFAULT_STT_CONFIG.modelSize
+      const model = STT_MODELS.find(m => m.id === modelSize)
+      if (model && data.sttModelRepo === model.repo) {
+        setStatus('loading')
+        setProgress(0)
+        if (engine) {
+          engine.loadModel(data.sttModelRepo)
+        } else {
+          chrome.runtime.sendMessage({ type: MSG.STT_LOAD_MODEL, modelRepo: data.sttModelRepo })
         }
-      })
-    } else {
-      chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL }, (response) => {
-        if (response?.ready) {
-          setStatus('ready')
-          setProgress(100)
-        }
-      })
+      }
     }
+
+    init()
+    return () => { cancelled = true }
   }, [])
 
   // Listen for STT progress messages

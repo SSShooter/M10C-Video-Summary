@@ -427,6 +427,16 @@ export default defineBackground(() => {
   let capturedSubtitleUrl: string | null = null
   let sttTranscribeTabId: number | null = null
 
+  // Restore state from local storage on service worker startup
+  chrome.storage.local.get(['capturedSubtitleUrl', 'sttTranscribeTabId'], (data) => {
+    if (data.capturedSubtitleUrl) {
+      capturedSubtitleUrl = data.capturedSubtitleUrl
+    }
+    if (data.sttTranscribeTabId) {
+      sttTranscribeTabId = data.sttTranscribeTabId
+    }
+  })
+
   // 监听YouTube的timedtext API请求
   chrome.webRequest.onBeforeRequest.addListener(
     (details) => {
@@ -441,6 +451,7 @@ export default defineBackground(() => {
         if (url.searchParams.has("pot")) {
           console.log("捕获到YouTube字幕URL:", details.url)
           capturedSubtitleUrl = details.url
+          chrome.storage.local.set({ capturedSubtitleUrl: details.url })
 
           // 通知content script字幕URL已捕获
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -474,10 +485,32 @@ export default defineBackground(() => {
       request.type === 'STT_RESULT' ||
       request.type === 'STT_ERROR'
     )) {
+      const relay = (tabId: number) => {
+        chrome.tabs.sendMessage(tabId, request).catch(() => {
+          if (sttTranscribeTabId === tabId) {
+            sttTranscribeTabId = null
+          }
+          chrome.storage.local.remove('sttTranscribeTabId')
+        })
+      }
+
       if (sttTranscribeTabId) {
-        chrome.tabs.sendMessage(sttTranscribeTabId, request).catch(() => {
-          // Tab may have been closed — clear stale ID
-          sttTranscribeTabId = null
+        relay(sttTranscribeTabId)
+      } else {
+        chrome.storage.local.get('sttTranscribeTabId', (data) => {
+          if (data.sttTranscribeTabId) {
+            sttTranscribeTabId = data.sttTranscribeTabId
+            relay(data.sttTranscribeTabId)
+          } else if (
+            request.type === 'STT_PROGRESS' &&
+            (request.status === 'ready' || request.status === 'deleted')
+          ) {
+            // Model status changed with no active transcription —
+            // notify the active tab so it can enable/disable the transcribe button
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+              if (tabs[0]?.id) relay(tabs[0].id)
+            })
+          }
         })
       }
       return
@@ -489,6 +522,16 @@ export default defineBackground(() => {
       request.type === 'STT_RESULT' ||
       request.type === 'STT_ERROR'
     )) {
+      return
+    }
+
+    // Auto-open side panel when requested (e.g. B站 subtitles unavailable)
+    if (request.type === 'OPEN_SIDE_PANEL') {
+      const tabId = sender.tab?.id
+      if (tabId) {
+        chrome.sidePanel.open({ tabId }).catch(() => {})
+      }
+      sendResponse({ received: true })
       return
     }
 
@@ -510,6 +553,7 @@ export default defineBackground(() => {
         // Save the tab ID so we can relay progress/results back to it
         if (sender.tab?.id) {
           sttTranscribeTabId = sender.tab.id
+          chrome.storage.local.set({ sttTranscribeTabId: sender.tab.id })
         }
         // Audio data too large for storage — forward with retries
         const fwdMsg = { _forwarded: true, ...request }
@@ -540,11 +584,19 @@ export default defineBackground(() => {
     }
 
     if (request.action === "getCapturedSubtitleUrl") {
-      sendResponse({ success: true, data: capturedSubtitleUrl })
+      if (capturedSubtitleUrl) {
+        sendResponse({ success: true, data: capturedSubtitleUrl })
+      } else {
+        chrome.storage.local.get('capturedSubtitleUrl', (data) => {
+          sendResponse({ success: true, data: data.capturedSubtitleUrl || null })
+        })
+        return true // Keep channel open for async response
+      }
     }
 
     if (request.action === "clearCapturedSubtitleUrl") {
       capturedSubtitleUrl = null
+      chrome.storage.local.remove('capturedSubtitleUrl')
       sendResponse({ success: true })
     }
 

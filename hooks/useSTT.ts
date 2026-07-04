@@ -19,6 +19,7 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
   const [result, setResult] = useState<string | null>(null)
   const [chunks, setChunks] = useState<STTChunk[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState<number>(0)
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -60,7 +61,7 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
     })
   }, [])
 
-  const getCacheKey = () => videoId ? `local:stt_cache_${videoId}` : null
+  const getCacheKey = () => videoId ? `local:stt_cache_${videoId}` as `local:${string}` : null
 
   const loadCache = useCallback(async () => {
     const key = getCacheKey()
@@ -83,6 +84,7 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
 
   useEffect(() => {
     const listener = (msg: any) => {
+      console.log('[STT Hook] Received runtime message:', msg.type, 'status:', msg.status, 'progress:', msg.progress)
       if (msg.type === MSG.STT_RESULT) {
         clearWatchdog()
         setResult(msg.text)
@@ -100,6 +102,9 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
         if (msg.status === 'transcribing') {
           resetWatchdog()
           setStatus('transcribing')
+          if (typeof msg.progress === 'number') {
+            setProgress(msg.progress)
+          }
         }
         if (msg.status === 'ready') {
           stopPolling()
@@ -138,6 +143,8 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
       await clearCache()
       setStatus('recording')
       setResult(null)
+      setChunks([])
+      setProgress(0)
       setError(null)
 
       const response: any = await new Promise((resolve) => {
@@ -167,5 +174,5 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
     }
   }, [getAudioUrl, clearCache])
 
-  return { status, result, chunks, error, transcribe, clearCache }
+  return { status, result, chunks, error, progress, transcribe, checkModel, clearCache }
 }

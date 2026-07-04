@@ -67,6 +67,72 @@ function BilibiliSubtitlePanel() {
     return document.cookie
   }
 
+  // 从页面 __playinfo__ 中提取音频 URL
+  const getAudioUrlFromPlayInfo = (): string | null => {
+    try {
+      // 方式1：直接读 window.__playinfo__（content script 可访问页面设置的 window 属性）
+      let playInfo = (window as any).__playinfo__
+
+      // 方式2：从 script 标签解析（兜底）
+      if (!playInfo) {
+        console.log("[Audio] window.__playinfo__ 为空，尝试从 script 标签解析...")
+        const scripts = Array.from(document.querySelectorAll("script"))
+        const playInfoScript = scripts.find((script) =>
+          script.textContent?.includes("__playinfo__")
+        )
+        console.log("[Audio] 包含 __playinfo__ 的 script 标签:", playInfoScript ? "找到" : "未找到")
+
+        if (playInfoScript?.textContent) {
+          console.log("[Audio] script 内容前200字符:", playInfoScript.textContent.substring(0, 200))
+          const match = playInfoScript.textContent.match(/window\.__playinfo__\s*=\s*(\{.*)/s)
+          if (match?.[1]) {
+            let jsonStr = match[1].replace(/;\s*$/, "")
+            try {
+              playInfo = JSON.parse(jsonStr)
+            } catch (e) {
+              console.log("[Audio] JSON.parse 失败，尝试截取...")
+              const endIdx = jsonStr.lastIndexOf("}")
+              if (endIdx > 0) {
+                try {
+                  playInfo = JSON.parse(jsonStr.substring(0, endIdx + 1))
+                } catch (err) {
+                  console.error("[Audio] 截取后仍无法解析 JSON")
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (!playInfo) {
+        console.log("[Audio] 所有方式均未获取到 __playinfo__")
+        return null
+      }
+
+      console.log("[Audio] __playinfo__ 顶层 key:", Object.keys(playInfo))
+      const dash = playInfo?.data?.dash
+      if (!dash) {
+        console.log("[Audio] 无 dash 数据，data keys:", Object.keys(playInfo?.data || {}))
+        return null
+      }
+
+      const audioList = dash.audio
+      console.log("[Audio] audio 数组长度:", audioList?.length)
+
+      if (!audioList || audioList.length === 0) {
+        console.log("[Audio] 无音频流，dash keys:", Object.keys(dash))
+        return null
+      }
+
+      const audioUrl = audioList[0].baseUrl || audioList[0].base_url
+      console.log("✅ 成功提取 B 站音频直链:", audioUrl)
+      return audioUrl
+    } catch (error) {
+      console.error("[Audio] 解析 __playinfo__ 失败:", error)
+      return null
+    }
+  }
+
   // 获取字幕数据
   const fetchSubtitles = async (bvid: string, cid: number) => {
     try {
@@ -237,6 +303,13 @@ function BilibiliSubtitlePanel() {
     }
   }, [currentBvid])
 
+  // 字幕获取失败时自动打开 side panel（STT）
+  useEffect(() => {
+    if (error) {
+      chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' })
+    }
+  }, [error])
+
   if (!isVisible) {
     return null
   }
@@ -267,6 +340,7 @@ function BilibiliSubtitlePanel() {
       onJumpToTime={jumpToTime}
       platform="bilibili"
       onClose={handleClose}
+      getAudioUrl={getAudioUrlFromPlayInfo}
     />
   )
 }

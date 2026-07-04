@@ -52,17 +52,26 @@ export default function SidePanelApp() {
     // Handle messages from Worker
     worker.onmessage = (e: MessageEvent) => {
       const msg = e.data
+      console.log('[STT App] Worker message:', msg.type, 'status:', msg.status, 'progress:', msg.progress)
 
       if (msg.type === 'progress') {
         // Update mirrored state
         if (msg.status === 'ready') {
           isModelReady = true
           if (msg.modelRepo) currentModelRepo = msg.modelRepo
+          chrome.storage.local.set({ sttModelDownloaded: true, sttModelRepo: msg.modelRepo })
         } else if (msg.status === 'deleted') {
           isModelReady = false
           currentModelRepo = null
+          chrome.storage.local.remove(['sttModelDownloaded', 'sttModelRepo'])
         }
-        broadcast({ type: MSG.STT_PROGRESS, status: msg.status, progress: msg.progress })
+        console.log('[STT App] Broadcasting progress:', msg.progress)
+        broadcast({
+          type: MSG.STT_PROGRESS,
+          status: msg.status,
+          progress: msg.progress,
+          chunks: msg.chunks
+        })
       } else if (msg.type === 'result') {
         broadcast({ type: MSG.STT_RESULT, text: msg.text, chunks: msg.chunks })
         setLastResult(msg.text)

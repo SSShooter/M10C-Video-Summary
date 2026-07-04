@@ -9,10 +9,10 @@
  * pattern causes in Chrome extension dev mode (script served from
  * http://localhost vs. page origin chrome-extension://).
  */
-import { pipeline, env } from '@huggingface/transformers'
+import { pipeline, env, WhisperTextStreamer, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers'
 
 export default defineUnlistedScript(() => {
-  let transcriber: any = null
+  let transcriber: AutomaticSpeechRecognitionPipeline | null = null
   let isModelReady = false
   let currentModelRepo: string | null = null
 
@@ -42,8 +42,9 @@ export default defineUnlistedScript(() => {
   // ─── ONNX Runtime setup ────────────────────────────────────────────────────
   function initRuntime(mjsUrl: string, wasmUrl: string) {
     env.allowLocalModels = false
+    if(env.backends.onnx.wasm){
     env.backends.onnx.wasm.numThreads = 1
-    env.backends.onnx.wasm.wasmPaths = { mjs: mjsUrl, wasm: wasmUrl }
+    env.backends.onnx.wasm.wasmPaths = { mjs: mjsUrl, wasm: wasmUrl }}
 
     // Patch WebGPU to prevent hangs in extension context
     try {
@@ -166,14 +167,39 @@ export default defineUnlistedScript(() => {
       }
 
       console.log('[STT Worker] Starting Whisper inference, language:', options.language || 'auto')
+
+      let chunkCount = 0
+
+      const streamer = new WhisperTextStreamer(transcriber.tokenizer as any, {
+        skip_prompt: true,
+        skip_special_tokens: true,
+        callback_function: (text: string) => {
+          console.log('[STT Worker] 增量文本:', JSON.stringify(text))
+        },
+        on_chunk_start: (time: number) => {
+          console.log('[STT Worker] Chunk start, time:', time)
+        },
+        on_chunk_end: (time: number) => {
+          chunkCount++
+          console.log('[STT Worker] Chunk end, time:', time, 'chunkCount:', chunkCount)
+          self.postMessage({
+            type: 'progress',
+            status: 'transcribing',
+            progress: chunkCount
+          })
+        },
+      })
+
       const result = await transcriber(audioData, {
         ...options,
         chunk_length_s: 30,
         stride_length_s: 5,
         return_timestamps: true,
+        streamer,
       })
-      const text = result?.text || ''
-      const chunks = result?.chunks || []
+      const output = Array.isArray(result) ? result[0] : result
+      const text = output?.text || ''
+      const chunks = output?.chunks || []
       console.log('[STT Worker] Transcription complete, length:', text.length, 'chunks:', chunks.length)
       self.postMessage({ type: 'result', text, chunks })
     } catch (err: any) {
