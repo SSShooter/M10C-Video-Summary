@@ -14,7 +14,7 @@ export interface STTChunk {
  *                       or null if not available
  * @param videoId - optional video ID for caching transcription results
  */
-export function useSTT(getAudioUrl: () => string | null, videoId?: string | null) {
+export function useSTT(getAudioUrl: () => string | null | Promise<string | null>, videoId?: string | null) {
   const [status, setStatus] = useState<STTStatus>('checking')
   const [result, setResult] = useState<string | null>(null)
   const [chunks, setChunks] = useState<STTChunk[]>([])
@@ -22,6 +22,7 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
   const [progress, setProgress] = useState<number>(0)
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tabIdRef = useRef<number | null>(null)
 
   const clearWatchdog = () => {
     if (watchdogRef.current) {
@@ -45,15 +46,17 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
     }
   }
 
-  const checkModel = useCallback(() => {
-    chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL }, (res) => {
+  const checkModel = useCallback((retriesLeft = 0) => {
+    chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' })
+    chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL, sourceTabId: tabIdRef.current }, (res) => {
       if (res?.ready) {
         stopPolling()
         setStatus('idle')
       } else if (res?.reloading) {
-        // Model is being reloaded by background, poll until ready
         setStatus('loading')
         pollingRef.current = setTimeout(() => checkModel(), 3000)
+      } else if (retriesLeft > 0) {
+        pollingRef.current = setTimeout(() => checkModel(retriesLeft - 1), 1500)
       } else {
         stopPolling()
         setStatus('model-not-ready')
@@ -114,9 +117,17 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
     }
     chrome.runtime.onMessage.addListener(listener)
 
-    // Check cache first, then model status
-    loadCache().then((cached) => {
-      if (!cached) checkModel()
+    // Get this content script's tab ID first (needed before checkModel
+    // so the side panel knows which tab to send STT_PROGRESS(ready) to).
+    chrome.runtime.sendMessage({ action: 'GET_TAB_ID' }, (res) => {
+      if (res?.tabId) {
+        tabIdRef.current = res.tabId
+      }
+      // Then check cache and model status.
+      // checkModel opens the side panel and retries while it opens.
+      loadCache().then((cached) => {
+        if (!cached) checkModel(5)
+      })
     })
 
     return () => {
@@ -132,7 +143,7 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
   }, [videoId])
 
   const transcribe = useCallback(async () => {
-    const audioUrl = getAudioUrl()
+    const audioUrl = await getAudioUrl()
     if (!audioUrl) {
       setError('No audio URL found on this page')
       setStatus('error')
@@ -147,26 +158,34 @@ export function useSTT(getAudioUrl: () => string | null, videoId?: string | null
       setProgress(0)
       setError(null)
 
-      const response: any = await new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-          { action: 'FETCH_AUDIO_BASE64', url: audioUrl, referer: window.location.href },
-          resolve
-        )
-      })
-
-      if (!response?.success) {
-        throw new Error(response?.error || 'Failed to fetch audio')
-      }
-
       setStatus('transcribing')
       resetWatchdog()
       const savedConfig = await storage.getItem<STTConfig>(STT_STORAGE_KEY)
       const language = savedConfig?.language || DEFAULT_STT_CONFIG.language
-      chrome.runtime.sendMessage({
+
+      // Open side panel, then send STT_TRANSCRIBE with audio URL directly.
+      // Side Panel fetches and decodes the audio itself — no need to pipe
+      // the entire audio through Background as base64.
+      chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' })
+      const sttMsg = {
         type: MSG.STT_TRANSCRIBE,
-        audioBase64: response.base64,
-        language
-      })
+        audioUrl,
+        referer: window.location.href,
+        language,
+        sourceTabId: tabIdRef.current,
+      }
+      let retries = 0
+      const maxRetries = 15
+      const trySend = () => {
+        chrome.runtime.sendMessage(sttMsg, (res) => {
+          if (res?.received) return
+          retries++
+          if (retries < maxRetries) {
+            setTimeout(trySend, 800)
+          }
+        })
+      }
+      trySend()
     } catch (err: any) {
       clearWatchdog()
       setError(err.message)

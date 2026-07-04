@@ -7,6 +7,7 @@ import elixirStyles from "mind-elixir/style.css?inline"
 import overrideStyles from "@/assets/mind-elixir-override.css?inline"
 import sonnerStyles from "sonner/dist/styles.css?inline"
 
+
 interface SubtitleItem {
   from: number
   to: number
@@ -68,14 +69,19 @@ function BilibiliSubtitlePanel() {
   }
 
   // 从页面 __playinfo__ 中提取音频 URL
-  const getAudioUrlFromPlayInfo = (): string | null => {
+  const getAudioUrlFromPlayInfo = async (): Promise<string | null> => {
     try {
-      // 方式1：直接读 window.__playinfo__（content script 可访问页面设置的 window 属性）
-      let playInfo = (window as any).__playinfo__
+      // 方式1：通过 Background Script 的 chrome.scripting.executeScript 读取主页面 window.__playinfo__ 属性（绕过 CSP）
+      const response = await new Promise<any>((resolve) => {
+        chrome.runtime.sendMessage({ action: "getBilibiliPlayInfo" }, (res) => {
+          resolve(res)
+        })
+      })
+      let playInfo = response?.success ? response.data : null
 
-      // 方式2：从 script 标签解析（兜底）
+      // 方式2：从 script 标签解析（首屏加载的兜底）
       if (!playInfo) {
-        console.log("[Audio] window.__playinfo__ 为空，尝试从 script 标签解析...")
+        console.log("[Audio] 主页面上下文 __playinfo__ 为空，尝试从 script 标签解析...")
         const scripts = Array.from(document.querySelectorAll("script"))
         const playInfoScript = scripts.find((script) =>
           script.textContent?.includes("__playinfo__")

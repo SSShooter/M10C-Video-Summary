@@ -425,15 +425,11 @@ class BackgroundAIService {
 export default defineBackground(() => {
   const backgroundAIService = new BackgroundAIService()
   let capturedSubtitleUrl: string | null = null
-  let sttTranscribeTabId: number | null = null
 
   // Restore state from local storage on service worker startup
-  chrome.storage.local.get(['capturedSubtitleUrl', 'sttTranscribeTabId'], (data) => {
+  chrome.storage.local.get(['capturedSubtitleUrl'], (data) => {
     if (data.capturedSubtitleUrl) {
       capturedSubtitleUrl = data.capturedSubtitleUrl
-    }
-    if (data.sttTranscribeTabId) {
-      sttTranscribeTabId = data.sttTranscribeTabId
     }
   })
 
@@ -476,56 +472,7 @@ export default defineBackground(() => {
 
   // Listen for messages from content scripts and extension pages
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // STT result/progress/error from the side panel — relay to the content
-    // script tab that initiated the transcription. chrome.runtime.sendMessage
-    // from extension pages does NOT reliably reach content scripts.
-    const isFromSidePanel = sender.url?.includes('sidepanel')
-    if (isFromSidePanel && (
-      request.type === 'STT_PROGRESS' ||
-      request.type === 'STT_RESULT' ||
-      request.type === 'STT_ERROR'
-    )) {
-      const relay = (tabId: number) => {
-        chrome.tabs.sendMessage(tabId, request).catch(() => {
-          if (sttTranscribeTabId === tabId) {
-            sttTranscribeTabId = null
-          }
-          chrome.storage.local.remove('sttTranscribeTabId')
-        })
-      }
-
-      if (sttTranscribeTabId) {
-        relay(sttTranscribeTabId)
-      } else {
-        chrome.storage.local.get('sttTranscribeTabId', (data) => {
-          if (data.sttTranscribeTabId) {
-            sttTranscribeTabId = data.sttTranscribeTabId
-            relay(data.sttTranscribeTabId)
-          } else if (
-            request.type === 'STT_PROGRESS' &&
-            (request.status === 'ready' || request.status === 'deleted')
-          ) {
-            // Model status changed with no active transcription —
-            // notify the active tab so it can enable/disable the transcribe button
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-              if (tabs[0]?.id) relay(tabs[0].id)
-            })
-          }
-        })
-      }
-      return
-    }
-    // Block STT broadcasts that are neither from a content script nor from
-    // the side panel (e.g. echoed back from runtime.sendMessage).
-    if (!sender.tab && !isFromSidePanel && (
-      request.type === 'STT_PROGRESS' ||
-      request.type === 'STT_RESULT' ||
-      request.type === 'STT_ERROR'
-    )) {
-      return
-    }
-
-    // Auto-open side panel when requested (e.g. B站 subtitles unavailable)
+    // Auto-open side panel when requested
     if (request.type === 'OPEN_SIDE_PANEL') {
       const tabId = sender.tab?.id
       if (tabId) {
@@ -535,44 +482,44 @@ export default defineBackground(() => {
       return
     }
 
-    // STT command messages: auto-open side panel and store pending operation.
-    if (request.type && request.type.startsWith('STT_')) {
-      const openSidePanel = (tabId: number) => {
+    // Model-status broadcasts from Side Panel (ready/deleted): relay to
+    // active tab.  These are sent before any STT_TRANSCRIBE, so the Side
+    // Panel doesn't know the content script's tab ID yet.
+    if (request.type === 'STT_PROGRESS' &&
+        (request.status === 'ready' || request.status === 'deleted')) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, request).catch(() => {})
+        }
+      })
+      return
+    }
+
+    // STT commands from content scripts or Options/Popup: open side panel.
+    // Content scripts send STT commands directly to Side Panel via
+    // runtime.sendMessage — Background just ensures the panel is open.
+    // Messages from the Side Panel itself (broadcasts) are not STT commands.
+    if (request.type && request.type.startsWith('STT_') && !sender.url?.includes('sidepanel')) {
+      const tabId = sender.tab?.id
+      if (tabId) {
         chrome.sidePanel.open({ tabId }).catch(() => {})
-      }
-
-      if (sender.tab?.id) {
-        openSidePanel(sender.tab.id)
       } else {
+        // From Options/Popup (no tab context) — store as pending
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0]?.id) openSidePanel(tabs[0].id)
+          const firstTab = tabs[0]
+          if (firstTab?.id) chrome.sidePanel.open({ tabId: firstTab.id }).catch(() => {})
         })
-      }
-
-      if (request.type === 'STT_TRANSCRIBE') {
-        // Save the tab ID so we can relay progress/results back to it
-        if (sender.tab?.id) {
-          sttTranscribeTabId = sender.tab.id
-          chrome.storage.local.set({ sttTranscribeTabId: sender.tab.id })
-        }
-        // Audio data too large for storage — forward with retries
-        const fwdMsg = { _forwarded: true, ...request }
-        let retries = 0
-        const tryForward = () => {
-          chrome.runtime.sendMessage(fwdMsg, () => {
-            if (chrome.runtime.lastError && retries < 10) {
-              retries++
-              setTimeout(tryForward, 500)
-            }
-          })
-        }
-        setTimeout(tryForward, 800)
-      } else {
-        // Store in storage for the side panel to pick up on mount
         chrome.storage.local.set({ sttPendingOp: request })
+        sendResponse({ received: true })
       }
+      return
+    }
 
-      sendResponse({ received: true })
+    // Return tab ID to content scripts
+    if (request.action === 'GET_TAB_ID') {
+      if (sender.tab?.id) {
+        sendResponse({ tabId: sender.tab.id })
+      }
       return
     }
 
@@ -600,72 +547,28 @@ export default defineBackground(() => {
       sendResponse({ success: true })
     }
 
-    if (request.action === "FETCH_AUDIO_BLOB") {
-      console.log("[Background] FETCH_AUDIO_BLOB start, url:", request.url?.substring(0, 100))
-      const fetchUrl = request.url
-      try {
-        fetch(fetchUrl, {
-          method: "GET",
-          headers: {
-            Referer: "https://www.bilibili.com"
-          }
+    if (request.action === "getBilibiliPlayInfo") {
+      const tabId = sender.tab?.id
+      if (!tabId) {
+        sendResponse({ success: false, error: "No tab ID" })
+      } else {
+        chrome.scripting.executeScript({
+          target: { tabId },
+          func: () => {
+            return (window as any).__playinfo__ || null
+          },
+          world: 'MAIN'
         })
-          .then((res) => {
-            console.log("[Background] fetch response status:", res.status)
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.arrayBuffer()
-          })
-          .then((buffer) => {
-            console.log("[Background] download done, bytes:", buffer.byteLength)
-            try {
-              sendResponse({ success: true, size: buffer.byteLength })
-            } catch (e) {
-              console.error("[Background] sendResponse error:", e)
-            }
-          })
-          .catch((err) => {
-            console.error("[Background] fetch error:", err.message)
-            try {
-              sendResponse({ success: false, error: err.message })
-            } catch (e) {
-              console.error("[Background] sendResponse error:", e)
-            }
-          })
-      } catch (err) {
-        console.error("[Background] sync error:", err)
-        sendResponse({ success: false, error: String(err) })
+        .then((results) => {
+          const result = results?.[0]?.result
+          sendResponse({ success: true, data: result })
+        })
+        .catch((err) => {
+          console.error("[Background] Failed to execute scripting on Bilibili:", err)
+          sendResponse({ success: false, error: err.message })
+        })
       }
-      return true
-    }
-
-    if (request.action === "FETCH_AUDIO_BASE64") {
-      const fetchUrl = request.url
-      const referer = request.referer || ""
-      try {
-        const headers: Record<string, string> = {}
-        if (referer) headers["Referer"] = referer
-        fetch(fetchUrl, { method: "GET", headers })
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.arrayBuffer()
-          })
-          .then((buffer) => {
-            const bytes = new Uint8Array(buffer)
-            let binary = ""
-            for (let i = 0; i < bytes.length; i++) {
-              binary += String.fromCharCode(bytes[i])
-            }
-            const base64 = btoa(binary)
-            const mime = "audio/webm"
-            sendResponse({ success: true, base64: `data:${mime};base64,${base64}` })
-          })
-          .catch((err) => {
-            sendResponse({ success: false, error: err.message })
-          })
-      } catch (err) {
-        sendResponse({ success: false, error: String(err) })
-      }
-      return true
+      return true // Keep channel open for async response
     }
 
     if (request.action === "checkMindmapCache") {

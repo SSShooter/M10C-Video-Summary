@@ -8,6 +8,7 @@ import elixirStyles from "mind-elixir/style.css?inline"
 import overrideStyles from "@/assets/mind-elixir-override.css?inline"
 import sonnerStyles from "sonner/dist/styles.css?inline"
 
+
 interface SubtitleItem {
   start: number
   dur: number
@@ -313,31 +314,6 @@ function YouTubeSubtitlePanel() {
     return null
   }
 
-  // Extract audio-only stream URL from YouTube's player response
-  const getYouTubeAudioUrl = (): string | null => {
-    try {
-      const scripts = Array.from(document.querySelectorAll("script"))
-      for (const script of scripts) {
-        const text = script.textContent || ""
-        const match = text.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;/s)
-        if (match?.[1]) {
-          const playerResponse = JSON.parse(match[1])
-          const formats = playerResponse?.streamingData?.adaptiveFormats || []
-          const audioFormats = formats.filter((f: any) =>
-            f.mimeType?.startsWith("audio/") && f.url
-          )
-          if (audioFormats.length > 0) {
-            audioFormats.sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))
-            return audioFormats[0].url
-          }
-        }
-      }
-    } catch (e) {
-      console.log("[STT] Failed to extract YouTube audio URL:", e)
-    }
-    return null
-  }
-
   return (
     <SubtitlePanel
       key={videoInfo?.videoId || 'no-video'}
@@ -348,7 +324,6 @@ function YouTubeSubtitlePanel() {
       onJumpToTime={jumpToTime}
       platform="youtube"
       onClose={handleClose}
-      getAudioUrl={getYouTubeAudioUrl}
     />
   )
 }

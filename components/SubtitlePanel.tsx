@@ -33,7 +33,7 @@ export interface SubtitlePanelProps {
   onJumpToTime: (time: number) => void;
   platform: "bilibili" | "youtube";
   onClose: () => void;
-  getAudioUrl?: () => string | null;
+  getAudioUrl?: () => string | null | Promise<string | null>;
 }
 
 export function SubtitlePanel({

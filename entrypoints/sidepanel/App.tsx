@@ -9,9 +9,17 @@ import { STTEngineContext, type STTEngine } from '~/contexts/stt-engine'
 import { sttEvents } from '~/utils/stt-events'
 
 // ─── Whisper engine (Web Worker) ─────────────────────────────────────────────
-// Broadcast to both local listeners (sttEvents) and other extension contexts (chrome.runtime)
+// Track the content script tab that initiated transcription, so STT results
+// can be sent directly via tabs.sendMessage instead of routing through background.
+let currentContentTabId: number | null = null
+
 function broadcast(msg: any) {
   sttEvents.emit(msg)
+  // Side panel → content script must use tabs.sendMessage.
+  if (currentContentTabId) {
+    chrome.tabs.sendMessage(currentContentTabId, msg).catch(() => {})
+  }
+  // Also broadcast to other extension contexts (Options page, Background, etc.)
   chrome.runtime.sendMessage(msg)
 }
 
@@ -22,6 +30,20 @@ let currentModelRepo: string | null = null
 // AudioContext is not available in Workers, so audio decoding stays on the main thread
 async function base64ToFloat32Array(base64String: string): Promise<Float32Array> {
   const response = await fetch(base64String)
+  const arrayBuffer = await response.arrayBuffer()
+  const audioContext = new AudioContext({ sampleRate: 16000 })
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+  const float32Array = audioBuffer.getChannelData(0)
+  const copy = new Float32Array(float32Array)
+  audioContext.close()
+  return copy
+}
+
+async function fetchAudioToFloat32Array(audioUrl: string, referer?: string): Promise<Float32Array> {
+  const headers: Record<string, string> = {}
+  if (referer) headers['Referer'] = referer
+  const response = await fetch(audioUrl, { headers })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
   const arrayBuffer = await response.arrayBuffer()
   const audioContext = new AudioContext({ sampleRate: 16000 })
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
@@ -98,21 +120,29 @@ export default function SidePanelApp() {
     workerRef.current.postMessage({ type: 'loadModel', modelRepo })
   }, [])
 
-  const transcribe = useCallback(async (audioBase64: string, language: string) => {
+  const transcribe = useCallback(async (params: { audioBase64?: string; audioUrl?: string; referer?: string; language: string }) => {
     if (!workerRef.current) {
       broadcast({ type: MSG.STT_ERROR, error: 'Worker not initialized' })
       return
     }
 
     try {
-      // Decode audio on main thread (AudioContext is not available in Workers)
       broadcast({ type: MSG.STT_PROGRESS, status: 'transcribing', progress: 0 })
-      const audioData = await base64ToFloat32Array(audioBase64)
+
+      let audioData: Float32Array
+      if (params.audioUrl) {
+        audioData = await fetchAudioToFloat32Array(params.audioUrl, params.referer)
+      } else if (params.audioBase64) {
+        audioData = await base64ToFloat32Array(params.audioBase64)
+      } else {
+        throw new Error('No audio source provided')
+      }
+
       console.log('[STT] Audio decoded, samples:', audioData.length, 'duration:', (audioData.length / 16000).toFixed(1), 's')
 
       // Transfer Float32Array buffer to Worker (zero-copy)
       workerRef.current.postMessage(
-        { type: 'transcribe', audioData, language },
+        { type: 'transcribe', audioData, language: params.language },
         [audioData.buffer]
       )
     } catch (err: any) {
@@ -126,18 +156,32 @@ export default function SidePanelApp() {
     workerRef.current.postMessage({ type: 'deleteModel', modelRepo })
   }, [])
 
-  // Listen for STT messages from content scripts (direct broadcast)
+  // Listen for STT messages directly from content scripts (via runtime.sendMessage)
   useEffect(() => {
     const listener = (msg: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
+      if (msg.type === MSG.STT_TRANSCRIBE) {
+        // Capture the source tab ID so broadcast() can send results back directly
+        if (msg.sourceTabId) {
+          currentContentTabId = msg.sourceTabId
+        } else if (sender.tab?.id) {
+          currentContentTabId = sender.tab.id
+        }
+        transcribe({
+          audioBase64: msg.audioBase64,
+          audioUrl: msg.audioUrl,
+          referer: msg.referer,
+          language: msg.language,
+        })
+        sendResponse({ received: true })
+      }
       if (msg.type === MSG.STT_LOAD_MODEL) {
         loadModel(msg.modelRepo)
         sendResponse({ received: true })
       }
-      if (msg.type === MSG.STT_TRANSCRIBE) {
-        transcribe(msg.audioBase64, msg.language)
-        sendResponse({ received: true })
-      }
       if (msg.type === MSG.STT_CHECK_MODEL) {
+        if (msg.sourceTabId) {
+          currentContentTabId = msg.sourceTabId
+        }
         sendResponse({ ready: isModelReady, modelRepo: currentModelRepo })
       }
       if (msg.type === MSG.STT_DELETE_MODEL) {
