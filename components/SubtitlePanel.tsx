@@ -124,14 +124,22 @@ export function SubtitlePanel({
 
   // 获取所有字幕文本
   const getAllSubtitlesText = () => {
-    if (subtitles.length === 0) {
-      return null;
+    if (subtitles.length > 0) {
+      return subtitles
+        .map((subtitle) => getSubtitleContent(subtitle))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
     }
-    return subtitles
-      .map((subtitle) => getSubtitleContent(subtitle))
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+    // 没有平台字幕时，回退到本地 STT 生成的 chunks
+    if (sttChunks.length > 0) {
+      return sttChunks
+        .map((chunk) => chunk.text)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+    return null;
   };
 
   // AI总结生成配置
@@ -233,7 +241,7 @@ export function SubtitlePanel({
             </div>
           )}
 
-          {error && (
+          {error && sttChunks.length === 0 && (
             <div className="text-center p-[20px]">
               <div className="text-red-500 mb-4">{error}</div>
               <Button
@@ -260,53 +268,56 @@ export function SubtitlePanel({
             </div>
           )}
 
-          {/* STT button */}
-          <div className="mb-2 flex items-center gap-2 flex-shrink-0">
-            <Button
-              onClick={() => transcribe()}
-              disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking"}
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-            >
-              {isSttBusy ? (
-                <>
-                  <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  {sttStatus === "loading" ? t("sttInitializing") : sttStatus === "recording" ? t("sttRecording") : t("sttTranscribing")}
-                </>
-              ) : (
-                <>
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                  {t("sttTranscribe")}
-                </>
-              )}
-            </Button>
-            {sttStatus === "model-not-ready" && (
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); checkModel(); }}
-                className="text-xs text-blue-500 hover:underline"
+          {subtitles.length === 0 && (<>
+            {/* STT button */}
+            <div className="mb-2 flex justify-center items-center gap-2 flex-shrink-0">
+              <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded font-semibold">STT</span>
+              <Button
+                onClick={() => transcribe()}
+                disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking"}
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
               >
-                {t("sttConfigureModel")}
-              </a>
-            )}
-          </div>
-
-          {sttStatus === "transcribing" && (
-            <div className="flex items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
-              <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
-              <span>
-                {t("sttTranscribing")}
-                {sttProgress > 0 ? ` (Chunk ${sttProgress})` : ""}
-              </span>
+                {isSttBusy ? (
+                  <>
+                    <span className="inline-block w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    {sttStatus === "loading" ? t("sttInitializing") : sttStatus === "recording" ? t("sttRecording") : t("sttTranscribing")}
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    {t("sttTranscribe")}
+                  </>
+                )}
+              </Button>
+              {sttStatus === "model-not-ready" && (
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); checkModel(); }}
+                  className="text-xs text-blue-500 hover:underline"
+                >
+                  {t("sttConfigureModel")}
+                </a>
+              )}
             </div>
-          )}
 
-          {sttError && (
-            <div className="text-xs text-red-500 mb-2 flex-shrink-0">{sttError}</div>
-          )}
+            {sttStatus === "transcribing" && (
+              <div className="flex items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
+                <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span>
+                  {t("sttTranscribing")}
+                  {sttProgress > 0 ? ` (Chunk ${sttProgress})` : ""}
+                </span>
+              </div>
+            )}
+
+            {sttError && (
+              <div className="text-xs text-red-500 mb-2 flex-shrink-0">{sttError}</div>
+            )}
+          </>)}
 
           <ScrollArea className="flex-1">
             {sttChunks.length > 0 ? (
@@ -316,7 +327,7 @@ export function SubtitlePanel({
                   className="py-[8px] border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50"
                   onClick={() => onJumpToTime(chunk.timestamp[0])}
                 >
-                  <div className="text-[12px] text-blue-500 mb-[4px] font-medium">
+                  <div className="text-[12px] text-blue-500 mb-[4px] font-medium flex items-center gap-1">
                     {formatTime(chunk.timestamp[0])} - {formatTime(chunk.timestamp[1])}
                   </div>
                   <div className="text-[14px] text-gray-900 leading-relaxed">
