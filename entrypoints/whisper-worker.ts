@@ -9,7 +9,7 @@
  * pattern causes in Chrome extension dev mode (script served from
  * http://localhost vs. page origin chrome-extension://).
  */
-import { pipeline, env, WhisperTextStreamer, type AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers'
+import { pipeline, env, WhisperTextStreamer, type AutomaticSpeechRecognitionPipeline, WhisperTokenizer } from '@huggingface/transformers'
 
 export default defineUnlistedScript(() => {
   let transcriber: AutomaticSpeechRecognitionPipeline | null = null
@@ -98,7 +98,7 @@ export default defineUnlistedScript(() => {
           pipeline('automatic-speech-recognition', modelRepo, {
             dtype: 'q4',
             device: 'wasm',
-            progress_callback: (progress: any) => {
+            progress_callback: (progress) => {
               if (progress.status === 'progress' && typeof progress.progress === 'number') {
                 self.postMessage({
                   type: 'progress',
@@ -170,7 +170,7 @@ export default defineUnlistedScript(() => {
 
       let chunkCount = 0
 
-      const streamer = new WhisperTextStreamer(transcriber.tokenizer as any, {
+      const streamer = new WhisperTextStreamer(transcriber.tokenizer as WhisperTokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (text: string) => {
