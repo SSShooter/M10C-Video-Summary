@@ -188,11 +188,13 @@ export default defineUnlistedScript(() => {
           chunkCount++
           const absoluteTime = audioChunkIdx * JUMP_S + time
           console.log('[STT Worker] Chunk end, relative:', time, 'absolute:', absoluteTime, 'chunkCount:', chunkCount)
+          const totalDuration = audioData.length / 16000
           self.postMessage({
             type: 'progress',
             status: 'transcribing',
             progress: chunkCount,
-            time: absoluteTime
+            time: absoluteTime,
+            totalDuration
           })
         },
         on_finalize: () => {

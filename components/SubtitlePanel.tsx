@@ -55,7 +55,7 @@ export function SubtitlePanel({
   const currentUrl = window.location.href;
 
   const sttVideoId = videoInfo?.bvid || videoInfo?.videoId || null;
-  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, progress: sttProgress, chunkTime: sttChunkTime, transcribe, checkModel, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
+  const { status: sttStatus, result: sttResult, chunks: sttChunks, error: sttError, progress: sttProgress, progressPercent: sttProgressPercent, chunkTime: sttChunkTime, transcribe, checkModel, clearCache: clearSttCache } = useSTT(getAudioUrl || (() => null), sttVideoId);
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
@@ -281,7 +281,7 @@ export function SubtitlePanel({
                   }
                   transcribe()
                 }}
-                disabled={sttStatus === "model-not-ready" || sttStatus === "checking"}
+                disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking"}
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
@@ -311,11 +311,9 @@ export function SubtitlePanel({
               )}
             </div>
 
-            {sttStatus === "transcribing" && (
+            {sttStatus === "transcribing" && sttProgressPercent > 0 && (
               <div className="flex justify-center items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
-                <span>
-                  {sttProgress > 0 ? ` (Chunk ${sttProgress}${sttChunkTime != null ? ` - ${formatTime(sttChunkTime)}` : ""})` : ""}
-                </span>
+                <span>{sttProgressPercent}%</span>
               </div>
             )}
 

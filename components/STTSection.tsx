@@ -97,6 +97,9 @@ export function STTSection() {
           setProgress(100)
         } else if (msg.status === 'transcribing') {
           setStatus('transcribing')
+          if (typeof msg.progressPercent === 'number') {
+            setProgress(msg.progressPercent)
+          }
         }
       }
       if (msg.type === MSG.STT_RESULT) {
@@ -270,10 +273,11 @@ export function STTSection() {
           <div
             className={cn(
               "h-full transition-all duration-300 ease-out rounded-full",
+              status === 'transcribing' && progress > 0 ? "bg-amber-500" :
               status === 'transcribing' ? "bg-amber-500 animate-pulse" :
               status === 'loading' ? "bg-blue-500 animate-pulse" : "bg-primary"
             )}
-            style={{ width: status === 'transcribing' ? '100%' : `${progress}%` }}
+            style={{ width: `${progress}%` }}
           />
         </div>
       )}

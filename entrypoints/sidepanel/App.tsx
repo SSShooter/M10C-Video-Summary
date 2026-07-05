@@ -100,11 +100,12 @@ export default function SidePanelApp() {
           isTranscribing = true
         }
         console.log('[STT App] Broadcasting progress:', msg.progress)
+        const progressPercent = msg.totalDuration > 0 ? Math.round((msg.time / msg.totalDuration) * 100) : undefined
         broadcast({
           type: MSG.STT_PROGRESS,
           status: msg.status,
           progress: msg.progress,
-          chunks: msg.chunks,
+          ...(progressPercent !== undefined && { progressPercent }),
           time: msg.time
         })
       } else if (msg.type === 'result') {
