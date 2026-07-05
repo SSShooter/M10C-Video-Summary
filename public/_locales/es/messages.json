@@ -611,6 +611,10 @@
     "message": "Restablecer",
     "description": "STT reset button to recover from stuck state"
   },
+  "sttTerminate": {
+    "message": "Terminar",
+    "description": "STT terminate button to stop active execution"
+  },
   "sttModelReady": {
     "message": "Modelo listo",
     "description": "STT model ready status"

@@ -278,12 +278,7 @@ function BilibiliSubtitlePanel() {
     }
   }, [currentBvid])
 
-  // 字幕获取失败时自动打开 side panel（STT）
-  useEffect(() => {
-    if (error) {
-      chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' })
-    }
-  }, [error])
+
 
   if (!isVisible) {
     return null

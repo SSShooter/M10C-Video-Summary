@@ -51,18 +51,24 @@ export function STTSection() {
       if ((modelCheck as any)?.ready) {
         setStatus('ready')
         setProgress(100)
+        chrome.runtime.sendMessage({ type: MSG.STT_PROGRESS, status: 'ready' })
         return
       }
 
       // Auto-load from cache if previously downloaded
       const data = await chrome.storage.local.get(['sttModelDownloaded', 'sttModelRepo'])
-      if (cancelled || !data.sttModelDownloaded || !data.sttModelRepo) return
+      if (cancelled) return
+      if (!data.sttModelDownloaded || !data.sttModelRepo) {
+        chrome.runtime.sendMessage({ type: MSG.STT_PROGRESS, status: 'not-downloaded' })
+        return
+      }
 
       const modelSize = saved?.modelSize || DEFAULT_STT_CONFIG.modelSize
       const model = STT_MODELS.find(m => m.id === modelSize)
       if (model && data.sttModelRepo === model.repo) {
         setStatus('loading')
         setProgress(0)
+        chrome.runtime.sendMessage({ type: MSG.STT_PROGRESS, status: 'loading' })
         if (engine) {
           engine.loadModel(data.sttModelRepo)
         } else {
@@ -172,12 +178,15 @@ export function STTSection() {
   }
 
   const handleReset = () => {
-    // Force UI back to not-downloaded without touching the model cache
-    // User can then retry download with fresh state
+    if (engine) {
+      engine.terminateSTT()
+    } else {
+      chrome.runtime.sendMessage({ type: MSG.STT_TERMINATE })
+    }
     setStatus('not-downloaded')
     setProgress(0)
     setLoadingSeconds(0)
-    toast.info(t('sttReset') || 'Reset')
+    toast.info(t('sttTerminate') || 'STT Terminated')
   }
 
   const selectedModel = STT_MODELS.find(m => m.id === config.modelSize)
@@ -317,7 +326,7 @@ export function STTSection() {
                 className="gap-1.5 h-9 text-xs"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                <span>{t('sttReset')}</span>
+                <span>{t('sttTerminate')}</span>
               </Button>
             )}
           </>

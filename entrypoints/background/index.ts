@@ -485,8 +485,7 @@ export default defineBackground(() => {
     // Model-status broadcasts from Side Panel (ready/deleted): relay to
     // active tab.  These are sent before any STT_TRANSCRIBE, so the Side
     // Panel doesn't know the content script's tab ID yet.
-    if (request.type === 'STT_PROGRESS' &&
-        (request.status === 'ready' || request.status === 'deleted')) {
+    if (request.type === 'STT_PROGRESS') {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id) {
           chrome.tabs.sendMessage(tabs[0].id, request).catch(() => {})
@@ -499,7 +498,7 @@ export default defineBackground(() => {
     // Content scripts send STT commands directly to Side Panel via
     // runtime.sendMessage — Background just ensures the panel is open.
     // Messages from the Side Panel itself (broadcasts) are not STT commands.
-    if (request.type && request.type.startsWith('STT_') && !sender.url?.includes('sidepanel')) {
+    if (request.type && request.type.startsWith('STT_') && request.type !== 'STT_TERMINATE' && !sender.url?.includes('sidepanel')) {
       const tabId = sender.tab?.id
       if (tabId) {
         chrome.sidePanel.open({ tabId }).catch(() => {})

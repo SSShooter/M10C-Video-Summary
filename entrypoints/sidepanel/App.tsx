@@ -56,8 +56,20 @@ async function fetchAudioToFloat32Array(audioUrl: string, referer?: string): Pro
 export default function SidePanelApp() {
   const workerRef = useRef<Worker | null>(null)
 
-  // Initialize Whisper Worker
-  useEffect(() => {
+  const terminateWorker = useCallback(() => {
+    if (workerRef.current) {
+      console.log('[STT App] Terminating active Whisper worker')
+      workerRef.current.terminate()
+      workerRef.current = null
+    }
+    isModelReady = false
+    currentModelRepo = null
+  }, [])
+
+  const initWorker = useCallback(() => {
+    terminateWorker()
+
+    console.log('[STT App] Initializing new Whisper worker')
     const worker = new Worker(
       chrome.runtime.getURL('/whisper-worker.js')
     )
@@ -109,12 +121,22 @@ export default function SidePanelApp() {
     }
 
     workerRef.current = worker
+  }, [terminateWorker])
+
+  // Initialize Whisper Worker and query active tab
+  useEffect(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        currentContentTabId = tabs[0].id
+      }
+    })
+
+    initWorker()
 
     return () => {
-      worker.terminate()
-      workerRef.current = null
+      terminateWorker()
     }
-  }, [])
+  }, [initWorker, terminateWorker])
 
   const loadModel = useCallback((modelRepo: string) => {
     if (!workerRef.current) return
@@ -157,6 +179,11 @@ export default function SidePanelApp() {
     workerRef.current.postMessage({ type: 'deleteModel', modelRepo })
   }, [])
 
+  const terminateSTT = useCallback(() => {
+    initWorker()
+    broadcast({ type: MSG.STT_ERROR, error: 'STT terminated by user' })
+  }, [initWorker])
+
   // Listen for STT messages directly from content scripts (via runtime.sendMessage)
   useEffect(() => {
     const listener = (msg: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
@@ -189,10 +216,14 @@ export default function SidePanelApp() {
         deleteModel(msg.modelRepo)
         sendResponse({ received: true })
       }
+      if (msg.type === MSG.STT_TERMINATE) {
+        terminateSTT()
+        sendResponse({ received: true })
+      }
     }
     chrome.runtime.onMessage.addListener(listener)
     return () => chrome.runtime.onMessage.removeListener(listener)
-  }, [loadModel, transcribe, deleteModel])
+  }, [loadModel, transcribe, deleteModel, terminateSTT])
 
   // Pick up pending STT operations written by the background script.
   // When the options page or popup triggers an STT action, the background
@@ -213,6 +244,7 @@ export default function SidePanelApp() {
     loadModel,
     deleteModel,
     checkModel: async () => ({ ready: isModelReady, modelRepo: currentModelRepo }),
+    terminateSTT,
   }
 
   return (

@@ -611,6 +611,10 @@
     "message": "초기화",
     "description": "STT reset button to recover from stuck state"
   },
+  "sttTerminate": {
+    "message": "중지",
+    "description": "STT terminate button to stop active execution"
+  },
   "sttModelReady": {
     "message": "모델 준비 완료",
     "description": "STT model ready status"

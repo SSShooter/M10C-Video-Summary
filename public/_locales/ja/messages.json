@@ -607,6 +607,10 @@
     "message": "リセット",
     "description": "STT reset button to recover from stuck state"
   },
+  "sttTerminate": {
+    "message": "中止",
+    "description": "STT terminate button to stop active execution"
+  },
   "sttModelReady": {
     "message": "モデル準備完了",
     "description": "STT model ready status"

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { storage } from '@wxt-dev/storage'
-import { MSG, STT_STORAGE_KEY, DEFAULT_STT_CONFIG, type STTConfig } from '~/utils/stt-config'
+import { MSG, STT_STORAGE_KEY, DEFAULT_STT_CONFIG, type STTConfig, STT_MODELS } from '~/utils/stt-config'
 
 export type STTStatus = 'idle' | 'checking' | 'loading' | 'model-not-ready' | 'recording' | 'transcribing' | 'done' | 'error'
 
@@ -24,6 +24,57 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tabIdRef = useRef<number | null>(null)
+  const pendingTranscribeRef = useRef<{ audioUrl: string; language: string } | null>(null)
+  const hasTriggeredLoadRef = useRef<boolean>(false)
+  const connectionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearConnectionTimeout = useCallback(() => {
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current)
+      connectionTimeoutRef.current = null
+    }
+  }, [])
+
+  const startConnectionTimeout = useCallback(() => {
+    clearConnectionTimeout()
+    connectionTimeoutRef.current = setTimeout(() => {
+      if (pendingTranscribeRef.current) {
+        pendingTranscribeRef.current = null
+        setError('Failed to connect to side panel')
+        setStatus('error')
+      }
+    }, 15000)
+  }, [clearConnectionTimeout])
+
+  const runTranscribe = useCallback(async (audioUrl: string, language: string) => {
+    try {
+      setStatus('transcribing')
+      resetWatchdog()
+      const sttMsg = {
+        type: MSG.STT_TRANSCRIBE,
+        audioUrl,
+        referer: window.location.href,
+        language,
+        sourceTabId: tabIdRef.current,
+      }
+      let retries = 0
+      const maxRetries = 15
+      const trySend = () => {
+        chrome.runtime.sendMessage(sttMsg, (res) => {
+          if (res?.received) return
+          retries++
+          if (retries < maxRetries) {
+            setTimeout(trySend, 800)
+          }
+        })
+      }
+      trySend()
+    } catch (err: any) {
+      clearWatchdog()
+      setError(err.message)
+      setStatus('error')
+    }
+  }, [])
 
   const clearWatchdog = () => {
     if (watchdogRef.current) {
@@ -103,6 +154,8 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
         setStatus('error')
       }
       if (msg.type === MSG.STT_PROGRESS) {
+        clearConnectionTimeout()
+
         if (msg.status === 'transcribing') {
           resetWatchdog()
           setStatus('transcribing')
@@ -112,10 +165,33 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
           if (typeof msg.time === 'number') {
             setChunkTime(msg.time)
           }
-        }
-        if (msg.status === 'ready') {
+        } else if (msg.status === 'ready') {
           stopPolling()
           setStatus('idle')
+          const pending = pendingTranscribeRef.current
+          if (pending) {
+            pendingTranscribeRef.current = null
+            runTranscribe(pending.audioUrl, pending.language)
+          }
+        } else if (msg.status === 'loading' || msg.status === 'downloading') {
+          setStatus('loading')
+          if (msg.status === 'downloading' && typeof msg.progress === 'number') {
+            setProgress(msg.progress)
+          }
+        } else if (msg.status === 'not-downloaded') {
+          const pending = pendingTranscribeRef.current
+          if (pending && !hasTriggeredLoadRef.current) {
+            hasTriggeredLoadRef.current = true
+            storage.getItem<STTConfig>(STT_STORAGE_KEY).then((savedConfig) => {
+              const modelSize = savedConfig?.modelSize || DEFAULT_STT_CONFIG.modelSize
+              const model = STT_MODELS.find(m => m.id === modelSize)
+              const modelRepo = model?.repo || DEFAULT_STT_CONFIG.modelSize
+              chrome.runtime.sendMessage({ type: MSG.STT_LOAD_MODEL, modelRepo })
+            })
+            setStatus('loading')
+          } else {
+            setStatus('model-not-ready')
+          }
         }
       }
     }
@@ -127,19 +203,21 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
       if (res?.tabId) {
         tabIdRef.current = res.tabId
       }
-      // Then check cache and model status.
-      // checkModel opens the side panel and retries while it opens.
+      // Then check cache.
       loadCache().then((cached) => {
-        if (!cached) checkModel(5)
+        if (!cached) {
+          setStatus('idle')
+        }
       })
     })
 
     return () => {
       clearWatchdog()
       stopPolling()
+      clearConnectionTimeout()
       chrome.runtime.onMessage.removeListener(listener)
     }
-  }, [checkModel, loadCache])
+  }, [checkModel, loadCache, runTranscribe, clearConnectionTimeout])
 
   const clearCache = useCallback(async () => {
     const key = getCacheKey()
@@ -156,46 +234,52 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
 
     try {
       await clearCache()
-      setStatus('recording')
+      setStatus('loading')
       setResult(null)
       setChunks([])
       setProgress(0)
       setError(null)
 
-      setStatus('transcribing')
-      resetWatchdog()
       const savedConfig = await storage.getItem<STTConfig>(STT_STORAGE_KEY)
       const language = savedConfig?.language || DEFAULT_STT_CONFIG.language
+      const modelSize = savedConfig?.modelSize || DEFAULT_STT_CONFIG.modelSize
+      const model = STT_MODELS.find(m => m.id === modelSize)
+      const modelRepo = model?.repo || DEFAULT_STT_CONFIG.modelSize
 
-      // Open side panel, then send STT_TRANSCRIBE with audio URL directly.
-      // Side Panel fetches and decodes the audio itself — no need to pipe
-      // the entire audio through Background as base64.
+      pendingTranscribeRef.current = { audioUrl, language }
+      hasTriggeredLoadRef.current = false
+
+      // Open side panel
       chrome.runtime.sendMessage({ type: 'OPEN_SIDE_PANEL' })
-      const sttMsg = {
-        type: MSG.STT_TRANSCRIBE,
-        audioUrl,
-        referer: window.location.href,
-        language,
-        sourceTabId: tabIdRef.current,
-      }
-      let retries = 0
-      const maxRetries = 15
-      const trySend = () => {
-        chrome.runtime.sendMessage(sttMsg, (res) => {
-          if (res?.received) return
-          retries++
-          if (retries < maxRetries) {
-            setTimeout(trySend, 800)
+
+      // Start connection timeout check
+      startConnectionTimeout()
+
+      // Send a single check model message to see if side panel is already open and ready
+      chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL, sourceTabId: tabIdRef.current }, (res) => {
+        if (res) {
+          clearConnectionTimeout()
+          if (res.ready) {
+            const pending = pendingTranscribeRef.current
+            if (pending) {
+              pendingTranscribeRef.current = null
+              runTranscribe(pending.audioUrl, pending.language)
+            }
+          } else {
+            if (!hasTriggeredLoadRef.current) {
+              hasTriggeredLoadRef.current = true
+              chrome.runtime.sendMessage({ type: MSG.STT_LOAD_MODEL, modelRepo })
+            }
+            setStatus('loading')
           }
-        })
-      }
-      trySend()
+        }
+      })
     } catch (err: any) {
       clearWatchdog()
       setError(err.message)
       setStatus('error')
     }
-  }, [getAudioUrl, clearCache])
+  }, [getAudioUrl, clearCache, runTranscribe, startConnectionTimeout, clearConnectionTimeout])
 
   return { status, result, chunks, error, progress, chunkTime, transcribe, checkModel, clearCache }
 }
