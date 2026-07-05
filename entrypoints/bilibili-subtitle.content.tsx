@@ -79,39 +79,8 @@ function BilibiliSubtitlePanel() {
       })
       let playInfo = response?.success ? response.data : null
 
-      // 方式2：从 script 标签解析（首屏加载的兜底）
       if (!playInfo) {
-        console.log("[Audio] 主页面上下文 __playinfo__ 为空，尝试从 script 标签解析...")
-        const scripts = Array.from(document.querySelectorAll("script"))
-        const playInfoScript = scripts.find((script) =>
-          script.textContent?.includes("__playinfo__")
-        )
-        console.log("[Audio] 包含 __playinfo__ 的 script 标签:", playInfoScript ? "找到" : "未找到")
-
-        if (playInfoScript?.textContent) {
-          console.log("[Audio] script 内容前200字符:", playInfoScript.textContent.substring(0, 200))
-          const match = playInfoScript.textContent.match(/window\.__playinfo__\s*=\s*(\{.*)/s)
-          if (match?.[1]) {
-            let jsonStr = match[1].replace(/;\s*$/, "")
-            try {
-              playInfo = JSON.parse(jsonStr)
-            } catch (e) {
-              console.log("[Audio] JSON.parse 失败，尝试截取...")
-              const endIdx = jsonStr.lastIndexOf("}")
-              if (endIdx > 0) {
-                try {
-                  playInfo = JSON.parse(jsonStr.substring(0, endIdx + 1))
-                } catch (err) {
-                  console.error("[Audio] 截取后仍无法解析 JSON")
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (!playInfo) {
-        console.log("[Audio] 所有方式均未获取到 __playinfo__")
+        console.log("[Audio] 未获取到 __playinfo__")
         return null
       }
 
