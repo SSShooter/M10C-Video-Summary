@@ -305,7 +305,7 @@ export function SubtitlePanel({
             </div>
 
             {sttStatus === "transcribing" && (
-              <div className="flex items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
+              <div className="flex justify-center items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
                 <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                 <span>
                   {sttProgress > 0 ? ` (Chunk ${sttProgress}${sttChunkTime != null ? ` - ${formatTime(sttChunkTime)}` : ""})` : ""}

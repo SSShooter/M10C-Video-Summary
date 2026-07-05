@@ -555,7 +555,7 @@ export default defineBackground(() => {
         chrome.scripting.executeScript({
           target: { tabId },
           func: () => {
-            return (window as any).__playinfo__ || null
+            return (window as any).__playurl_playinfo__ || (window as any).__playinfo__ || null
           },
           world: 'MAIN'
         })
