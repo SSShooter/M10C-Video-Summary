@@ -670,5 +670,9 @@
   "sttConfigureModel": {
     "message": "모델 설정",
     "description": "STT configure model link text"
+  },
+  "sttTaskRunning": {
+    "message": "한 번에 하나의 STT 작업만 실행할 수 있습니다",
+    "description": "STT task already running toast"
   }
 }

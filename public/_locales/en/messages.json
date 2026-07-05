@@ -670,5 +670,9 @@
   "sttConfigureModel": {
     "message": "Configure Model",
     "description": "STT configure model link text"
+  },
+  "sttTaskRunning": {
+    "message": "Only one STT task can run at a time",
+    "description": "STT task already running toast"
   }
 }

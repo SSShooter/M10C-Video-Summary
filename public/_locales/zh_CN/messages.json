@@ -670,5 +670,9 @@
   "sttConfigureModel": {
     "message": "配置模型",
     "description": "STT configure model link text"
+  },
+  "sttTaskRunning": {
+    "message": "只能同时运行一个STT任务",
+    "description": "STT task already running toast"
   }
 }

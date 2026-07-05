@@ -4,6 +4,7 @@ import { storage } from "@wxt-dev/storage";
 
 import { Button } from "~components/ui/button";
 import { Toaster } from "~components/ui/sonner";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
 import { t, getMatchedBrowserLanguage } from "~utils/i18n";
@@ -273,8 +274,14 @@ export function SubtitlePanel({
             <div className="mb-2 flex justify-center items-center gap-2 flex-shrink-0">
               <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded font-semibold">STT</span>
               <Button
-                onClick={() => transcribe()}
-                disabled={isSttBusy || sttStatus === "model-not-ready" || sttStatus === "checking"}
+                onClick={() => {
+                  if (isSttBusy) {
+                    toast.info(t("sttTaskRunning"))
+                    return
+                  }
+                  transcribe()
+                }}
+                disabled={sttStatus === "model-not-ready" || sttStatus === "checking"}
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
@@ -313,7 +320,7 @@ export function SubtitlePanel({
             )}
 
             {sttError && (
-              <div className="text-xs text-red-500 mb-2 flex-shrink-0">{sttError}</div>
+              <div className="text-xs text-red-500 mb-2 flex-shrink-0 text-center">{sttError}</div>
             )}
           </>)}
 

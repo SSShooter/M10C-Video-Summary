@@ -105,8 +105,23 @@ export function STTSection() {
       }
       if (msg.type === MSG.STT_ERROR) {
         toast.dismiss()
-        setStatus('not-downloaded')
-        setProgress(0)
+        setStatus((current) => {
+          if (msg.error === 'STT terminated by user') {
+            if (current === 'ready' || current === 'transcribing') {
+              setProgress(0)
+              return 'loading'
+            } else {
+              setProgress(0)
+              return 'not-downloaded'
+            }
+          } else if (msg.fatal) {
+            setProgress(0)
+            return 'not-downloaded'
+          } else {
+            setProgress(100)
+            return 'ready'
+          }
+        })
         toast.error(msg.error || 'STT error')
       }
     }
@@ -183,9 +198,14 @@ export function STTSection() {
     } else {
       chrome.runtime.sendMessage({ type: MSG.STT_TERMINATE })
     }
-    setStatus('not-downloaded')
-    setProgress(0)
-    setLoadingSeconds(0)
+    setStatus((current) => {
+      if (current === 'downloading') {
+        setProgress(0)
+        setLoadingSeconds(0)
+        return 'not-downloaded'
+      }
+      return current
+    })
     toast.info(t('sttTerminate') || 'STT Terminated')
   }
 

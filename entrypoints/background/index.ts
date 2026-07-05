@@ -485,7 +485,9 @@ export default defineBackground(() => {
     // Model-status broadcasts from Side Panel (ready/deleted): relay to
     // active tab.  These are sent before any STT_TRANSCRIBE, so the Side
     // Panel doesn't know the content script's tab ID yet.
-    if (request.type === 'STT_PROGRESS') {
+    // If the message has a tabId set or is currently transcribing, it is already
+    // targeted to a specific tab directly by the Side Panel, so background shouldn't relay it.
+    if (request.type === 'STT_PROGRESS' && request.status !== 'transcribing' && !request.tabId) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.id) {
           chrome.tabs.sendMessage(tabs[0].id, request).catch(() => {})

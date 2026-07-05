@@ -14,13 +14,14 @@ import { sttEvents } from '~/utils/stt-events'
 let currentContentTabId: number | null = null
 
 function broadcast(msg: any) {
-  sttEvents.emit(msg)
+  const msgWithTab = { ...msg, tabId: currentContentTabId }
+  sttEvents.emit(msgWithTab)
   // Side panel → content script must use tabs.sendMessage.
   if (currentContentTabId) {
-    chrome.tabs.sendMessage(currentContentTabId, msg).catch(() => {})
+    chrome.tabs.sendMessage(currentContentTabId, msgWithTab).catch(() => {})
   }
   // Also broadcast to other extension contexts (Options page, Background, etc.)
-  chrome.runtime.sendMessage(msg)
+  chrome.runtime.sendMessage(msgWithTab)
 }
 
 // Mirror of Worker model state for synchronous checks from other extension contexts
@@ -180,9 +181,24 @@ export default function SidePanelApp() {
   }, [])
 
   const terminateSTT = useCallback(() => {
+    const wasModelReady = isModelReady
+    const prevModelRepo = currentModelRepo
+
     initWorker()
     broadcast({ type: MSG.STT_ERROR, error: 'STT terminated by user' })
-  }, [initWorker])
+
+    if (wasModelReady && prevModelRepo) {
+      console.log('[STT App] Auto-reloading model after worker termination:', prevModelRepo)
+      loadModel(prevModelRepo)
+    } else {
+      chrome.storage.local.get('sttModelRepo', (data) => {
+        if (wasModelReady && data.sttModelRepo) {
+          console.log('[STT App] Auto-reloading model from storage after worker termination:', data.sttModelRepo)
+          loadModel(data.sttModelRepo)
+        }
+      })
+    }
+  }, [initWorker, loadModel])
 
   // Listen for STT messages directly from content scripts (via runtime.sendMessage)
   useEffect(() => {

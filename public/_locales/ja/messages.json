@@ -666,5 +666,9 @@
   "sttConfigureModel": {
     "message": "モデルを設定",
     "description": "STT configure model link text"
+  },
+  "sttTaskRunning": {
+    "message": "同時に実行できるSTTタスクは1つだけです",
+    "description": "STT task already running toast"
   }
 }

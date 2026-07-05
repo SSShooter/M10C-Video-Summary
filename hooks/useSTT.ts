@@ -139,6 +139,10 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
 
   useEffect(() => {
     const listener = (msg: any) => {
+      // Ignore messages intended for other tabs
+      if (msg.tabId !== undefined && msg.tabId !== null && tabIdRef.current !== null && msg.tabId !== tabIdRef.current) {
+        return
+      }
       console.log('[STT Hook] Received runtime message:', msg.type, 'status:', msg.status, 'progress:', msg.progress)
       if (msg.type === MSG.STT_RESULT) {
         clearWatchdog()
