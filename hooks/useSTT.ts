@@ -62,6 +62,13 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
       const trySend = () => {
         chrome.runtime.sendMessage(sttMsg, (res) => {
           if (res?.received) return
+          // Side panel is busy with another tab — abort immediately
+          if (res?.busy) {
+            clearWatchdog()
+            setError('STT is busy with another tab')
+            setStatus('error')
+            return
+          }
           retries++
           if (retries < maxRetries) {
             setTimeout(trySend, 800)
@@ -263,6 +270,13 @@ export function useSTT(getAudioUrl: () => string | null | Promise<string | null>
       chrome.runtime.sendMessage({ type: MSG.STT_CHECK_MODEL, sourceTabId: tabIdRef.current }, (res) => {
         if (res) {
           clearConnectionTimeout()
+          // Side panel is already busy with another tab — abort immediately
+          if (res.busy) {
+            pendingTranscribeRef.current = null
+            setError('STT is busy with another tab')
+            setStatus('error')
+            return
+          }
           if (res.ready) {
             const pending = pendingTranscribeRef.current
             if (pending) {

@@ -27,6 +27,8 @@ function broadcast(msg: any) {
 // Mirror of Worker model state for synchronous checks from other extension contexts
 let isModelReady = false
 let currentModelRepo: string | null = null
+// Global transcription mutex — prevents a second tab from hijacking the worker
+let isTranscribing = false
 
 // AudioContext is not available in Workers, so audio decoding stays on the main thread
 async function base64ToFloat32Array(base64String: string): Promise<Float32Array> {
@@ -94,6 +96,8 @@ export default function SidePanelApp() {
           isModelReady = false
           currentModelRepo = null
           chrome.storage.local.remove(['sttModelDownloaded', 'sttModelRepo'])
+        } else if (msg.status === 'transcribing') {
+          isTranscribing = true
         }
         console.log('[STT App] Broadcasting progress:', msg.progress)
         broadcast({
@@ -104,11 +108,13 @@ export default function SidePanelApp() {
           time: msg.time
         })
       } else if (msg.type === 'result') {
+        isTranscribing = false
         broadcast({ type: MSG.STT_RESULT, text: msg.text, chunks: msg.chunks })
       } else if (msg.type === 'error') {
         // Only reset model state on fatal errors (e.g. model load failure),
         // not on transient errors (e.g. transcription failure)
         if (msg.fatal) isModelReady = false
+        isTranscribing = false
         broadcast({ type: MSG.STT_ERROR, error: msg.error })
       } else if (msg.type === 'modelStatus') {
         isModelReady = msg.ready
@@ -150,8 +156,14 @@ export default function SidePanelApp() {
       return
     }
 
+    // Set mutex immediately — before any async work — so concurrent requests
+    // from other tabs are blocked even during audio fetch/decode.
+    isTranscribing = true
+
     try {
-      broadcast({ type: MSG.STT_PROGRESS, status: 'transcribing', progress: 0 })
+      // Phase 1: fetch + decode audio — broadcast 'recording' so the page
+      // shows a spinner instead of leaving the user wondering why nothing happens.
+      broadcast({ type: MSG.STT_PROGRESS, status: 'recording', progress: 0 })
 
       let audioData: Float32Array
       if (params.audioUrl) {
@@ -164,13 +176,15 @@ export default function SidePanelApp() {
 
       console.log('[STT] Audio decoded, samples:', audioData.length, 'duration:', (audioData.length / 16000).toFixed(1), 's')
 
-      // Transfer Float32Array buffer to Worker (zero-copy)
+      // Phase 2: hand off decoded audio to Worker — now switch to 'transcribing'.
+      broadcast({ type: MSG.STT_PROGRESS, status: 'transcribing', progress: 0 })
       workerRef.current.postMessage(
         { type: 'transcribe', audioData, language: params.language },
         [audioData.buffer]
       )
     } catch (err: any) {
       console.error('[STT] Audio decode failed:', err)
+      isTranscribing = false
       broadcast({ type: MSG.STT_ERROR, error: 'Audio decode failed: ' + err.message })
     }
   }, [])
@@ -184,6 +198,7 @@ export default function SidePanelApp() {
     const wasModelReady = isModelReady
     const prevModelRepo = currentModelRepo
 
+    isTranscribing = false
     initWorker()
     broadcast({ type: MSG.STT_ERROR, error: 'STT terminated by user' })
 
@@ -204,6 +219,11 @@ export default function SidePanelApp() {
   useEffect(() => {
     const listener = (msg: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
       if (msg.type === MSG.STT_TRANSCRIBE) {
+        // Reject if a transcription is already running (prevent cross-tab hijack)
+        if (isTranscribing) {
+          sendResponse({ received: false, busy: true })
+          return
+        }
         // Capture the source tab ID so broadcast() can send results back directly
         if (msg.sourceTabId) {
           currentContentTabId = msg.sourceTabId
@@ -223,10 +243,13 @@ export default function SidePanelApp() {
         sendResponse({ received: true })
       }
       if (msg.type === MSG.STT_CHECK_MODEL) {
-        if (msg.sourceTabId) {
+        // Only take ownership of this tab if we are not mid-transcription.
+        // If we are busy, do NOT update currentContentTabId — otherwise the
+        // ongoing transcription's progress would be broadcast to the wrong tab.
+        if (msg.sourceTabId && !isTranscribing) {
           currentContentTabId = msg.sourceTabId
         }
-        sendResponse({ ready: isModelReady, modelRepo: currentModelRepo })
+        sendResponse({ ready: isModelReady, modelRepo: currentModelRepo, busy: isTranscribing })
       }
       if (msg.type === MSG.STT_DELETE_MODEL) {
         deleteModel(msg.modelRepo)
