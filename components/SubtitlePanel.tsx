@@ -241,7 +241,7 @@ export function SubtitlePanel({
             </div>
           )}
 
-          {error && sttChunks.length === 0 && (
+          {error && sttChunks.length === 0 && sttStatus !== "transcribing" && (
             <div className="text-center p-[20px]">
               <div className="text-red-500 mb-4">{error}</div>
               <Button
@@ -306,7 +306,6 @@ export function SubtitlePanel({
 
             {sttStatus === "transcribing" && (
               <div className="flex justify-center items-center gap-2 text-xs text-blue-500 mb-2 flex-shrink-0">
-                <span className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                 <span>
                   {sttProgress > 0 ? ` (Chunk ${sttProgress}${sttChunkTime != null ? ` - ${formatTime(sttChunkTime)}` : ""})` : ""}
                 </span>
