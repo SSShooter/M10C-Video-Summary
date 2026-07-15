@@ -1,4 +1,4 @@
-import { Check, Star, RefreshCw, LogOut, LogIn, User } from "lucide-react"
+import { Check, Download, Star, RefreshCw, LogOut, LogIn, Upload, User } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 import { storage } from "@wxt-dev/storage"
 import iconBase64 from "~/assets/icon.png"
@@ -19,6 +19,7 @@ import type { AIConfig, ProviderConfig } from "~/utils/ai-service"
 import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
 import { DEFAULT_SUMMARY_PROMPT } from "~/utils/summary-prompt"
 import { DEFAULT_MINDMAP_PROMPT } from "~/utils/mindmap-prompt"
+import { createConfigBackup, parseConfigBackup } from "~/utils/config-backup"
 
 interface AIProvider {
   id: string
@@ -103,6 +104,11 @@ function OptionsPage() {
   const [fetchingModels, setFetchingModels] = useState(false)
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
   const modelInputRef = useRef<HTMLInputElement>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
+  const [backupMessage, setBackupMessage] = useState<{
+    type: "success" | "error"
+    text: string
+  } | null>(null)
 
   const [user, setUser] = useState<UserData | null>(null)
   const [loadingUser, setLoadingUser] = useState(false)
@@ -253,6 +259,45 @@ function OptionsPage() {
       console.error(t("saveConfigFailed"), error)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const exportConfig = () => {
+    const backup = createConfigBackup(aiConfig)
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json"
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    const date = new Date().toISOString().slice(0, 10)
+    link.href = url
+    link.download = `m10c-config-${date}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+    setBackupMessage({ type: "success", text: t("configExportSucceeded") })
+  }
+
+  const importConfig = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    try {
+      const parsed = JSON.parse(await file.text())
+      const imported = parseConfigBackup(parsed)
+      const restored: AIConfig = {
+        ...imported,
+        summaryPrompt: imported.summaryPrompt || DEFAULT_SUMMARY_PROMPT,
+        mindmapPrompt: imported.mindmapPrompt || DEFAULT_MINDMAP_PROMPT
+      }
+      await storage.setItem("local:aiConfigV2", restored)
+      setAiConfig(restored)
+      setBackupMessage({ type: "success", text: t("configImportSucceeded") })
+    } catch (error) {
+      setBackupMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : t("configImportFailed")
+      })
     }
   }
 
@@ -870,6 +915,45 @@ function OptionsPage() {
             className={cn("w-full h-10 text-sm font-semibold", saved ? "bg-green-600 hover:bg-green-700" : "")}>
             {saving ? t("saving") : saved ? t("saved") : t("saveConfig")}
           </Button>
+        </div>
+
+        <div className="space-y-3 border-t border-border pt-4 mt-2">
+          <div>
+            <Label className="text-sm font-semibold text-foreground">
+              {t("configBackup")}
+            </Label>
+            <p className="text-[10px] text-amber-700 mt-1">
+              {t("configBackupSensitiveTip")}
+            </p>
+          </div>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={importConfig}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={exportConfig}>
+              <Download className="h-4 w-4 mr-2" />
+              {t("exportConfig")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => importInputRef.current?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              {t("importConfig")}
+            </Button>
+          </div>
+          {backupMessage && (
+            <p className={cn(
+              "text-xs",
+              backupMessage.type === "success" ? "text-green-600" : "text-red-600"
+            )}>
+              {backupMessage.text}
+            </p>
+          )}
         </div>
       </div>
 
