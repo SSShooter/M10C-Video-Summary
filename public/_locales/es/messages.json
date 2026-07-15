@@ -574,5 +574,18 @@
   "freeGenerationExhausted": {
     "message": "Cuota de generación gratis agotada. Se consumirán Stars.",
     "description": "Toast when free generation quota is exhausted"
-  }
+  },
+  "blogPublishConfig": { "message": "Publicación en Blog", "description": "Título de configuración del Blog" },
+  "blogPublishConfigTip": { "message": "Configura el endpoint usado por el botón Enviar al Blog.", "description": "Ayuda de configuración del Blog" },
+  "blogPostUrl": { "message": "POST URL", "description": "URL del endpoint del Blog" },
+  "blogHeaderName": { "message": "Nombre del Header", "description": "Nombre del Header de autenticación" },
+  "blogHeaderToken": { "message": "Header Token", "description": "Token de autenticación" },
+  "blogHeaderTokenPlaceholder": { "message": "Introduce el valor del Token", "description": "Marcador del Token" },
+  "sendToBlog": { "message": "Enviar al Blog", "description": "Botón de publicación manual" },
+  "sendingToBlog": { "message": "Enviando...", "description": "Publicación manual en curso" },
+  "blogPublishSucceeded": { "message": "Enviado al Blog", "description": "Publicación manual correcta" },
+  "blogPublishFailed": { "message": "No se pudo enviar al Blog", "description": "Error de publicación manual" },
+  "blogPublishNotConfigured": { "message": "Configura primero la POST URL, el nombre del Header y el Token", "description": "Falta configuración del Blog" },
+  "blogPublishInvalidUrl": { "message": "La POST URL del Blog debe usar HTTP o HTTPS", "description": "URL del Blog no válida" },
+  "blogPublishTimeout": { "message": "La solicitud al Blog agotó el tiempo", "description": "Tiempo de espera agotado" }
 }

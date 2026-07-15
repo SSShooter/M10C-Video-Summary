@@ -51,6 +51,7 @@ function ArticleMindmapPanelContent({
   // AI总结生成配置
   const summaryGenerateConfig: SummaryGenerateConfig = {
     getContent: getArticleContent,
+    getTitle: () => articleInfo?.title || "",
     additionalData: {}
   }
 
@@ -138,6 +139,10 @@ function ArticleMindmapPanelContent({
           <SummaryDisplay
             generateConfig={summaryGenerateConfig}
             cacheKey={getSummaryCacheKey()}
+            publishSource={{
+              sourceUrl: articleInfo.url,
+              title: articleInfo.title
+            }}
             noSummaryText={t("noAiSummary")}
             generatePromptText={t("clickToGenerateArticleSummary")}
           />

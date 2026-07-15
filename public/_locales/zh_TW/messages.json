@@ -574,5 +574,18 @@
   "freeGenerationExhausted": {
     "message": "免費生成次數已用完，將消耗星星",
     "description": "免費生成次數用完時的提示"
-  }
+  },
+  "blogPublishConfig": { "message": "Blog 發布設定", "description": "Blog 發布設定標題" },
+  "blogPublishConfigTip": { "message": "設定文章摘要中「傳送到 Blog」按鈕使用的介面。", "description": "Blog 發布設定說明" },
+  "blogPostUrl": { "message": "POST URL", "description": "Blog 介面地址" },
+  "blogHeaderName": { "message": "Header 名稱", "description": "Blog 驗證 Header 名稱" },
+  "blogHeaderToken": { "message": "Header Token", "description": "Blog 驗證 Token" },
+  "blogHeaderTokenPlaceholder": { "message": "請輸入 Token 值", "description": "Blog Token 預留文字" },
+  "sendToBlog": { "message": "傳送到 Blog", "description": "手動發布按鈕" },
+  "sendingToBlog": { "message": "傳送中...", "description": "手動發布進行中" },
+  "blogPublishSucceeded": { "message": "已傳送到 Blog", "description": "手動發布成功" },
+  "blogPublishFailed": { "message": "傳送到 Blog 失敗", "description": "手動發布失敗" },
+  "blogPublishNotConfigured": { "message": "請先設定 Blog POST URL、Header 名稱和 Token", "description": "Blog 設定缺失" },
+  "blogPublishInvalidUrl": { "message": "Blog POST URL 必須使用 HTTP 或 HTTPS", "description": "Blog URL 無效" },
+  "blogPublishTimeout": { "message": "Blog 請求逾時", "description": "Blog 請求逾時" }
 }

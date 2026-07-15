@@ -574,5 +574,30 @@
   "freeGenerationExhausted": {
     "message": "免费生成次数已用完，将消耗星星",
     "description": "免费生成次数用完时的提示"
-  }
+  },
+  "summaryPrompt": { "message": "摘要 Prompt", "description": "摘要 Prompt 配置标题" },
+  "summaryPromptTip": { "message": "文章和视频摘要共用此 Prompt。修改并保存后将覆盖系统默认值；{{language}} 会替换为当前回复语言。", "description": "摘要 Prompt 配置说明" },
+  "mindmapPrompt": { "message": "思维导图 Prompt", "description": "思维导图 Prompt 配置标题" },
+  "mindmapPromptTip": { "message": "文章和视频思维导图共用此 Prompt。修改并保存后将覆盖系统默认值；{{language}} 会替换为当前回复语言。", "description": "思维导图 Prompt 配置说明" },
+  "restoreDefaultPrompt": { "message": "恢复默认", "description": "恢复默认摘要 Prompt" },
+  "configBackup": { "message": "配置备份", "description": "配置导入导出标题" },
+  "configBackupSensitiveTip": { "message": "导出的 JSON 包含 API Key 和 Blog Token，请妥善保管，不要公开分享。", "description": "配置备份敏感信息提示" },
+  "exportConfig": { "message": "导出配置", "description": "导出配置按钮" },
+  "importConfig": { "message": "导入配置", "description": "导入配置按钮" },
+  "configExportSucceeded": { "message": "配置已导出", "description": "配置导出成功" },
+  "configImportSucceeded": { "message": "配置已导入并保存", "description": "配置导入成功" },
+  "configImportFailed": { "message": "配置导入失败", "description": "配置导入失败" },
+  "blogPublishConfig": { "message": "Blog 发布配置", "description": "Blog 发布配置标题" },
+  "blogPublishConfigTip": { "message": "配置文章摘要中“发送到 Blog”按钮使用的接口。", "description": "Blog 发布配置说明" },
+  "blogPostUrl": { "message": "POST URL", "description": "Blog 接口地址" },
+  "blogHeaderName": { "message": "Header 名称", "description": "Blog 鉴权 Header 名称" },
+  "blogHeaderToken": { "message": "Header Token", "description": "Blog 鉴权 Token" },
+  "blogHeaderTokenPlaceholder": { "message": "请输入 Token 值", "description": "Blog Token 占位文案" },
+  "sendToBlog": { "message": "发送到 Blog", "description": "手动发布按钮" },
+  "sendingToBlog": { "message": "发送中...", "description": "手动发布进行中" },
+  "blogPublishSucceeded": { "message": "已发送到 Blog", "description": "手动发布成功" },
+  "blogPublishFailed": { "message": "发送到 Blog 失败", "description": "手动发布失败" },
+  "blogPublishNotConfigured": { "message": "请先配置 Blog POST URL、Header 名称和 Token", "description": "Blog 配置缺失" },
+  "blogPublishInvalidUrl": { "message": "Blog POST URL 必须使用 HTTP 或 HTTPS", "description": "Blog URL 无效" },
+  "blogPublishTimeout": { "message": "Blog 请求超时", "description": "Blog 请求超时" }
 }

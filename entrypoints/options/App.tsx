@@ -1,4 +1,4 @@
-import { Check, Star, RefreshCw, LogOut, LogIn, User } from "lucide-react"
+import { Check, Download, Star, RefreshCw, LogOut, LogIn, Upload, User } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 import { storage } from "@wxt-dev/storage"
 import iconBase64 from "~/assets/icon.png"
@@ -17,6 +17,9 @@ import { cn } from "~/lib/utils"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig, ProviderConfig } from "~/utils/ai-service"
 import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
+import { DEFAULT_SUMMARY_PROMPT } from "~/utils/summary-prompt"
+import { DEFAULT_MINDMAP_PROMPT } from "~/utils/mindmap-prompt"
+import { createConfigBackup, parseConfigBackup } from "~/utils/config-backup"
 
 interface AIProvider {
   id: string
@@ -89,6 +92,8 @@ function OptionsPage() {
   const [aiConfig, setAiConfig] = useState<AIConfig>({
     activeProvider: "mind-elixir",
     replyLanguage: getMatchedBrowserLanguage(navigator.language),
+    summaryPrompt: DEFAULT_SUMMARY_PROMPT,
+    mindmapPrompt: DEFAULT_MINDMAP_PROMPT,
     providers: {}
   })
   const [saving, setSaving] = useState(false)
@@ -99,6 +104,11 @@ function OptionsPage() {
   const [fetchingModels, setFetchingModels] = useState(false)
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
   const modelInputRef = useRef<HTMLInputElement>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
+  const [backupMessage, setBackupMessage] = useState<{
+    type: "success" | "error"
+    text: string
+  } | null>(null)
 
   const [user, setUser] = useState<UserData | null>(null)
   const [loadingUser, setLoadingUser] = useState(false)
@@ -215,7 +225,11 @@ function OptionsPage() {
         if (!config.replyLanguage || config.replyLanguage === "auto") {
           config.replyLanguage = getMatchedBrowserLanguage(navigator.language)
         }
-        setAiConfig(config)
+        setAiConfig({
+          ...config,
+          summaryPrompt: config.summaryPrompt || DEFAULT_SUMMARY_PROMPT,
+          mindmapPrompt: config.mindmapPrompt || DEFAULT_MINDMAP_PROMPT
+        })
 
         // 如果有API Key且支持获取模型，尝试获取模型列表
         const provider = AI_PROVIDERS.find((p) => p.id === config.activeProvider)
@@ -245,6 +259,45 @@ function OptionsPage() {
       console.error(t("saveConfigFailed"), error)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const exportConfig = () => {
+    const backup = createConfigBackup(aiConfig)
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json"
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    const date = new Date().toISOString().slice(0, 10)
+    link.href = url
+    link.download = `m10c-config-${date}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+    setBackupMessage({ type: "success", text: t("configExportSucceeded") })
+  }
+
+  const importConfig = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    try {
+      const parsed = JSON.parse(await file.text())
+      const imported = parseConfigBackup(parsed)
+      const restored: AIConfig = {
+        ...imported,
+        summaryPrompt: imported.summaryPrompt || DEFAULT_SUMMARY_PROMPT,
+        mindmapPrompt: imported.mindmapPrompt || DEFAULT_MINDMAP_PROMPT
+      }
+      await storage.setItem("local:aiConfigV2", restored)
+      setAiConfig(restored)
+      setBackupMessage({ type: "success", text: t("configImportSucceeded") })
+    } catch (error) {
+      setBackupMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : t("configImportFailed")
+      })
     }
   }
 
@@ -398,6 +451,20 @@ function OptionsPage() {
         }
       }
     })
+  }
+
+  const updateBlogPublishConfig = (
+    field: "postUrl" | "headerName" | "token",
+    value: string
+  ) => {
+    setAiConfig((current) => ({
+      ...current,
+      blogPublish: {
+        ...current.blogPublish,
+        headerName: current.blogPublish?.headerName || "Authorization",
+        [field]: value
+      }
+    }))
   }
 
   const currentProvider = AI_PROVIDERS.find((p) => p.id === aiConfig.activeProvider)
@@ -722,6 +789,125 @@ function OptionsPage() {
           </p>
         </div>
 
+        <div className="space-y-4 border-t border-border pt-4 mt-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="summary-prompt" className="text-sm font-semibold text-foreground">
+                {t("summaryPrompt")}
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setAiConfig((current) => ({
+                  ...current,
+                  summaryPrompt: DEFAULT_SUMMARY_PROMPT
+                }))}>
+                {t("restoreDefaultPrompt")}
+              </Button>
+            </div>
+            <textarea
+              id="summary-prompt"
+              className="flex min-h-[280px] w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={aiConfig.summaryPrompt || DEFAULT_SUMMARY_PROMPT}
+              onChange={(event) => setAiConfig({
+                ...aiConfig,
+                summaryPrompt: event.target.value
+              })}
+            />
+            <p className="text-[10px] text-muted-foreground">
+              {t("summaryPromptTip")}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4 border-t border-border pt-4 mt-2">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="mindmap-prompt" className="text-sm font-semibold text-foreground">
+                {t("mindmapPrompt")}
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setAiConfig((current) => ({
+                  ...current,
+                  mindmapPrompt: DEFAULT_MINDMAP_PROMPT
+                }))}>
+                {t("restoreDefaultPrompt")}
+              </Button>
+            </div>
+            <textarea
+              id="mindmap-prompt"
+              className="flex min-h-[320px] w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={aiConfig.mindmapPrompt || DEFAULT_MINDMAP_PROMPT}
+              onChange={(event) => setAiConfig({
+                ...aiConfig,
+                mindmapPrompt: event.target.value
+              })}
+            />
+            <p className="text-[10px] text-muted-foreground">
+              {t("mindmapPromptTip")}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4 border-t border-border pt-4 mt-2">
+          <div>
+            <Label className="text-sm font-semibold text-foreground">
+              {t("blogPublishConfig")}
+            </Label>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {t("blogPublishConfigTip")}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="blog-post-url" className="text-sm font-medium text-foreground">
+              {t("blogPostUrl")}
+            </Label>
+            <Input
+              id="blog-post-url"
+              type="url"
+              className="h-10 text-sm"
+              value={aiConfig.blogPublish?.postUrl || ""}
+              onChange={(event) => updateBlogPublishConfig("postUrl", event.target.value)}
+              placeholder="https://example.com/api/articles"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="blog-header-name" className="text-sm font-medium text-foreground">
+              {t("blogHeaderName")}
+            </Label>
+            <Input
+              id="blog-header-name"
+              type="text"
+              className="h-10 text-sm"
+              value={aiConfig.blogPublish?.headerName || "Authorization"}
+              onChange={(event) => updateBlogPublishConfig("headerName", event.target.value)}
+              placeholder="Authorization"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="blog-header-token" className="text-sm font-medium text-foreground">
+              {t("blogHeaderToken")}
+            </Label>
+            <Input
+              id="blog-header-token"
+              type="password"
+              className="h-10 text-sm"
+              value={aiConfig.blogPublish?.token || ""}
+              onChange={(event) => updateBlogPublishConfig("token", event.target.value)}
+              placeholder={t("blogHeaderTokenPlaceholder")}
+            />
+          </div>
+        </div>
+
         <div className="pt-2">
           <Button
             onClick={saveConfig}
@@ -729,6 +915,45 @@ function OptionsPage() {
             className={cn("w-full h-10 text-sm font-semibold", saved ? "bg-green-600 hover:bg-green-700" : "")}>
             {saving ? t("saving") : saved ? t("saved") : t("saveConfig")}
           </Button>
+        </div>
+
+        <div className="space-y-3 border-t border-border pt-4 mt-2">
+          <div>
+            <Label className="text-sm font-semibold text-foreground">
+              {t("configBackup")}
+            </Label>
+            <p className="text-[10px] text-amber-700 mt-1">
+              {t("configBackupSensitiveTip")}
+            </p>
+          </div>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={importConfig}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={exportConfig}>
+              <Download className="h-4 w-4 mr-2" />
+              {t("exportConfig")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => importInputRef.current?.click()}>
+              <Upload className="h-4 w-4 mr-2" />
+              {t("importConfig")}
+            </Button>
+          </div>
+          {backupMessage && (
+            <p className={cn(
+              "text-xs",
+              backupMessage.type === "success" ? "text-green-600" : "text-red-600"
+            )}>
+              {backupMessage.text}
+            </p>
+          )}
         </div>
       </div>
 

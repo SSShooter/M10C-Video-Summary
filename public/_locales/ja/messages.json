@@ -570,5 +570,18 @@
   "freeGenerationExhausted": {
     "message": "無料生成枠を使い切りました。スターを消費します。",
     "description": "無料生成枠がなくなった時のトースト"
-  }
+  },
+  "blogPublishConfig": { "message": "Blog 投稿設定", "description": "Blog 投稿設定タイトル" },
+  "blogPublishConfigTip": { "message": "記事要約の「Blog に送信」ボタンで使用するエンドポイントを設定します。", "description": "Blog 投稿設定の説明" },
+  "blogPostUrl": { "message": "POST URL", "description": "Blog エンドポイント URL" },
+  "blogHeaderName": { "message": "Header 名", "description": "認証 Header 名" },
+  "blogHeaderToken": { "message": "Header Token", "description": "認証 Token" },
+  "blogHeaderTokenPlaceholder": { "message": "Token 値を入力", "description": "Token プレースホルダー" },
+  "sendToBlog": { "message": "Blog に送信", "description": "手動投稿ボタン" },
+  "sendingToBlog": { "message": "送信中...", "description": "手動投稿中" },
+  "blogPublishSucceeded": { "message": "Blog に送信しました", "description": "手動投稿成功" },
+  "blogPublishFailed": { "message": "Blog への送信に失敗しました", "description": "手動投稿失敗" },
+  "blogPublishNotConfigured": { "message": "Blog の POST URL、Header 名、Token を先に設定してください", "description": "Blog 設定不足" },
+  "blogPublishInvalidUrl": { "message": "Blog POST URL は HTTP または HTTPS を使用してください", "description": "Blog URL 無効" },
+  "blogPublishTimeout": { "message": "Blog リクエストがタイムアウトしました", "description": "Blog リクエストタイムアウト" }
 }

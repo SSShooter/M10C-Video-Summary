@@ -3,6 +3,8 @@ import { storage } from "@wxt-dev/storage"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
 import type { AIConfig } from "~/utils/ai-service"
 import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
+import { buildBlogMarkdown } from "~/utils/blog-content"
+import { consumeSseLines, flushSseBuffer } from "~/utils/sse-stream"
 
 interface APIRequestConfig {
   url: string
@@ -322,35 +324,36 @@ class BackgroundAIService {
       const decoder = new TextDecoder()
       let buffer = ""
 
+      const processSseLine = (line: string) => {
+        const trimmedLine = line.trim()
+        if (!trimmedLine || !trimmedLine.startsWith("data: ")) return
+
+        const dataStr = trimmedLine.slice(6)
+        if (dataStr === "[DONE]") return
+
+        try {
+          const data = JSON.parse(dataStr)
+          const chunkData = handler.parseStreamChunk(data)
+          if (chunkData.content || chunkData.reasoning) {
+            onChunk(chunkData)
+          }
+        } catch (e) {
+          console.warn("Failed to parse stream chunk:", e)
+        }
+      }
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        buffer += chunk
-
-        const lines = buffer.split("\n")
-        buffer = lines.pop() || ""
-
-        for (const line of lines) {
-          const trimmedLine = line.trim()
-          if (!trimmedLine) continue
-          if (trimmedLine.startsWith("data: ")) {
-            const dataStr = trimmedLine.slice(6)
-            if (dataStr === "[DONE]") continue
-
-            try {
-              const data = JSON.parse(dataStr)
-              const chunkData = handler.parseStreamChunk(data)
-              if (chunkData.content || chunkData.reasoning) {
-                onChunk(chunkData)
-              }
-            } catch (e) {
-              console.warn("Failed to parse stream chunk:", e)
-            }
-          }
-        }
+        const consumed = consumeSseLines(buffer, chunk)
+        buffer = consumed.buffer
+        consumed.lines.forEach(processSseLine)
       }
+
+      buffer += decoder.decode()
+      flushSseBuffer(buffer).forEach(processSseLine)
 
       onDone()
     } catch (error) {
@@ -475,6 +478,71 @@ export default defineBackground(() => {
     if (request.action === "clearCapturedSubtitleUrl") {
       capturedSubtitleUrl = null
       sendResponse({ success: true })
+    }
+
+    if (request.action === "publishSummaryToBlog") {
+      const publish = async () => {
+        const config = await backgroundAIService.getConfig()
+        const publishConfig = config?.blogPublish
+        const postUrl = publishConfig?.postUrl?.trim()
+        const headerName = publishConfig?.headerName?.trim()
+        const token = publishConfig?.token?.trim()
+
+        if (!postUrl || !headerName || !token) {
+          throw new Error(t("blogPublishNotConfigured"))
+        }
+
+        let url: URL
+        try {
+          url = new URL(postUrl)
+        } catch {
+          throw new Error(t("blogPublishInvalidUrl"))
+        }
+        if (url.protocol !== "http:" && url.protocol !== "https:") {
+          throw new Error(t("blogPublishInvalidUrl"))
+        }
+
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 15000)
+
+        try {
+          const headers = new Headers({ "Content-Type": "application/json" })
+          headers.set(headerName, token)
+          const response = await fetch(url.toString(), {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              title: request.title,
+              content: buildBlogMarkdown({
+                title: request.title,
+                sourceUrl: request.sourceUrl,
+                summary: request.summary,
+                summarizedAt: request.summarizedAt
+              })
+            }),
+            signal: controller.signal
+          })
+
+          if (!response.ok) {
+            throw new Error(`${t("blogPublishFailed")} (HTTP ${response.status})`)
+          }
+        } finally {
+          clearTimeout(timeout)
+        }
+      }
+
+      publish()
+        .then(() => sendResponse({ success: true }))
+        .catch((error) => {
+          const message =
+            error instanceof DOMException && error.name === "AbortError"
+              ? t("blogPublishTimeout")
+              : error instanceof Error
+                ? error.message
+                : t("blogPublishFailed")
+          sendResponse({ success: false, error: message })
+        })
+      return true
     }
 
     if (request.action === "checkMindmapCache") {

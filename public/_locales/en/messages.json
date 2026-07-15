@@ -574,5 +574,18 @@
   "freeGenerationExhausted": {
     "message": "Free generation quota used up. Will consume Stars.",
     "description": "Toast when free generation quota is exhausted"
-  }
+  },
+  "blogPublishConfig": { "message": "Blog Publishing", "description": "Blog publishing settings title" },
+  "blogPublishConfigTip": { "message": "Configure the endpoint used by the manual Send to Blog button.", "description": "Blog publishing settings help" },
+  "blogPostUrl": { "message": "POST URL", "description": "Blog endpoint URL label" },
+  "blogHeaderName": { "message": "Header Name", "description": "Blog authentication header name label" },
+  "blogHeaderToken": { "message": "Header Token", "description": "Blog authentication token label" },
+  "blogHeaderTokenPlaceholder": { "message": "Enter the token value", "description": "Blog token placeholder" },
+  "sendToBlog": { "message": "Send to Blog", "description": "Manual publish button" },
+  "sendingToBlog": { "message": "Sending...", "description": "Manual publish progress" },
+  "blogPublishSucceeded": { "message": "Sent to Blog", "description": "Manual publish success" },
+  "blogPublishFailed": { "message": "Failed to send to Blog", "description": "Manual publish failure" },
+  "blogPublishNotConfigured": { "message": "Configure the Blog POST URL, Header name, and Token first", "description": "Missing Blog configuration" },
+  "blogPublishInvalidUrl": { "message": "The Blog POST URL must use HTTP or HTTPS", "description": "Invalid Blog URL" },
+  "blogPublishTimeout": { "message": "The Blog request timed out", "description": "Blog request timeout" }
 }

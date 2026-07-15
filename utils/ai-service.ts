@@ -6,10 +6,19 @@ export interface ProviderConfig {
   model?: string
 }
 
+export interface BlogPublishConfig {
+  postUrl?: string
+  headerName?: string
+  token?: string
+}
+
 export interface AIConfig {
   activeProvider: string
   replyLanguage?: string
+  summaryPrompt?: string
+  mindmapPrompt?: string
   providers: Record<string, ProviderConfig>
+  blogPublish?: BlogPublishConfig
 }
 
 class AIService {

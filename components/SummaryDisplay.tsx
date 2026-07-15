@@ -1,4 +1,4 @@
-import { Brain, Check, Copy } from "lucide-react"
+import { Check, Copy, Send } from "lucide-react"
 import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { storage } from "@wxt-dev/storage"
@@ -21,6 +21,10 @@ interface SummaryDisplayProps {
   generateButtonText?: string
   noSummaryText?: string
   generatePromptText?: string
+  publishSource?: {
+    sourceUrl: string
+    title: string
+  }
 }
 
 export function SummaryDisplay({
@@ -28,13 +32,16 @@ export function SummaryDisplay({
   cacheKey,
   generateButtonText,
   noSummaryText,
-  generatePromptText
+  generatePromptText,
+  publishSource
 }: SummaryDisplayProps) {
   const [markdownContent, setMarkdownContent] = useState<string>("")
   const [aiLoading, setAiLoading] = useState(false)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [reasoning, setReasoning] = useState("")
+  const [summaryTimestamp, setSummaryTimestamp] = useState<number | null>(null)
+  const [publishing, setPublishing] = useState(false)
 
   const portRef = useRef<chrome.runtime.Port | null>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -52,6 +59,7 @@ export function SummaryDisplay({
         const isExpired = Date.now() - cached.timestamp > 24 * 60 * 60 * 1000 // 24小时过期
         if (!isExpired) {
           setMarkdownContent(cached.content)
+          setSummaryTimestamp(cached.timestamp)
           setCacheLoaded(true)
         }
       }
@@ -61,13 +69,13 @@ export function SummaryDisplay({
   }
 
   // 保存缓存数据
-  const saveCacheData = async (content: string) => {
+  const saveCacheData = async (content: string, timestamp: number) => {
     if (!cacheKey) return
 
     try {
       const cacheData = {
         content,
-        timestamp: Date.now()
+        timestamp
       }
       await storage.setItem(`local:${cacheKey}`, cacheData)
     } catch (error) {
@@ -81,6 +89,30 @@ export function SummaryDisplay({
     setIsCopied(true)
     toast.success("Success")
     setTimeout(() => setIsCopied(false), 2000)
+  }
+
+  const handlePublish = async () => {
+    if (!publishSource || !markdownContent || publishing) return
+
+    setPublishing(true)
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: "publishSummaryToBlog",
+        sourceUrl: publishSource.sourceUrl,
+        title: publishSource.title,
+        summary: markdownContent,
+        summarizedAt: new Date(summaryTimestamp || Date.now()).toISOString()
+      })
+
+      if (!response?.success) {
+        throw new Error(response?.error || t("blogPublishFailed"))
+      }
+      toast.success(t("blogPublishSucceeded"))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("blogPublishFailed"))
+    } finally {
+      setPublishing(false)
+    }
   }
 
   const contentRef = useRef("")
@@ -129,12 +161,18 @@ export function SummaryDisplay({
         if (msg.content) {
           setReasoning("")
           const newChunk = msg.content || ""
-          setMarkdownContent((prev) => prev + newChunk)
+          setMarkdownContent((prev) => {
+            const next = prev + newChunk
+            contentRef.current = next
+            return next
+          })
         }
       } else if (msg.type === "done") {
+        const completedAt = Date.now()
         setAiLoading(false)
         setReasoning("")
-        saveCacheData(contentRef.current)
+        setSummaryTimestamp(completedAt)
+        saveCacheData(contentRef.current, completedAt)
         toast.success(t("aiSummaryGenerated"))
         port.disconnect()
         portRef.current = null
@@ -180,6 +218,19 @@ export function SummaryDisplay({
               ? t("regenerate")
               : generateButtonText || t("generateAiSummary")}
         </Button>
+        {markdownContent && publishSource && (
+          <Button
+            size="sm"
+            onClick={handlePublish}
+            disabled={publishing}
+            className="px-3 shrink-0"
+            title={t("sendToBlog")}>
+            <Send className="h-4 w-4" />
+            <span className="ml-1">
+              {publishing ? t("sendingToBlog") : t("sendToBlog")}
+            </span>
+          </Button>
+        )}
         {markdownContent && (
           <Button
             size="sm"

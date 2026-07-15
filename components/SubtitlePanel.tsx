@@ -129,6 +129,7 @@ export function SubtitlePanel({
   // AI总结生成配置
   const summaryGenerateConfig: SummaryGenerateConfig = {
     getContent: getAllSubtitlesText,
+    getTitle: () => videoInfo?.title || "",
     additionalData: {},
   };
 
@@ -285,6 +286,10 @@ export function SubtitlePanel({
           <SummaryDisplay
             generateConfig={summaryGenerateConfig}
             cacheKey={getSummaryCacheKey()}
+            publishSource={videoInfo ? {
+              sourceUrl: currentUrl,
+              title: videoInfo.title,
+            } : undefined}
           />
         </TabsContent>
 
