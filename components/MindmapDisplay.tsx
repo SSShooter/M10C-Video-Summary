@@ -1,8 +1,11 @@
 import { downloadMethodList } from "@mind-elixir/export-mindmap"
 import { launchMindElixir } from "@mind-elixir/open-desktop"
-import { Download, ExternalLink, Maximize } from "lucide-react"
+import { Copy, Download, ExternalLink, Maximize } from "lucide-react"
 import type { MindElixirData } from "mind-elixir"
-import { plaintextToMindElixir } from "mind-elixir/plaintextConverter"
+import {
+  mindElixirToPlaintext,
+  plaintextToMindElixir
+} from "mind-elixir/plaintextConverter"
 import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { storage } from "@wxt-dev/storage"
@@ -407,6 +410,25 @@ export function MindmapDisplay({
     }
   }
 
+  const handleCopy = async (format: "json" | "plaintext") => {
+    const instance = mindmapRef.current?.instance
+    if (!instance) return
+
+    try {
+      const data = instance.getData()
+      const text =
+        format === "json"
+          ? JSON.stringify(data, null, 2)
+          : mindElixirToPlaintext(data)
+
+      await navigator.clipboard.writeText(text)
+      toast.success(t("copySuccess"))
+    } catch (error) {
+      console.error("复制思维导图失败:", error)
+      toast.error(t("copyFailed"))
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full">
       <div className="flex mb-2 gap-2 justify-between">
@@ -447,7 +469,24 @@ export function MindmapDisplay({
             </Button>
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" title={t("download") || "下载"}>
+                <Button size="sm" title={t("copy")}>
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal container={panelRef.current}>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleCopy("json")}>
+                    {t("copyJson")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCopy("plaintext")}>
+                    {t("copyPlaintext")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenu>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" title={t("download")}>
                   <Download className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>

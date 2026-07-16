@@ -574,5 +574,29 @@
   "freeGenerationExhausted": {
     "message": "免費生成次數已用完，將消耗星星",
     "description": "免費生成次數用完時的提示"
+  },
+  "download": {
+    "message": "下載",
+    "description": "下載心智圖按鈕標題"
+  },
+  "copy": {
+    "message": "複製",
+    "description": "複製心智圖按鈕標題"
+  },
+  "copyJson": {
+    "message": "JSON",
+    "description": "複製為 Mind Elixir JSON 格式"
+  },
+  "copyPlaintext": {
+    "message": "純文字",
+    "description": "複製為 Mind Elixir 純文字格式"
+  },
+  "copySuccess": {
+    "message": "已複製到剪貼簿",
+    "description": "心智圖複製成功提示"
+  },
+  "copyFailed": {
+    "message": "複製失敗",
+    "description": "心智圖複製失敗提示"
   }
 }

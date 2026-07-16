@@ -574,5 +574,29 @@
   "freeGenerationExhausted": {
     "message": "Free generation quota used up. Will consume Stars.",
     "description": "Toast when free generation quota is exhausted"
+  },
+  "download": {
+    "message": "Download",
+    "description": "Download mindmap button title"
+  },
+  "copy": {
+    "message": "Copy",
+    "description": "Copy mindmap button title"
+  },
+  "copyJson": {
+    "message": "JSON",
+    "description": "Copy mindmap as Mind Elixir JSON"
+  },
+  "copyPlaintext": {
+    "message": "Plaintext",
+    "description": "Copy mindmap as Mind Elixir plaintext"
+  },
+  "copySuccess": {
+    "message": "Copied to clipboard",
+    "description": "Toast when mindmap data is copied successfully"
+  },
+  "copyFailed": {
+    "message": "Failed to copy",
+    "description": "Toast when mindmap copy fails"
   }
 }

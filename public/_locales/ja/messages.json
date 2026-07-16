@@ -570,5 +570,29 @@
   "freeGenerationExhausted": {
     "message": "無料生成枠を使い切りました。スターを消費します。",
     "description": "無料生成枠がなくなった時のトースト"
+  },
+  "download": {
+    "message": "ダウンロード",
+    "description": "マインドマップのダウンロードボタン"
+  },
+  "copy": {
+    "message": "コピー",
+    "description": "マインドマップのコピーボタン"
+  },
+  "copyJson": {
+    "message": "JSON",
+    "description": "Mind Elixir JSON 形式でコピー"
+  },
+  "copyPlaintext": {
+    "message": "プレーンテキスト",
+    "description": "Mind Elixir プレーンテキスト形式でコピー"
+  },
+  "copySuccess": {
+    "message": "クリップボードにコピーしました",
+    "description": "マインドマップのコピー成功トースト"
+  },
+  "copyFailed": {
+    "message": "コピーに失敗しました",
+    "description": "マインドマップのコピー失敗トースト"
   }
 }

@@ -574,5 +574,29 @@
   "freeGenerationExhausted": {
     "message": "免费生成次数已用完，将消耗星星",
     "description": "免费生成次数用完时的提示"
+  },
+  "download": {
+    "message": "下载",
+    "description": "下载思维导图按钮标题"
+  },
+  "copy": {
+    "message": "复制",
+    "description": "复制思维导图按钮标题"
+  },
+  "copyJson": {
+    "message": "JSON",
+    "description": "复制为 Mind Elixir JSON 格式"
+  },
+  "copyPlaintext": {
+    "message": "纯文本",
+    "description": "复制为 Mind Elixir 纯文本格式"
+  },
+  "copySuccess": {
+    "message": "已复制到剪贴板",
+    "description": "思维导图复制成功提示"
+  },
+  "copyFailed": {
+    "message": "复制失败",
+    "description": "思维导图复制失败提示"
   }
 }

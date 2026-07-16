@@ -574,5 +574,29 @@
   "freeGenerationExhausted": {
     "message": "Cuota de generación gratis agotada. Se consumirán Stars.",
     "description": "Toast when free generation quota is exhausted"
+  },
+  "download": {
+    "message": "Descargar",
+    "description": "Botón de descarga del mapa mental"
+  },
+  "copy": {
+    "message": "Copiar",
+    "description": "Botón de copiar el mapa mental"
+  },
+  "copyJson": {
+    "message": "JSON",
+    "description": "Copiar como JSON de Mind Elixir"
+  },
+  "copyPlaintext": {
+    "message": "Texto plano",
+    "description": "Copiar como texto plano de Mind Elixir"
+  },
+  "copySuccess": {
+    "message": "Copiado al portapapeles",
+    "description": "Toast al copiar el mapa mental correctamente"
+  },
+  "copyFailed": {
+    "message": "Error al copiar",
+    "description": "Toast cuando falla la copia del mapa mental"
   }
 }
