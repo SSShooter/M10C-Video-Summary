@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.0] - 2026-08-03
+
+### Added
+- **Copy Mindmap**: Added a copy button in the mindmap tab that exports the mindmap as JSON or plaintext (Mind Elixir format) to the clipboard, with localized tooltips and messages across all supported languages.
+- **Mind Elixir Dependency Update**: Upgraded `mind-elixir` to v5.15.0 and `@mind-elixir/open-desktop` to v0.0.4.
+
+### Changed
+- **Default AI Temperature**: Removed the hardcoded `temperature: 0.3` parameter from OpenAI and Gemini provider requests, letting the models use their default temperature.
+
+### Fixed
+- **Generate Button State**: The generate button in the popup is now disabled when no AI configuration is present, preventing confusing empty generations.
+- **Mind Elixir Config on Login**: The default Mind Elixir provider configuration is now auto-saved after login, so the popup immediately recognizes the extension as configured.
+
+---
+
 ## [3.4.0] - 2026-06-14
 
 ### Added

@@ -17,8 +17,10 @@ To use the automated submission API, you must have an OAuth Client ID configured
 ## 2. Initialize Submission Configuration
 Run the initialization command interactively:
 ```bash
-pnpx wxt submit init
+pnpm wxt submit init
 ```
+> **⚠️ Always use `pnpm`, never `pnpx`:** `pnpx` (i.e., `pnpm dlx`) fetches the **latest** `wxt` and `publish-browser-extension` from the npm registry, ignoring the project's pinned versions. The latest CLI can be incompatible — e.g., `pnpx wxt submit init` silently exits with no output. `pnpm wxt ...` runs the project-local binary and is the only reliable way to run these commands.
+
 During the prompt:
 1. Select the stores you want to configure (e.g., `Chrome Web Store`).
 2. Enter your extension ID (found on the Chrome Developer Dashboard).
@@ -51,10 +53,10 @@ Finally, use the `wxt submit` CLI (which utilizes `publish-browser-extension` un
 
 ```bash
 # Submit only to Chrome:
-pnpx wxt submit --chrome-zip .output/<YOUR_EXTENSION_ZIP_FILE_NAME>-chrome.zip
+pnpm wxt submit --chrome-zip .output/<YOUR_EXTENSION_ZIP_FILE_NAME>-chrome.zip
 
 # Submit to Chrome and Edge:
-pnpx wxt submit \
+pnpm wxt submit \
   --chrome-zip .output/<YOUR_EXTENSION_ZIP_FILE_NAME>-chrome.zip \
   --edge-zip .output/<YOUR_EXTENSION_ZIP_FILE_NAME>-chrome.zip
 ```
