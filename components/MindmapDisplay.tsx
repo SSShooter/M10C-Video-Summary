@@ -1,6 +1,6 @@
 import { downloadMethodList } from "@mind-elixir/export-mindmap"
 import { launchMindElixir } from "@mind-elixir/open-desktop"
-import { Copy, Download, ExternalLink, Maximize } from "lucide-react"
+import { Copy, Download, ExternalLink, Loader2, Maximize } from "lucide-react"
 import type { MindElixirData } from "mind-elixir"
 import {
   mindElixirToPlaintext,
@@ -284,17 +284,24 @@ export function MindmapDisplay({
   const openInMindElixir = async () => {
     if (mindmapData) {
       setMindElixirLoading(true)
-      toast.loading(t("opening"))
+      const loadingToast = toast.loading(t("opening"), {
+        duration: 8000,
+      })
 
       try {
         await launchMindElixir(mindmapData)
-        toast.dismiss()
-        toast.success(t("openedSuccessfully"))
+        toast.dismiss(loadingToast)
+        toast.success(t("openedSuccessfully"), {
+          duration: 3000,
+        })
       } catch (error) {
         console.error("打开 Mind Elixir 失败:", error)
-        toast.dismiss()
+        toast.dismiss(loadingToast)
         toast.error(
-          error instanceof Error ? error.message : t("openMindElixirFailed")
+          error instanceof Error ? error.message : t("openMindElixirFailed"),
+          {
+            duration: 5000,
+          }
         )
       } finally {
         setMindElixirLoading(false)
@@ -457,7 +464,11 @@ export function MindmapDisplay({
               disabled={mindElixirLoading}
               size="sm"
               title={mindElixirLoading ? t("opening") : t("openInMindElixir")}>
-              <ExternalLink className="w-4 h-4" />
+              {mindElixirLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ExternalLink className="w-4 h-4" />
+              )}
             </Button>
             <Button
               onClick={() => {
