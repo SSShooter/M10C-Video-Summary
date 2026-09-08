@@ -87,26 +87,6 @@
     "message": "配置 AI 服務",
     "description": "配置AI服務按鈕"
   },
-  "features": {
-    "message": "✨ 功能特性",
-    "description": "功能特性標題"
-  },
-  "autoSubtitleExtraction": {
-    "message": "YouTube/Bilibili 字幕自動擷取",
-    "description": "自動字幕提取功能"
-  },
-  "aiContentSummary": {
-    "message": "AI 智能內容總結分析",
-    "description": "AI內容总结功能"
-  },
-  "articleMindmap": {
-    "message": "文章內容心智圖生成",
-    "description": "文章思维导图功能"
-  },
-  "oneClickJump": {
-    "message": "一鍵時間跳轉與內容定位",
-    "description": "一鍵跳转功能"
-  },
   "optionsTitle": {
     "message": "設定",
     "description": "選項頁面標題"
@@ -166,10 +146,6 @@
   "saveConfig": {
     "message": "儲存配置",
     "description": "儲存配置按鈕"
-  },
-  "usageInstructions": {
-    "message": "使用說明",
-    "description": "使用說明標題"
   },
   "refreshing": {
     "message": "獲取中...",

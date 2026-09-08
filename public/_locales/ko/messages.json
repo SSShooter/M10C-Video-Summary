@@ -87,26 +87,6 @@
     "message": "AI 서비스 설정",
     "description": "AI 서비스 설정 버튼"
   },
-  "features": {
-    "message": "✨ 주요 기능",
-    "description": "주요 기능 제목"
-  },
-  "autoSubtitleExtraction": {
-    "message": "YouTube/Bilibili 자막 자동 추출",
-    "description": "자막 자동 추출 기능"
-  },
-  "aiContentSummary": {
-    "message": "AI 지능형 콘텐츠 요약 분석",
-    "description": "AI 콘텐츠 요약 기능"
-  },
-  "articleMindmap": {
-    "message": "아티클 콘텐츠 마인드맵 생성",
-    "description": "아티클 마인드맵 기능"
-  },
-  "oneClickJump": {
-    "message": "클릭 한 번으로 시간 이동 및 내용 위치 찾기",
-    "description": "원클릭 시간 이동 기능"
-  },
   "optionsTitle": {
     "message": "설정",
     "description": "설정 페이지 제목"
@@ -166,10 +146,6 @@
   "saveConfig": {
     "message": "설정 저장",
     "description": "설정 저장 버튼"
-  },
-  "usageInstructions": {
-    "message": "사용 방법",
-    "description": "사용 방법 제목"
   },
   "refreshing": {
     "message": "가져오는 중...",

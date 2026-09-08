@@ -87,26 +87,6 @@
     "message": "Configurar servicio de IA",
     "description": "Configure AI service button"
   },
-  "features": {
-    "message": "✨ Características",
-    "description": "Features title"
-  },
-  "autoSubtitleExtraction": {
-    "message": "Extracción automática de subtítulos de YouTube/Bilibili",
-    "description": "Auto subtitle extraction feature"
-  },
-  "aiContentSummary": {
-    "message": "Análisis y resumen inteligente de contenido por IA",
-    "description": "AI content summary feature"
-  },
-  "articleMindmap": {
-    "message": "Generación de mapa mental a partir del contenido del artículo",
-    "description": "Article mindmap feature"
-  },
-  "oneClickJump": {
-    "message": "Salto de tiempo y posicionamiento de contenido con un solo clic",
-    "description": "One-click jump feature"
-  },
   "optionsTitle": {
     "message": "Configuración",
     "description": "Options page title"
@@ -166,10 +146,6 @@
   "saveConfig": {
     "message": "Guardar configuración",
     "description": "Save config button"
-  },
-  "usageInstructions": {
-    "message": "Instrucciones de uso",
-    "description": "Usage instructions title"
   },
   "refreshing": {
     "message": "Obteniendo...",

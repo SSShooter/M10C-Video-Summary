@@ -898,40 +898,6 @@ function OptionsPage() {
         </div>
       </div>
 
-      <div className="mt-8 pt-5 border-t border-border space-y-3">
-        <h3 className="font-semibold text-xs text-foreground">{t("usageInstructions")}</h3>
-        <div className="text-xs break-all">
-          <a
-            href="https://github.com/SSShooter/Video-Summary/blob/master/guide/index.md"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-medium">
-            https://github.com/SSShooter/Video-Summary/blob/master/guide/index.md
-          </a>
-        </div>
-
-        <div className="space-y-1.5">
-          <h4 className="font-medium text-[11px] text-muted-foreground">{t("features")}</h4>
-          <div className="space-y-1 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 bg-primary rounded-full flex-shrink-0"></div>
-              <span>{t("autoSubtitleExtraction")}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 bg-primary rounded-full flex-shrink-0"></div>
-              <span>{t("oneClickJump")}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 bg-primary rounded-full flex-shrink-0"></div>
-              <span>{t("aiContentSummary")}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 bg-primary rounded-full flex-shrink-0"></div>
-              <span>{t("articleMindmap")}</span>
-            </div>
-          </div>
-        </div>
-        </div>
       </div>
     </div>
   )

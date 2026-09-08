@@ -87,26 +87,6 @@
     "message": "AIサービスを設定",
     "description": "AIサービス設定ボタン"
   },
-  "features": {
-    "message": "✨ 機能特徴",
-    "description": "機能特徴見出し"
-  },
-  "autoSubtitleExtraction": {
-    "message": "YouTube/Bilibili 字幕の自動抽出",
-    "description": "自動字幕抽出機能"
-  },
-  "aiContentSummary": {
-    "message": "AIインテリジェントコンテンツ要約分析",
-    "description": "AIコンテンツ要約機能"
-  },
-  "articleMindmap": {
-    "message": "記事内容のマインドマップ作成",
-    "description": "記事マインドマップ機能"
-  },
-  "oneClickJump": {
-    "message": "ワンクリックでの時間移動とコンテンツ配置",
-    "description": "ワンクリックジャンプ機能"
-  },
   "optionsTitle": {
     "message": "設定",
     "description": "オプションページのタイトル"
@@ -166,10 +146,6 @@
   "saveConfig": {
     "message": "设定を保存",
     "description": "設定保存ボタン"
-  },
-  "usageInstructions": {
-    "message": "使用方法",
-    "description": "使用方法の見出し"
   },
   "refreshing": {
     "message": "取得中...",
