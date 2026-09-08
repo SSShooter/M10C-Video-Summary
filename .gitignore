@@ -13,6 +13,7 @@ lerna-debug.log*
 !.env.example
 
 node_modules
+.pnpm-store
 .output
 stats.html
 stats-*.json

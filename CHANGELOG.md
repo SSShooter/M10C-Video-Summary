@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.6.0] - 2026-09-08
+
+### Added
+- **Multi-Model Management & 190+ AI Providers**: Upgraded AI provider configuration architecture to V3 (`aiConfigV3`), enabling users to configure multiple models, switch default active models, duplicate or customize configurations, and auto-fetch model lists. Integrated over 190 providers from `models.dev` with unified OpenAI-compatible routing alongside native Gemini and Claude handlers.
+- **Brand Logo on Floating Panels**: Added the official m10c brand icon to both the video `SubtitlePanel` and `ArticleMindmap` floating panels for a consistent visual identity.
+
+### Changed / Refactored
+- **Redesigned Options Page**: Completely redesigned the settings page with a modern card-based interface, a dedicated modal dialog for adding and editing models, responsive controls, and an enhanced Mind Elixir account & star balance status widget with toast notifications.
+- **Prompt Syntax Hardening**: Updated the `MINDMAP_SYSTEM` prompt with unified prefix rules, explicit spacing requirements, and negative examples to prevent malformed syntax and ensure reliable mindmap generation across different LLMs.
+- **Store Listing Descriptions**: Added copywriting-optimized store listing descriptions to `README.md` and `README.zh.md` for Chrome, Firefox, and Edge stores.
+- **Localization Cleanup**: Cleaned up obsolete feature strings and usage instructions across all 6 supported locales (`en`, `zh_CN`, `zh_TW`, `ja`, `ko`, `es`).
+
+---
+
 ## [3.5.0] - 2026-08-03
 
 ### Added
