@@ -360,7 +360,7 @@
     "description": "자막 로드 실패 오류"
   },
   "articleAssistant": {
-    "message": "📄 아티클 어시스턴트",
+    "message": "아티클 어시스턴트",
     "description": "아티클 어시스턴트 제목"
   },
   "noArticleContent": {

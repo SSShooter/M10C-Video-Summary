@@ -360,7 +360,7 @@
     "description": "字幕内容読み込み失敗"
   },
   "articleAssistant": {
-    "message": "📄 記事アシスタント",
+    "message": "記事アシスタント",
     "description": "記事アシスタント見出し"
   },
   "noArticleContent": {

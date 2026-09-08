@@ -360,7 +360,7 @@
     "description": "加载字幕内容失败"
   },
   "articleAssistant": {
-    "message": "📄 文章助手",
+    "message": "文章助手",
     "description": "文章助手标题"
   },
   "noArticleContent": {

@@ -17,6 +17,7 @@ import { useDraggable } from "~/hooks/useDraggable"
 import { detectArticle, type ArticleInfo } from "~/utils/article-detector"
 import { detectAndConvertArticle } from "~/utils/html-to-markdown"
 import { t } from "~/utils/i18n"
+import brandLogoUrl from "~/assets/logo-64.png?inline"
 import mainStyles from "@/assets/style.css?inline"
 import elixirStyles from "mind-elixir/style.css?inline"
 import overrideStyles from "@/assets/mind-elixir-override.css?inline"
@@ -81,9 +82,17 @@ function ArticleMindmapPanelContent({
       style={{ visibility: isPositionLoaded ? "visible" : "hidden" }}>
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
-          <h3 className="m-0 text-[16px] font-semibold text-gray-900 select-none">
-            {t("articleAssistant")}
-          </h3>
+          <div className="flex items-center gap-[6px] select-none">
+            <img
+              src={brandLogoUrl}
+              alt="M10C"
+              className="w-[20px] h-[20px] rounded-[5px] shadow-sm"
+              draggable={false}
+            />
+            <h3 className="m-0 text-[16px] font-semibold text-gray-900">
+              {t("articleAssistant")}
+            </h3>
+          </div>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"

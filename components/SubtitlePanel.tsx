@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { GripVertical } from "lucide-react";
+import brandLogoUrl from "~/assets/logo-64.png?inline";
 
 import { Button } from "~components/ui/button";
 import { Toaster } from "~components/ui/sonner";
@@ -153,11 +154,19 @@ export function SubtitlePanel({
     >
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
-          <h3 className="m-0 text-[16px] font-semibold text-gray-900 select-none">
-            {platform === "bilibili"
-              ? t("videoAssistant")
-              : t("youtubeSubtitle")}
-          </h3>
+          <div className="flex items-center gap-[6px] select-none">
+            <img
+              src={brandLogoUrl}
+              alt="M10C"
+              className="w-[20px] h-[20px] rounded-[5px] shadow-sm"
+              draggable={false}
+            />
+            <h3 className="m-0 text-[16px] font-semibold text-gray-900">
+              {platform === "bilibili"
+                ? t("videoAssistant")
+                : t("youtubeSubtitle")}
+            </h3>
+          </div>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"

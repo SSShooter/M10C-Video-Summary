@@ -360,7 +360,7 @@
     "description": "Load subtitle content failed"
   },
   "articleAssistant": {
-    "message": "📄 Article Assistant",
+    "message": "Article Assistant",
     "description": "Article assistant title"
   },
   "noArticleContent": {
