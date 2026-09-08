@@ -24,6 +24,24 @@
 
 A Chrome extension that analyzes video and article content to generate summaries and mind maps.
 
+## 🏪 Store Listing Description
+
+> The following content can be copied directly into the extension description of Chrome Web Store / Firefox Add-ons / Edge Add-ons.
+
+A 40-minute video, and you really only need 3 takeaways. A 3,000-word article, and only one paragraph actually concerns you.
+
+M10C is a browser extension that turns YouTube & Bilibili videos and web articles into AI summaries and mind maps in one click — read the key points first, then decide if it's worth your time.
+
+**✨ What you can do with it**
+
+- 🎬 **Videos: read the summary before committing** — automatically reads subtitles and generates overviews and key points in one click; click any point to jump straight to that moment in the video, no more scrubbing
+- 📄 **Articles: read long posts in one screen** — auto-extracts the article body and lays out main viewpoints, key information, and topic tags
+- 🧠 **Mind maps: keep what you've learned** — summaries become structured, interactive mind maps you can edit and export, so knowledge doesn't evaporate
+- 🆓 **Generated content, free to fetch** — content generated via the built-in hosted model (Star Compute) is saved to the cloud; when a video or article has been analyzed before, you can fetch the ready-made result for free instead of paying to generate it again (5 free fetches per month)
+- 🔒 **Your API Key never leaves your browser** — bring your own key (Google Gemini is free; OpenAI, Claude and more supported), or skip setup entirely by logging in with a Mind Elixir account and using the built-in hosted model
+
+**Getting started:** install, open any video or article, click "Generate Mind Map" — M10C handles the rest.
+
 ## 🚀 Three Core Features
 
 ### 🎬 Intelligent Video Content Summarization
