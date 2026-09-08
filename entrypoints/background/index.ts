@@ -1,8 +1,13 @@
 import { PROMPTS } from "./prompts"
-import { storage } from "@wxt-dev/storage"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
-import type { AIConfig } from "~/utils/ai-service"
-import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
+import type { AIModelConfig } from "~/utils/ai-service"
+import {
+  createBuiltInModel,
+  getDefaultModel,
+  isMindElixirModel,
+  loadAIModelsConfig
+} from "~/utils/ai-service"
+import { getProviderBaseUrl, getProviderLabel } from "~/utils/ai-providers"
 
 interface APIRequestConfig {
   url: string
@@ -185,38 +190,18 @@ class ClaudeProvider implements ProviderHandler {
 
 const BACKEND_BASE_URL = import.meta.env.WXT_BACKEND_BASE_URL
 
-// Default fallback endpoint powered by Mind Elixir Star balance.
-// Used when the user has not configured a personal AI provider.
-const DEFAULT_MIND_ELIXIR_CONFIG: AIConfig = {
-  activeProvider: "mind-elixir",
-  replyLanguage: "auto",
-  providers: {
-    "mind-elixir": DEFAULT_MIND_ELIXIR_PROVIDER
-  }
-}
-
 class BackgroundAIService {
-  private providerHandlers: Record<string, ProviderHandler> = {
-    "mind-elixir": new OpenAIProvider(),
-    openai: new OpenAIProvider(),
-    "openai-compatible": new OpenAIProvider(),
+  private openAIHandler = new OpenAIProvider()
+
+  // Legacy V2 provider ids that use native (non-OpenAI-compatible) protocols.
+  private legacyHandlers: Record<string, ProviderHandler> = {
     gemini: new GeminiProvider(),
-    claude: new ClaudeProvider(),
-    openrouter: new OpenAIProvider()
+    claude: new ClaudeProvider()
   }
 
-  async getConfig(): Promise<AIConfig | null> {
-    try {
-      const config = await storage.getItem<AIConfig>("local:aiConfigV2")
-      if (!config) return null
-      if (!config.replyLanguage || config.replyLanguage === "auto") {
-        config.replyLanguage = getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
-      }
-      return config
-    } catch (error) {
-      console.error("获取AI配置失败:", error)
-      return null
-    }
+  private getHandler(providerId: string): ProviderHandler {
+    // Providers from models.dev are all OpenAI-compatible.
+    return this.legacyHandlers[providerId] || this.openAIHandler
   }
 
   /**
@@ -233,46 +218,35 @@ class BackgroundAIService {
     onFreeGeneration?: () => void
   ): Promise<void> {
     try {
-      let config = await this.getConfig()
-      const originalProvider = config?.activeProvider || "mind-elixir"
-      let providerCfg = config?.providers?.[originalProvider]
-      let apiKey = providerCfg?.apiKey
+      // V3 multi-model config (falls back to migrating legacy V2 data).
+      const config = await loadAIModelsConfig()
+      const defaultModel = getDefaultModel(config)
 
       // Fall back to the built-in Mind Elixir endpoint when:
-      // (a) the user has not configured any provider,
-      // (b) the user explicitly selected the "mind-elixir" provider, or
-      // (c) the active provider has no saved config.
-      const isMindElixir = !config || !providerCfg || originalProvider === "mind-elixir"
+      // (a) the user has not configured any model,
+      // (b) the default model is the built-in Mind Elixir model.
+      const isMindElixir = !defaultModel || isMindElixirModel(defaultModel)
+      const activeModel: AIModelConfig = isMindElixir
+        ? createBuiltInModel()
+        : defaultModel
 
-      if (isMindElixir) {
-        config = {
-          ...DEFAULT_MIND_ELIXIR_CONFIG,
-          replyLanguage: getMatchedBrowserLanguage(chrome.i18n.getUILanguage())
-        }
-        providerCfg = config.providers["mind-elixir"]
-        apiKey = providerCfg.apiKey!
-      }
-
-      if (!config) {
-        throw new Error("AI configuration is missing")
-      }
+      const providerId = activeModel.provider
+      const apiKey = activeModel.apiKey
 
       if (!apiKey || !apiKey.trim()) {
         throw new Error("API Key is missing")
       }
 
-      const handler = this.providerHandlers[config.activeProvider]
-      if (!handler) {
-        throw new Error(`不支持的AI服务商: ${config.activeProvider}`)
-      }
-
-      const model = providerCfg?.model || ""
-      const baseUrl = providerCfg?.baseUrl || handler.getDefaultBaseUrl()
+      const handler = this.getHandler(providerId)
+      const baseUrl =
+        activeModel.baseUrl ||
+        getProviderBaseUrl(providerId) ||
+        handler.getDefaultBaseUrl()
       const requestConfig = handler.buildRequestConfig(
         baseUrl,
         systemPrompt,
         userPrompt,
-        model,
+        activeModel.model,
         apiKey,
         true
       )
@@ -303,7 +277,7 @@ class BackgroundAIService {
           throw new Error(t("mindElixirLoginRequired"))
         }
 
-        const displayProvider = isMindElixir ? "Mind Elixir" : (originalProvider || "AI")
+        const displayProvider = isMindElixir ? "Mind Elixir" : getProviderLabel(providerId)
         throw new Error(
           t("apiRequestFailed", [
             displayProvider,

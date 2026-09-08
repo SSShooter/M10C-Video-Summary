@@ -598,5 +598,38 @@
   "copyFailed": {
     "message": "복사 실패",
     "description": "마인드맵 복사 실패 토스트"
+  },
+  "aiModels": {
+    "message": "AI 모델"
+  },
+  "addModel": {
+    "message": "모델 추가"
+  },
+  "editModel": {
+    "message": "모델 편집"
+  },
+  "copyModel": {
+    "message": "모델 복사"
+  },
+  "deleteModel": {
+    "message": "모델 삭제"
+  },
+  "modelName": {
+    "message": "표시 이름"
+  },
+  "modelNamePlaceholder": {
+    "message": "예: My DeepSeek"
+  },
+  "searchProvider": {
+    "message": "공급자 검색(190+ 지원)..."
+  },
+  "noProvidersFound": {
+    "message": "공급자를 찾을 수 없습니다."
+  },
+  "baseUrlLockedTip": {
+    "message": "Base URL은 이 공급자의 공식 엔드포인트로 고정됩니다."
+  },
+  "defaultModelTip": {
+    "message": "모델 왼쪽의 라디오 버튼을 선택하면 요약 및 마인드맵에 사용되는 기본 모델로 설정됩니다."
   }
 }

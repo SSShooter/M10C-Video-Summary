@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
 import { GripVertical } from "lucide-react";
-import { storage } from "@wxt-dev/storage";
 
 import { Button } from "~components/ui/button";
 import { Toaster } from "~components/ui/sonner";
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
 import { t, getMatchedBrowserLanguage } from "~utils/i18n";
 import { useDraggable } from "~hooks/useDraggable";
+import { getDefaultModel, isMindElixirModel, loadAIModelsConfig } from "~utils/ai-service";
 
 import { MindmapDisplay, type MindmapGenerateConfig } from "./MindmapDisplay";
 import { SummaryDisplay, type SummaryGenerateConfig } from "./SummaryDisplay";
@@ -52,10 +52,10 @@ export function SubtitlePanel({
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
-    storage.getItem<any>("local:aiConfigV2").then((config) => {
+    loadAIModelsConfig().then((config) => {
       if (!config) return;
-      const provider = config.activeProvider;
-      if (provider && provider !== "mind-elixir") {
+      const model = getDefaultModel(config);
+      if (model && !isMindElixirModel(model)) {
         setIsByok(true);
       } else {
         setIsByok(false);

@@ -598,5 +598,38 @@
   "copyFailed": {
     "message": "複製失敗",
     "description": "心智圖複製失敗提示"
+  },
+  "aiModels": {
+    "message": "AI 模型"
+  },
+  "addModel": {
+    "message": "新增模型"
+  },
+  "editModel": {
+    "message": "編輯模型"
+  },
+  "copyModel": {
+    "message": "複製模型"
+  },
+  "deleteModel": {
+    "message": "刪除模型"
+  },
+  "modelName": {
+    "message": "顯示名稱"
+  },
+  "modelNamePlaceholder": {
+    "message": "例如：我的 DeepSeek"
+  },
+  "searchProvider": {
+    "message": "搜尋供應商（支援 190+ 家）..."
+  },
+  "noProvidersFound": {
+    "message": "找不到供應商。"
+  },
+  "baseUrlLockedTip": {
+    "message": "介面位址已鎖定為該供應商官方端點。"
+  },
+  "defaultModelTip": {
+    "message": "點擊模型左側的單選按鈕，即可將其設為摘要和心智圖使用的預設模型。"
   }
 }

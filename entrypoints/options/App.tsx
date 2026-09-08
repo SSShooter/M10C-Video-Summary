@@ -1,5 +1,18 @@
-import { Check, Star, RefreshCw, LogOut, LogIn, User } from "lucide-react"
-import { useEffect, useState, useRef } from "react"
+import {
+  Check,
+  Star,
+  RefreshCw,
+  LogOut,
+  LogIn,
+  User,
+  Plus,
+  Pencil,
+  Copy,
+  Trash2,
+  ChevronDown,
+  Search
+} from "lucide-react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { storage } from "@wxt-dev/storage"
 import iconBase64 from "~/assets/icon.png"
 
@@ -13,53 +26,23 @@ import {
   SelectTrigger,
   SelectValue
 } from "~/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group"
 import { cn } from "~/lib/utils"
 import { t, getMatchedBrowserLanguage } from "~/utils/i18n"
-import type { AIConfig, ProviderConfig } from "~/utils/ai-service"
-import { DEFAULT_MIND_ELIXIR_PROVIDER } from "~/utils/ai-service"
-
-interface AIProvider {
-  id: string
-  name: string
-  baseUrl?: string
-  modelsEndpoint?: string
-}
-
-const AI_PROVIDERS: AIProvider[] = [
-  {
-    id: "mind-elixir",
-    name: "Mind Elixir ⭐"
-  },
-  {
-    id: "openai",
-    name: "OpenAI",
-    baseUrl: "https://api.openai.com/v1",
-    modelsEndpoint: "/models"
-  },
-  {
-    id: "gemini",
-    name: "Google Gemini",
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    modelsEndpoint: "/models"
-  },
-  {
-    id: "claude",
-    name: "Anthropic Claude",
-    baseUrl: "https://api.anthropic.com/v1"
-  },
-  {
-    id: "openrouter",
-    name: "OpenRouter",
-    baseUrl: "https://openrouter.ai/api/v1",
-    modelsEndpoint: "/models"
-  },
-  {
-    id: "openai-compatible",
-    name: "OpenAI Compatible API",
-    baseUrl: "https://api.example.com/v1",
-    modelsEndpoint: "/models"
-  }
-]
+import type { AIModelConfig, AIModelsConfig } from "~/utils/ai-service"
+import {
+  MIND_ELIXIR_MODEL_ID,
+  createBuiltInModel,
+  isMindElixirModel,
+  loadAIModelsConfig,
+  saveAIModelsConfig
+} from "~/utils/ai-service"
+import {
+  getProviderLabel,
+  getProviderOptions,
+  fetchOpenAICompatibleModels
+} from "~/utils/ai-providers"
+import type { ProviderOption } from "~/utils/ai-providers"
 
 const REPLY_LANGUAGES = [
   { id: "en", name: "English" },
@@ -85,20 +68,31 @@ interface UserData {
 
 const BACKEND_BASE_URL = import.meta.env.WXT_BACKEND_BASE_URL
 
+function createInitialConfig(): AIModelsConfig {
+  return {
+    models: [createBuiltInModel()],
+    defaultModelId: MIND_ELIXIR_MODEL_ID,
+    replyLanguage: getMatchedBrowserLanguage(navigator.language)
+  }
+}
+
 function OptionsPage() {
-  const [aiConfig, setAiConfig] = useState<AIConfig>({
-    activeProvider: "mind-elixir",
-    replyLanguage: getMatchedBrowserLanguage(navigator.language),
-    providers: {}
-  })
+  const [aiConfig, setAiConfig] = useState<AIModelsConfig>(createInitialConfig)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [availableModels, setAvailableModels] = useState<{
-    [key: string]: string[]
-  }>({})
-  const [fetchingModels, setFetchingModels] = useState(false)
+
+  // ── Model edit form state ────────────────────────────────────────────────
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingModelId, setEditingModelId] = useState<string | null>(null)
+  const [formData, setFormData] = useState<Partial<AIModelConfig>>({})
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([])
+  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false)
+  const [providerSearch, setProviderSearch] = useState("")
+  const [modelOptions, setModelOptions] = useState<string[]>([])
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
-  const modelInputRef = useRef<HTMLInputElement>(null)
+  const [fetchingModels, setFetchingModels] = useState(false)
+  const providerSearchRef = useRef<HTMLInputElement>(null)
 
   const [user, setUser] = useState<UserData | null>(null)
   const [loadingUser, setLoadingUser] = useState(false)
@@ -124,7 +118,7 @@ function OptionsPage() {
       const userData = await fetchUser(true) // Silent check
       if (userData) {
         stopPolling()
-        ensureMindElixirSaved()
+        ensureBuiltInModelSaved()
       }
       if (attempts >= maxAttempts) {
         stopPolling()
@@ -196,6 +190,7 @@ function OptionsPage() {
   useEffect(() => {
     loadConfig()
     fetchUser()
+    setProviderOptions(getProviderOptions())
 
     const handleFocus = () => {
       fetchUser(true)
@@ -210,35 +205,39 @@ function OptionsPage() {
 
   const loadConfig = async () => {
     try {
-      const config = await storage.getItem<AIConfig>("local:aiConfigV2")
+      const config = await loadAIModelsConfig()
       if (config) {
         if (!config.replyLanguage || config.replyLanguage === "auto") {
           config.replyLanguage = getMatchedBrowserLanguage(navigator.language)
         }
         setAiConfig(config)
-
-        // 如果有API Key且支持获取模型，尝试获取模型列表
-        const provider = AI_PROVIDERS.find((p) => p.id === config.activeProvider)
-        const providerCfg = config.providers[config.activeProvider]
-        if (provider && providerCfg?.apiKey) {
-          fetchModels(provider, providerCfg.apiKey, providerCfg.baseUrl).then((models) => {
-            setAvailableModels((prev) => ({
-              ...prev,
-              [provider.id]: models
-            }))
-          })
-        }
       }
     } catch (error) {
       console.error(t("loadConfigFailed"), error)
     }
   }
 
+  const persistConfig = async (next: AIModelsConfig) => {
+    setAiConfig(next)
+    try {
+      await saveAIModelsConfig(next)
+    } catch (error) {
+      console.error(t("saveConfigFailed"), error)
+    }
+  }
+
+  // Ensure a config exists in storage after login, so the popup sees the
+  // extension as configured. No-op when V3 (or migratable V2) data exists.
+  const ensureBuiltInModelSaved = async () => {
+    const stored = await loadAIModelsConfig()
+    if (stored) return
+    persistConfig(createInitialConfig())
+  }
+
   const saveConfig = async () => {
     try {
       setSaving(true)
-
-      await storage.setItem("local:aiConfigV2", aiConfig)
+      await saveAIModelsConfig(aiConfig)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (error) {
@@ -248,162 +247,191 @@ function OptionsPage() {
     }
   }
 
-  // Ensure mind-elixir provider config exists and persist it.
-  // Called after login so the popup sees the extension as configured.
-  const ensureMindElixirSaved = () => {
-    if (aiConfig.providers["mind-elixir"]) return
-    const updated = {
-      ...aiConfig,
-      providers: {
-        ...aiConfig.providers,
-        "mind-elixir": DEFAULT_MIND_ELIXIR_PROVIDER
-      }
+  // ── Model form helpers ───────────────────────────────────────────────────
+
+  const isCustomProvider = formData.provider === "openai-compatible"
+
+  const selectedProviderOption = providerOptions.find(
+    (p) => p.id === formData.provider
+  )
+
+  const filteredProviderOptions = useMemo(() => {
+    const q = providerSearch.trim().toLowerCase()
+    if (!q) return providerOptions
+    return providerOptions.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
+    )
+  }, [providerOptions, providerSearch])
+
+  const loadModelOptions = async (baseUrl?: string, apiKey?: string) => {
+    if (!baseUrl || !apiKey) {
+      setModelOptions([])
+      return
     }
-    setAiConfig(updated)
-    storage.setItem("local:aiConfigV2", updated)
+    setFetchingModels(true)
+    const models = await fetchOpenAICompatibleModels(baseUrl, apiKey)
+    setModelOptions(models)
+    setFetchingModels(false)
   }
 
-  const fetchModels = async (
-    provider: AIProvider,
-    apiKey: string,
-    baseUrlOverride?: string
-  ) => {
-    if (!provider.modelsEndpoint || !apiKey) {
-      return []
-    }
-
-    try {
-      setFetchingModels(true)
-      const baseUrl = baseUrlOverride || aiConfig.providers[aiConfig.activeProvider]?.baseUrl || provider.baseUrl
-      const url = `${baseUrl}${provider.modelsEndpoint}`
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json"
-      }
-
-      if (
-        provider.id === "openai" ||
-        provider.id === "openai-compatible" ||
-        provider.id === "openrouter"
-      ) {
-        headers["Authorization"] = `Bearer ${apiKey}`
-      } else if (provider.id === "gemini") {
-        // Gemini uses API key as query parameter and different endpoint
-        const geminiUrl = `${provider.baseUrl}/models?key=${apiKey}`
-        const response = await fetch(geminiUrl, { headers })
-        const data = await response.json()
-        // 过滤出支持 generateContent 的模型
-        const supportedModels =
-          data.models
-            ?.filter((m: any) =>
-              m.supportedGenerationMethods?.includes("generateContent")
-            )
-            .map((m: any) => m.name.replace("models/", "")) || []
-        return supportedModels
-      }
-
-      const response = await fetch(url, { headers })
-      const data = await response.json()
-
-      return data.data?.map((m: any) => m.id) || []
-    } catch (error) {
-      console.error(t("fetchModelsFailed"), error)
-      return []
-    } finally {
-      setFetchingModels(false)
-    }
-  }
-
-  const handleProviderChange = async (providerId: string) => {
-    stopPolling()
-    const provider = AI_PROVIDERS.find((p) => p.id === providerId)
-    if (provider) {
-      // 从存储中加载完整配置，以获取该服务商之前保存的配置
-      const savedConfig = await storage.getItem<AIConfig>("local:aiConfigV2")
-      const savedProviderCfg = savedConfig?.providers?.[providerId]
-
-      // 优先使用该服务商之前保存的baseUrl，否则使用默认的baseUrl
-      const newBaseUrl = savedProviderCfg?.baseUrl || provider.baseUrl
-
-      const existingCfg = aiConfig.providers[providerId] || {}
-      setAiConfig({
-        ...aiConfig,
-        activeProvider: providerId,
-        providers: {
-          ...aiConfig.providers,
-          [providerId]: {
-            ...existingCfg,
-            baseUrl: existingCfg.baseUrl || provider.baseUrl
-          }
-        }
-      })
-
-      // 如果有API Key，尝试获取模型列表
-      const apiKey = aiConfig.providers[providerId]?.apiKey
-      if (apiKey) {
-        fetchModels(provider, apiKey, newBaseUrl).then((models) => {
-          setAvailableModels((prev) => ({
-            ...prev,
-            [providerId]: models
-          }))
-          if (models.length > 0) {
-            setAiConfig((prev) => ({
-              ...prev,
-              providers: {
-                ...prev.providers,
-                [providerId]: {
-                  ...prev.providers[providerId],
-                  model: models[0]
-                }
-              }
-            }))
-          }
-        })
-      }
-    }
-  }
-
-  const handleApiKeyChange = (apiKey: string) => {
-    const activeId = aiConfig.activeProvider
-    const currentCfg = aiConfig.providers[activeId] || {}
-    setAiConfig({
-      ...aiConfig,
-      providers: {
-        ...aiConfig.providers,
-        [activeId]: { ...currentCfg, apiKey }
-      }
+  const handleOpenAddForm = () => {
+    setEditingModelId(null)
+    setFormData({
+      name: "",
+      provider: "",
+      apiKey: "",
+      model: "",
+      baseUrl: ""
     })
+    setModelOptions([])
+    setProviderSearch("")
+    setHasSubmitted(false)
+    setFormOpen(true)
+  }
 
-    const provider = AI_PROVIDERS.find((p) => p.id === activeId)
-    if (provider && apiKey) {
-      fetchModels(provider, apiKey).then((models) => {
-        setAvailableModels((prev) => ({
-          ...prev,
-          [provider.id]: models
-        }))
-      })
+  const handleOpenEditForm = (model: AIModelConfig) => {
+    if (isMindElixirModel(model)) return
+    setEditingModelId(model.id)
+    setFormData({ ...model })
+    setModelOptions([])
+    setProviderSearch("")
+    setHasSubmitted(false)
+    setFormOpen(true)
+    if (model.apiKey && model.baseUrl) {
+      loadModelOptions(model.baseUrl, model.apiKey)
     }
   }
 
-  const handleModelChange = (model: string) => {
-    const activeId = aiConfig.activeProvider
-    const currentCfg = aiConfig.providers[activeId] || {}
-    setAiConfig({
-      ...aiConfig,
-      providers: {
-        ...aiConfig.providers,
-        [activeId]: {
-          ...currentCfg,
-          model
-        }
-      }
+  const handleOpenCopyForm = (model: AIModelConfig) => {
+    if (isMindElixirModel(model)) return
+    setEditingModelId(null)
+    setFormData({
+      name: `${model.name} (${t("copy")})`,
+      provider: model.provider,
+      apiKey: model.apiKey,
+      model: model.model,
+      baseUrl: model.baseUrl
     })
+    setModelOptions([])
+    setProviderSearch("")
+    setHasSubmitted(false)
+    setFormOpen(true)
+    if (model.apiKey && model.baseUrl) {
+      loadModelOptions(model.baseUrl, model.apiKey)
+    }
   }
 
-  const currentProvider = AI_PROVIDERS.find((p) => p.id === aiConfig.activeProvider)
-  const currentProviderCfg = aiConfig.providers[aiConfig.activeProvider] || {}
+  const handleCloseForm = () => {
+    setFormOpen(false)
+    setEditingModelId(null)
+    setFormData({})
+    setHasSubmitted(false)
+    setProviderDropdownOpen(false)
+    setModelDropdownOpen(false)
+  }
 
-  const isMindElixir = aiConfig.activeProvider === "mind-elixir"
+  const handleFormProviderChange = (providerId: string) => {
+    const option = providerOptions.find((p) => p.id === providerId)
+    setFormData((prev) => ({
+      ...prev,
+      provider: providerId,
+      baseUrl: option?.baseUrlEditable ? "" : option?.baseUrl || ""
+    }))
+    setProviderDropdownOpen(false)
+    setProviderSearch("")
+    if (formData.apiKey && option?.baseUrl) {
+      loadModelOptions(option.baseUrl, formData.apiKey)
+    } else {
+      setModelOptions([])
+    }
+  }
+
+  const handleFormApiKeyChange = (apiKey: string) => {
+    setFormData((prev) => ({ ...prev, apiKey }))
+    if (formData.baseUrl && apiKey) {
+      loadModelOptions(formData.baseUrl, apiKey)
+    } else {
+      setModelOptions([])
+    }
+  }
+
+  const handleFormBaseUrlChange = (baseUrl: string) => {
+    setFormData((prev) => ({ ...prev, baseUrl }))
+    if (apiKeyReadyForFetch(baseUrl)) {
+      loadModelOptions(baseUrl, formData.apiKey)
+    } else {
+      setModelOptions([])
+    }
+  }
+
+  const apiKeyReadyForFetch = (_baseUrl: string) => !!formData.apiKey?.trim()
+
+  const handleDeleteModel = (id: string) => {
+    const model = aiConfig.models.find((m) => m.id === id)
+    if (!model || isMindElixirModel(model)) return
+    const models = aiConfig.models.filter((m) => m.id !== id)
+    const defaultModelId =
+      aiConfig.defaultModelId === id ? MIND_ELIXIR_MODEL_ID : aiConfig.defaultModelId
+    persistConfig({ ...aiConfig, models, defaultModelId })
+  }
+
+  const handleSaveModel = () => {
+    const isInvalid =
+      !formData.name?.trim() ||
+      !formData.provider ||
+      !formData.apiKey?.trim() ||
+      !formData.model?.trim() ||
+      (isCustomProvider && !formData.baseUrl?.trim())
+
+    if (isInvalid) {
+      setHasSubmitted(true)
+      return
+    }
+
+    let models: AIModelConfig[]
+    let defaultModelId = aiConfig.defaultModelId
+
+    if (editingModelId) {
+      models = aiConfig.models.map((m) =>
+        m.id === editingModelId
+          ? {
+              ...m,
+              name: formData.name!.trim(),
+              provider: formData.provider!,
+              apiKey: formData.apiKey,
+              model: formData.model!.trim(),
+              baseUrl: formData.baseUrl || undefined
+            }
+          : m
+      )
+    } else {
+      const newModel: AIModelConfig = {
+        id: Date.now().toString(),
+        name: formData.name!.trim(),
+        provider: formData.provider!,
+        apiKey: formData.apiKey,
+        model: formData.model!.trim(),
+        baseUrl: formData.baseUrl || undefined
+      }
+      models = [...aiConfig.models, newModel]
+      // First custom model becomes the default so it is used right away.
+      if (aiConfig.defaultModelId === MIND_ELIXIR_MODEL_ID) {
+        defaultModelId = newModel.id
+      }
+    }
+
+    persistConfig({ ...aiConfig, models, defaultModelId })
+    handleCloseForm()
+  }
+
+  const defaultModel =
+    aiConfig.models.find((m) => m.id === aiConfig.defaultModelId) ||
+    aiConfig.models[0]
+  const isDefaultMindElixir = isMindElixirModel(defaultModel)
+
+  const currentModelLabel = (model: AIModelConfig) =>
+    `${getProviderLabel(model.provider)} · ${model.model}`
 
   return (
     <div className="min-h-screen bg-background">
@@ -422,26 +450,314 @@ function OptionsPage() {
         </div>
 
         <div className="space-y-5">
-        <div className="space-y-1">
-          <Label htmlFor="ai-provider" className="text-sm font-medium text-foreground">{t("aiProvider")}</Label>
-          <Select
-            value={aiConfig.activeProvider}
-            onValueChange={handleProviderChange}>
-            <SelectTrigger className="h-10 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {AI_PROVIDERS.map((provider) => (
-                <SelectItem key={provider.id} value={provider.id}>
-                  {provider.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* ── Model list ─────────────────────────────────────────────────── */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-foreground">
+              {t("aiModels")}
+            </Label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={handleOpenAddForm}>
+              <Plus className="h-3.5 w-3.5" />
+              {t("addModel")}
+            </Button>
+          </div>
+
+          {/* Add / edit form */}
+          {formOpen && (
+            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">
+                  {editingModelId ? t("editModel") : t("addModel")}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleCloseForm}>
+                  {t("close")}
+                </Button>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="model-name" className="text-xs font-medium text-foreground">
+                  {t("modelName")}
+                </Label>
+                <Input
+                  id="model-name"
+                  type="text"
+                  className={cn(
+                    "h-9 text-sm",
+                    hasSubmitted && !formData.name?.trim() && "border-destructive focus-visible:ring-destructive"
+                  )}
+                  value={formData.name || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  placeholder={t("modelNamePlaceholder")}
+                />
+              </div>
+
+              {/* Searchable provider dropdown */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-foreground">
+                  {t("aiProvider")}
+                </Label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    className={cn(
+                      "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm",
+                      hasSubmitted && !formData.provider && "border-destructive"
+                    )}
+                    onClick={() => {
+                      setProviderDropdownOpen((v) => !v)
+                      setTimeout(() => providerSearchRef.current?.focus(), 0)
+                    }}>
+                    <span className={cn(!formData.provider && "text-muted-foreground")}>
+                      {formData.provider
+                        ? getProviderLabel(formData.provider)
+                        : t("searchProvider")}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 opacity-50 transition-transform",
+                        providerDropdownOpen && "rotate-180"
+                      )}
+                    />
+                  </button>
+                  {providerDropdownOpen && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-md">
+                      <div className="p-2 border-b border-border">
+                        <div className="relative">
+                          <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            ref={providerSearchRef}
+                            className="h-8 pl-7 text-xs"
+                            value={providerSearch}
+                            onChange={(e) => setProviderSearch(e.target.value)}
+                            placeholder={t("searchProvider")}
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-[240px] overflow-y-auto p-1">
+                        {filteredProviderOptions.map((opt) => (
+                          <div
+                            key={opt.id}
+                            className={cn(
+                              "flex items-center justify-between px-2 py-1.5 text-xs rounded-sm cursor-pointer hover:bg-accent",
+                              formData.provider === opt.id && "bg-accent"
+                            )}
+                            onMouseDown={(e) => {
+                              e.preventDefault()
+                              handleFormProviderChange(opt.id)
+                            }}>
+                            <span className="truncate">{opt.name}</span>
+                            <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0">
+                              {opt.id}
+                            </span>
+                          </div>
+                        ))}
+                        {filteredProviderOptions.length === 0 && (
+                          <div className="py-4 text-center text-xs text-muted-foreground">
+                            {t("noProvidersFound")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="model-base-url" className="text-xs font-medium text-foreground">
+                  {t("apiAddress")}
+                </Label>
+                <Input
+                  id="model-base-url"
+                  type="text"
+                  className={cn(
+                    "h-9 text-sm",
+                    hasSubmitted && isCustomProvider && !formData.baseUrl?.trim() && "border-destructive focus-visible:ring-destructive"
+                  )}
+                  disabled={!isCustomProvider}
+                  value={formData.baseUrl || ""}
+                  onChange={(e) => handleFormBaseUrlChange(e.target.value)}
+                  placeholder={selectedProviderOption?.baseUrl || "https://api.example.com/v1"}
+                />
+                {!isCustomProvider && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {t("baseUrlLockedTip")}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="model-api-key" className="text-xs font-medium text-foreground">
+                  {t("apiKey")}
+                </Label>
+                <Input
+                  id="model-api-key"
+                  type="password"
+                  className={cn(
+                    "h-9 text-sm",
+                    hasSubmitted && !formData.apiKey?.trim() && "border-destructive focus-visible:ring-destructive"
+                  )}
+                  value={formData.apiKey || ""}
+                  onChange={(e) => handleFormApiKeyChange(e.target.value)}
+                  placeholder={
+                    selectedProviderOption?.env ||
+                    t("enterApiKeyPlaceholder", getProviderLabel(formData.provider || ""))
+                  }
+                />
+              </div>
+
+              {/* Model input with dropdown */}
+              <div className="space-y-1">
+                <Label htmlFor="model-id" className="text-xs font-medium text-foreground">
+                  {t("modelSelection")}
+                </Label>
+                <div className="relative">
+                  <Input
+                    className={cn(
+                      "h-9 text-sm",
+                      hasSubmitted && !formData.model?.trim() && "border-destructive focus-visible:ring-destructive"
+                    )}
+                    value={formData.model || ""}
+                    onChange={(e) => {
+                      setFormData({ ...formData, model: e.target.value })
+                      setModelDropdownOpen(true)
+                    }}
+                    onFocus={() => setModelDropdownOpen(true)}
+                    onBlur={() => {
+                      setTimeout(() => setModelDropdownOpen(false), 150)
+                    }}
+                    placeholder={t("enterCustomModelName")}
+                  />
+                  {modelDropdownOpen && modelOptions.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-md">
+                      <div className="max-h-[180px] overflow-y-auto p-1">
+                        {modelOptions
+                          .filter((m) =>
+                            m
+                              .toLowerCase()
+                              .includes((formData.model || "").toLowerCase())
+                          )
+                          .map((m) => (
+                            <div
+                              key={m}
+                              className={cn(
+                                "flex items-center px-2 py-1.5 text-xs rounded-sm cursor-pointer hover:bg-accent",
+                                formData.model === m && "bg-accent"
+                              )}
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                setFormData({ ...formData, model: m })
+                                setModelDropdownOpen(false)
+                              }}>
+                              <Check
+                                className={cn(
+                                  "mr-2 h-3.5 w-3.5",
+                                  formData.model === m ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {m}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {formData.baseUrl && formData.apiKey
+                    ? t("supportsAutoFetchModels")
+                    : t("notSupportsAutoFetchModels")}
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleCloseForm}>
+                  {t("close")}
+                </Button>
+                <Button size="sm" className="h-8 text-xs" onClick={handleSaveModel}>
+                  {t("saveConfig")}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Model rows */}
+          <RadioGroup
+            value={aiConfig.defaultModelId}
+            onValueChange={(id) => persistConfig({ ...aiConfig, defaultModelId: id })}
+            className="space-y-2">
+            {aiConfig.models.map((model) => {
+              const builtIn = isMindElixirModel(model)
+              return (
+                <div
+                  key={model.id}
+                  className={cn(
+                    "flex items-center justify-between p-3 border rounded-lg",
+                    model.id === aiConfig.defaultModelId && "border-primary/50 bg-primary/5"
+                  )}>
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <RadioGroupItem value={model.id} id={`model-${model.id}`} />
+                    <Label
+                      htmlFor={`model-${model.id}`}
+                      className="flex-1 cursor-pointer min-w-0">
+                      <div className="text-sm font-medium flex items-center gap-1.5">
+                        {builtIn && (
+                          <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                        )}
+                        <span className="truncate">{model.name}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {currentModelLabel(model)}
+                      </div>
+                    </Label>
+                  </div>
+                  {!builtIn && (
+                    <div className="flex items-center space-x-0.5 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => handleOpenCopyForm(model)}
+                        title={t("copyModel")}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => handleOpenEditForm(model)}
+                        title={t("editModel")}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                        onClick={() => handleDeleteModel(model.id)}
+                        title={t("deleteModel")}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </RadioGroup>
+          <p className="text-[10px] text-muted-foreground">
+            {t("defaultModelTip")}
+          </p>
         </div>
 
-        {/* Mind Elixir built-in provider panel */}
-        {isMindElixir ? (
+        {/* Mind Elixir built-in panel (shown when it is the default model) */}
+        {isDefaultMindElixir && (
           <div className="rounded-lg border border-amber-300/60 dark:border-amber-700/50 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-3">
             <p className="text-xs font-medium text-amber-900/90 dark:text-amber-200/90">
               {t("meProviderDesc")}
@@ -546,156 +862,6 @@ function OptionsPage() {
                 app.mind-elixir.com
               </a>
             </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {currentProvider?.baseUrl && (
-              <div className="space-y-1">
-                <Label htmlFor="api-address" className="text-sm font-medium text-foreground">{t("apiAddress")}</Label>
-                <Input
-                  id="api-address"
-                  type="text"
-                  className="h-10 text-sm"
-                  disabled={aiConfig.activeProvider !== "openai-compatible"}
-                  value={currentProviderCfg.baseUrl || ""}
-                  onChange={(e) => {
-                    const activeId = aiConfig.activeProvider
-                    const cfg = aiConfig.providers[activeId] || {}
-                    setAiConfig({
-                      ...aiConfig,
-                      providers: {
-                        ...aiConfig.providers,
-                        [activeId]: { ...cfg, baseUrl: e.target.value || undefined }
-                      }
-                    })
-                  }}
-                  placeholder={currentProvider.baseUrl}
-                />
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {t("customApiAddressTip")}
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-1">
-              <Label htmlFor="api-key" className="text-sm font-medium text-foreground">
-                {t("apiKey")}
-              </Label>
-              <Input
-                id="api-key"
-                type="password"
-                className="h-10 text-sm"
-                value={currentProviderCfg.apiKey || ""}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder={t(
-                  "enterApiKeyPlaceholder",
-                  currentProvider?.name || ""
-                )}
-              />
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                {t("autoFetchModelsTip")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {!isMindElixir && (
-          <div className="space-y-2 border-t border-border pt-4 mt-2">
-            <Label className="text-sm font-semibold text-foreground">
-              {t("modelSelection")}
-            </Label>
-
-            <div className="flex gap-2 items-center">
-              <div className="relative flex-1">
-                <Input
-                  ref={modelInputRef}
-                  className="h-9 text-xs"
-                  value={currentProviderCfg.model || ""}
-                  onChange={(e) => {
-                    handleModelChange(e.target.value)
-                    setModelDropdownOpen(true)
-                  }}
-                  onFocus={() => setModelDropdownOpen(true)}
-                  onBlur={() => {
-                    // 延迟关闭，让 click 事件先触发
-                    setTimeout(() => setModelDropdownOpen(false), 150)
-                  }}
-                  placeholder={t("modelSelection")}
-                />
-                {modelDropdownOpen && (availableModels[aiConfig.activeProvider] || []).length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-md">
-                    <div className="max-h-[180px] overflow-y-auto p-1">
-                      {(availableModels[aiConfig.activeProvider] || [])
-                        .filter((m) =>
-                          m.toLowerCase().includes((currentProviderCfg.model || "").toLowerCase())
-                        )
-                        .map((m) => (
-                          <div
-                            key={m}
-                            className={cn(
-                              "flex items-center px-2 py-1.5 text-xs rounded-sm cursor-pointer hover:bg-accent",
-                              currentProviderCfg.model === m && "bg-accent"
-                            )}
-                            onMouseDown={(e) => {
-                              e.preventDefault()
-                              handleModelChange(m)
-                              setModelDropdownOpen(false)
-                            }}>
-                            <Check
-                              className={cn(
-                                "mr-2 h-3.5 w-3.5",
-                                currentProviderCfg.model === m ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {m}
-                          </div>
-                        ))}
-                      {(availableModels[aiConfig.activeProvider] || [])
-                        .filter((m) =>
-                          m.toLowerCase().includes((currentProviderCfg.model || "").toLowerCase())
-                        ).length === 0 && (
-                        <div className="py-4 text-center text-xs text-muted-foreground">
-                          No models found.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {currentProviderCfg.apiKey && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-xs"
-                  onClick={() => {
-                    const provider = AI_PROVIDERS.find(
-                      (p) => p.id === aiConfig.activeProvider
-                    )
-                    if (provider && currentProviderCfg.apiKey) {
-                      fetchModels(provider, currentProviderCfg.apiKey).then((models) => {
-                        setAvailableModels((prev) => ({
-                          ...prev,
-                          [provider.id]: models
-                        }))
-                      })
-                    }
-                  }}
-                  disabled={fetchingModels}>
-                  {fetchingModels ? t("refreshing") : t("refresh")}
-                </Button>
-              )}
-            </div>
-
-            {fetchingModels ? (
-              <p className="text-[10px] text-muted-foreground ml-0">
-                {t("fetchingModels")}
-              </p>
-            ) : (
-              <p className="text-[10px] text-muted-foreground">
-                {t("supportsAutoFetchModels")}
-              </p>
-            )}
           </div>
         )}
 

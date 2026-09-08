@@ -598,5 +598,38 @@
   "copyFailed": {
     "message": "复制失败",
     "description": "思维导图复制失败提示"
+  },
+  "aiModels": {
+    "message": "AI 模型"
+  },
+  "addModel": {
+    "message": "添加模型"
+  },
+  "editModel": {
+    "message": "编辑模型"
+  },
+  "copyModel": {
+    "message": "复制模型"
+  },
+  "deleteModel": {
+    "message": "删除模型"
+  },
+  "modelName": {
+    "message": "显示名称"
+  },
+  "modelNamePlaceholder": {
+    "message": "例如：我的 DeepSeek"
+  },
+  "searchProvider": {
+    "message": "搜索供应商（支持 190+ 家）..."
+  },
+  "noProvidersFound": {
+    "message": "未找到供应商。"
+  },
+  "baseUrlLockedTip": {
+    "message": "接口地址已锁定为该供应商官方端点。"
+  },
+  "defaultModelTip": {
+    "message": "点击模型左侧的单选按钮，即可将其设为总结和思维导图使用的默认模型。"
   }
 }

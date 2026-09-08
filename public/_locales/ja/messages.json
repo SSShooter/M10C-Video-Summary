@@ -594,5 +594,38 @@
   "copyFailed": {
     "message": "コピーに失敗しました",
     "description": "マインドマップのコピー失敗トースト"
+  },
+  "aiModels": {
+    "message": "AI モデル"
+  },
+  "addModel": {
+    "message": "モデルを追加"
+  },
+  "editModel": {
+    "message": "モデルを編集"
+  },
+  "copyModel": {
+    "message": "モデルをコピー"
+  },
+  "deleteModel": {
+    "message": "モデルを削除"
+  },
+  "modelName": {
+    "message": "表示名"
+  },
+  "modelNamePlaceholder": {
+    "message": "例：My DeepSeek"
+  },
+  "searchProvider": {
+    "message": "プロバイダーを検索（190+ 対応）..."
+  },
+  "noProvidersFound": {
+    "message": "プロバイダーが見つかりません。"
+  },
+  "baseUrlLockedTip": {
+    "message": "ベース URL はこのプロバイダーの公式エンドポイントに固定されています。"
+  },
+  "defaultModelTip": {
+    "message": "モデルの左側のラジオボタンを選択すると、要約とマインドマップの既定モデルとして使用されます。"
   }
 }

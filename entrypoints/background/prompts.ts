@@ -2,9 +2,8 @@
  * AI提示词配置文件
  * 包含所有用于AI分析的系统提示词和用户提示词模板
  */
-import { storage } from "@wxt-dev/storage"
 import { getMatchedBrowserLanguage } from "~/utils/i18n"
-import type { AIConfig } from "~/utils/ai-service"
+import { loadAIModelsConfig } from "~/utils/ai-service"
 
 // 语言映射表
 const LANGUAGE_MAP: Record<string, string> = {
@@ -23,7 +22,7 @@ const LANGUAGE_MAP: Record<string, string> = {
 // 获取用户设置 of 回复语言
 async function getReplyLanguage(): Promise<string> {
   try {
-    const config = await storage.getItem<AIConfig>("local:aiConfigV2")
+    const config = await loadAIModelsConfig()
     if (!config) return LANGUAGE_MAP["en"]
     let languageCode = config.replyLanguage
     if (!languageCode || languageCode === "auto") {

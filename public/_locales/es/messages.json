@@ -598,5 +598,38 @@
   "copyFailed": {
     "message": "Error al copiar",
     "description": "Toast cuando falla la copia del mapa mental"
+  },
+  "aiModels": {
+    "message": "Modelos de IA"
+  },
+  "addModel": {
+    "message": "Añadir modelo"
+  },
+  "editModel": {
+    "message": "Editar modelo"
+  },
+  "copyModel": {
+    "message": "Copiar modelo"
+  },
+  "deleteModel": {
+    "message": "Eliminar modelo"
+  },
+  "modelName": {
+    "message": "Nombre visible"
+  },
+  "modelNamePlaceholder": {
+    "message": "p. ej. Mi DeepSeek"
+  },
+  "searchProvider": {
+    "message": "Buscar proveedor (190+ compatibles)..."
+  },
+  "noProvidersFound": {
+    "message": "No se encontraron proveedores."
+  },
+  "baseUrlLockedTip": {
+    "message": "La URL base está bloqueada al endpoint oficial de este proveedor."
+  },
+  "defaultModelTip": {
+    "message": "Selecciona el botón de opción de un modelo para que sea el predeterminado usado en resúmenes y mapas mentales."
   }
 }

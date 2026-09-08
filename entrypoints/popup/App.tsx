@@ -3,8 +3,8 @@ import { useEffect, useState } from "react"
 import { storage } from "@wxt-dev/storage"
 
 import { Button } from "~/components/ui/button"
-import type { AIConfig } from "~/utils/ai-service"
-import { isAIConfigured } from "~/utils/ai-service"
+import type { AIModelsConfig } from "~/utils/ai-service"
+import { isAIConfigured, loadAIModelsConfig } from "~/utils/ai-service"
 import { t } from "~/utils/i18n"
 
 function IndexPopup() {
@@ -23,7 +23,7 @@ function IndexPopup() {
 
   const loadAIStatus = async () => {
     try {
-      const config = await storage.getItem<AIConfig>("local:aiConfigV2")
+      const config = await loadAIModelsConfig()
       setAiEnabled(isAIConfigured(config))
     } catch (error) {
       console.error("加载AI配置失败:", error)

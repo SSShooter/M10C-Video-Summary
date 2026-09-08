@@ -598,5 +598,38 @@
   "copyFailed": {
     "message": "Failed to copy",
     "description": "Toast when mindmap copy fails"
+  },
+  "aiModels": {
+    "message": "AI Models"
+  },
+  "addModel": {
+    "message": "Add Model"
+  },
+  "editModel": {
+    "message": "Edit Model"
+  },
+  "copyModel": {
+    "message": "Copy Model"
+  },
+  "deleteModel": {
+    "message": "Delete Model"
+  },
+  "modelName": {
+    "message": "Display Name"
+  },
+  "modelNamePlaceholder": {
+    "message": "e.g. My DeepSeek"
+  },
+  "searchProvider": {
+    "message": "Search provider (190+ supported)..."
+  },
+  "noProvidersFound": {
+    "message": "No providers found."
+  },
+  "baseUrlLockedTip": {
+    "message": "Base URL is locked to the official endpoint of this provider."
+  },
+  "defaultModelTip": {
+    "message": "Select the radio button of a model to make it the default one used for summaries and mindmaps."
   }
 }
