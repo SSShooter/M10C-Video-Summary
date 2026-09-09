@@ -68,7 +68,8 @@ class OpenAIProvider implements ProviderHandler {
       body: {
         model: model,
         messages: messages,
-        stream: stream
+        stream: stream,
+        max_tokens: 16384
       }
     }
   }
@@ -168,7 +169,8 @@ class ClaudeProvider implements ProviderHandler {
         model: model,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
-        stream: stream
+        stream: stream,
+        max_tokens: 8192
       }
     }
   }
