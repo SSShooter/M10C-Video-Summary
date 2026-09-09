@@ -30,6 +30,7 @@ export default function App() {
     }
   }, [activeView, panelTabParam])
 
+
   useEffect(() => {
     async function seed() {
       try {
@@ -109,7 +110,7 @@ export default function App() {
         </div>
       )}
 
-      <div className={isPure ? "w-full flex items-center justify-center p-4" : "max-w-6xl mx-auto"}>
+      <div className={isPure ? "w-full flex items-center justify-center" : "max-w-6xl mx-auto"}>
         {/* 1. 原生 MindmapDisplay 组件 */}
         {activeView === "mindmap" && (
           <div
@@ -154,7 +155,8 @@ export default function App() {
               onClose={() => {}}
               defaultTab={(panelTabParam as any) || "subtitles"}
               disableDrag={true}
-              className="!static !m-0 !top-auto !right-auto shadow-xl"
+              className="static top-auto right-auto m-0 shadow-xl"
+              style={{ position: "static", margin: "0 auto" }}
             />
           </div>
         )}

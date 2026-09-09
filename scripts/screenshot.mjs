@@ -97,22 +97,22 @@ async function main() {
     {
       name: "subtitle_panel_subtitles",
       url: `${server.baseUrl}?view=panel&tab=subtitles&pure=1`,
-      width: 460,
-      height: 720,
+      width: 500,
+      height: 750,
       output: path.join(outputDir, "subtitle_panel_subtitles.png")
     },
     {
       name: "subtitle_panel_summary",
       url: `${server.baseUrl}?view=panel&tab=summary&pure=1`,
-      width: 460,
-      height: 720,
+      width: 500,
+      height: 750,
       output: path.join(outputDir, "subtitle_panel_summary.png")
     },
     {
       name: "subtitle_panel_mindmap",
       url: `${server.baseUrl}?view=panel&tab=mindmap&pure=1`,
-      width: 460,
-      height: 720,
+      width: 500,
+      height: 750,
       output: path.join(outputDir, "subtitle_panel_mindmap.png")
     }
   ]

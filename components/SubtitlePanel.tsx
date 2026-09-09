@@ -35,6 +35,7 @@ export interface SubtitlePanelProps {
   onClose: () => void;
   defaultTab?: "subtitles" | "summary" | "mindmap";
   className?: string;
+  style?: React.CSSProperties;
   disableDrag?: boolean;
 }
 
@@ -48,6 +49,7 @@ export function SubtitlePanel({
   onClose,
   defaultTab = "subtitles",
   className,
+  style,
   disableDrag = false,
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -162,7 +164,7 @@ export function SubtitlePanel({
         "w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col",
         className
       )}
-      style={{ visibility: isPositionLoaded ? "visible" : "hidden" }}
+      style={{ visibility: isPositionLoaded ? "visible" : "hidden", ...style }}
     >
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
