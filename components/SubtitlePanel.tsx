@@ -236,7 +236,7 @@ export function SubtitlePanel({
           value="subtitles"
           forceMount={true}
           className={cn(
-            "overflow-hidden mt-2",
+            "overflow-hidden mt-2 flex-1 flex flex-col",
             activeTab !== "subtitles" && "hidden",
           )}
         >
@@ -301,7 +301,7 @@ export function SubtitlePanel({
           value="summary"
           forceMount={true}
           className={cn(
-            "overflow-hidden mt-2",
+            "overflow-hidden mt-2 flex-1 flex flex-col",
             activeTab !== "summary" && "hidden",
           )}
         >
@@ -315,7 +315,7 @@ export function SubtitlePanel({
           value="mindmap"
           forceMount={true}
           className={cn(
-            "overflow-hidden mt-2",
+            "overflow-hidden mt-2 flex-1 flex flex-col",
             activeTab !== "mindmap" && "hidden",
           )}
         >

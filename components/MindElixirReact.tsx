@@ -133,7 +133,7 @@ const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
     return (
       <div
         style={{
-          height: "400px",
+          height: "100%",
           width: "100%"
         }}
         ref={mindmapEl}

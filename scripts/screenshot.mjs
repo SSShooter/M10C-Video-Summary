@@ -94,6 +94,7 @@ async function main() {
   const server = await ensureServer()
 
   const tasks = [
+    // 1. 卡片视口版本 (带背景留白与圆角投影)
     {
       name: "subtitle_panel_subtitles",
       url: `${server.baseUrl}?view=panel&tab=subtitles&pure=1`,
@@ -114,13 +115,43 @@ async function main() {
       width: 500,
       height: 750,
       output: path.join(outputDir, "subtitle_panel_mindmap.png")
+    },
+
+    // 2. 全图直角面板版本 (全图即面板，隐藏边缘圆角、边框与投影)
+    {
+      name: "full_panel_subtitles",
+      url: `${server.baseUrl}?view=panel&tab=subtitles&pure=1&mode=full`,
+      width: 500,
+      height: 750,
+      output: path.join(outputDir, "full_panel_subtitles.png")
+    },
+    {
+      name: "full_panel_summary",
+      url: `${server.baseUrl}?view=panel&tab=summary&pure=1&mode=full`,
+      width: 500,
+      height: 750,
+      output: path.join(outputDir, "full_panel_summary.png")
+    },
+    {
+      name: "full_panel_mindmap",
+      url: `${server.baseUrl}?view=panel&tab=mindmap&pure=1&mode=full`,
+      width: 500,
+      height: 750,
+      output: path.join(outputDir, "full_panel_mindmap.png")
     }
   ]
+
+  const modeFilter = process.argv[2]
+  const activeTasks = tasks.filter((t) => {
+    if (modeFilter === "full") return t.name.startsWith("full_")
+    if (modeFilter === "card") return t.name.startsWith("subtitle_")
+    return true
+  })
 
   console.log("\n📸 Capturing screenshots of original TSX components...\n")
 
   try {
-    for (const task of tasks) {
+    for (const task of activeTasks) {
       process.stdout.write(`  Capturing ${task.name}... `)
       const args = [
         "--headless=new",

@@ -10,7 +10,9 @@ export default function App() {
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
   const initialView = (urlParams?.get("view") as any) || "mindmap"
   const panelTabParam = urlParams?.get("tab") || "mindmap"
+  const initialMode = urlParams?.get("mode") || (urlParams?.get("full") === "1" ? "full" : "card")
   const [activeView, setActiveView] = useState<"panel" | "mindmap" | "summary">(initialView)
+  const [panelMode, setPanelMode] = useState<"card" | "full">(initialMode as any)
   const mindmapPanelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -66,9 +68,16 @@ export default function App() {
   }
 
   const isPure = urlParams?.get("pure") === "1"
+  const isFull = panelMode === "full"
+
+  const containerClasses = isPure
+    ? isFull
+      ? "w-screen h-screen bg-white m-0 p-0 overflow-hidden"
+      : "min-h-screen bg-slate-50 text-slate-900 p-0 flex items-center justify-center"
+    : "min-h-screen bg-slate-50 text-slate-900 p-6"
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-900 ${isPure ? "p-0 flex items-center justify-center" : "p-6"}`}>
+    <div className={containerClasses}>
       {/* 顶部简易切换 */}
       {!isPure && (
         <div className="max-w-6xl mx-auto mb-6 flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
@@ -103,6 +112,31 @@ export default function App() {
             >
               原生完整面板组件 (SubtitlePanel)
             </button>
+
+            {activeView === "panel" && (
+              <div className="ml-4 flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <button
+                  onClick={() => setPanelMode("card")}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                    panelMode === "card"
+                      ? "bg-white text-indigo-700 shadow-sm font-semibold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  卡片悬浮模式 (带外边距与圆角)
+                </button>
+                <button
+                  onClick={() => setPanelMode("full")}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                    panelMode === "full"
+                      ? "bg-white text-indigo-700 shadow-sm font-semibold"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  全图直角模式 (无圆角全屏)
+                </button>
+              </div>
+            )}
           </div>
           <span className="text-xs text-slate-400 font-medium">
             M10C 原生 TSX 组件挂载 • Mock 数据
@@ -110,7 +144,7 @@ export default function App() {
         </div>
       )}
 
-      <div className={isPure ? "w-full flex items-center justify-center" : "max-w-6xl mx-auto"}>
+      <div className={isPure ? (isFull ? "w-full h-full" : "w-full flex items-center justify-center") : "max-w-6xl mx-auto"}>
         {/* 1. 原生 MindmapDisplay 组件 */}
         {activeView === "mindmap" && (
           <div
@@ -140,25 +174,58 @@ export default function App() {
 
         {/* 3. 原生 SubtitlePanel 组件 */}
         {activeView === "panel" && (
-          <div id="capture-panel" className="flex items-center justify-center">
-            <SubtitlePanel
-              subtitles={mockSubtitles}
-              loading={false}
-              error={null}
-              videoInfo={{
-                bvid: "preview",
-                cid: 1,
-                title: "AI 赋能的现代软件工程与架构演进"
-              }}
-              onJumpToTime={() => {}}
-              platform="bilibili"
-              onClose={() => {}}
-              defaultTab={(panelTabParam as any) || "subtitles"}
-              disableDrag={true}
-              className="static top-auto right-auto m-0 shadow-xl"
-              style={{ position: "static", margin: "0 auto" }}
-            />
-          </div>
+          isFull ? (
+            <div
+              id="capture-panel"
+              className={isPure ? "w-full h-full overflow-hidden" : "w-[500px] h-[750px] mx-auto border border-slate-200 overflow-hidden shadow-sm"}
+            >
+              <SubtitlePanel
+                subtitles={mockSubtitles}
+                loading={false}
+                error={null}
+                videoInfo={{
+                  bvid: "preview",
+                  cid: 1,
+                  title: "AI 赋能的现代软件工程与架构演进"
+                }}
+                onJumpToTime={() => {}}
+                platform="bilibili"
+                onClose={() => {}}
+                defaultTab={(panelTabParam as any) || "subtitles"}
+                disableDrag={true}
+                className="w-full h-full static top-auto right-auto m-0 rounded-none border-0 shadow-none p-3.5"
+                style={{
+                  position: "static",
+                  width: "100%",
+                  height: "100%",
+                  borderRadius: 0,
+                  border: "none",
+                  boxShadow: "none",
+                  margin: 0
+                }}
+              />
+            </div>
+          ) : (
+            <div id="capture-panel" className="flex items-center justify-center">
+              <SubtitlePanel
+                subtitles={mockSubtitles}
+                loading={false}
+                error={null}
+                videoInfo={{
+                  bvid: "preview",
+                  cid: 1,
+                  title: "AI 赋能的现代软件工程与架构演进"
+                }}
+                onJumpToTime={() => {}}
+                platform="bilibili"
+                onClose={() => {}}
+                defaultTab={(panelTabParam as any) || "subtitles"}
+                disableDrag={true}
+                className="static top-auto right-auto m-0 shadow-xl"
+                style={{ position: "static", margin: "0 auto" }}
+              />
+            </div>
+          )
         )}
       </div>
     </div>
