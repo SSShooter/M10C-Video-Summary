@@ -33,6 +33,9 @@ export interface SubtitlePanelProps {
   onJumpToTime: (time: number) => void;
   platform: "bilibili" | "youtube";
   onClose: () => void;
+  defaultTab?: "subtitles" | "summary" | "mindmap";
+  className?: string;
+  disableDrag?: boolean;
 }
 
 export function SubtitlePanel({
@@ -43,10 +46,16 @@ export function SubtitlePanel({
   onJumpToTime,
   platform,
   onClose,
+  defaultTab = "subtitles",
+  className,
+  disableDrag = false,
 }: SubtitlePanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const { onMouseDown, isPositionLoaded } = useDraggable(panelRef, "video_panel_pos");
-  const [activeTab, setActiveTab] = useState("subtitles");
+  const { onMouseDown, isPositionLoaded } = useDraggable(
+    panelRef,
+    disableDrag ? undefined : "video_panel_pos"
+  );
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [isByok, setIsByok] = useState(false);
   const [configuredLanguage, setConfiguredLanguage] = useState<string | null>(null);
   const currentUrl = window.location.href;
@@ -149,7 +158,10 @@ export function SubtitlePanel({
   return (
     <div
       ref={panelRef}
-      className="w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col"
+      className={cn(
+        "w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col",
+        className
+      )}
       style={{ visibility: isPositionLoaded ? "visible" : "hidden" }}
     >
       <div className="mb-[12px]">

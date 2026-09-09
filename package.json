@@ -12,6 +12,7 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "screenshot": "node scripts/screenshot.mjs",
     "update:providers": "node scripts/sync-providers.mjs",
     "postinstall": "wxt prepare"
   },

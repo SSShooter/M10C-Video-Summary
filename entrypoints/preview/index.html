@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M10C Component Preview</title>
+    <script>
+      (function() {
+        const storageStore = {};
+        const setItem = (key, val) => {
+          storageStore[key] = val;
+          const clean = key.replace(/^local:/, "");
+          storageStore[clean] = val;
+          storageStore["local:" + clean] = val;
+        };
+
+        const mockMindmapData = {
+          nodeData: {
+            id: "root",
+            topic: "AI 赋能的现代软件工程与架构演进",
+            children: [
+              {
+                id: "c1",
+                topic: "1. 研发周期的全链路智能化",
+                direction: 0,
+                children: [
+                  { id: "c1-1", topic: "智能代码补全与架构重构建议" },
+                  { id: "c1-2", topic: "自动化测试与高覆盖率用例生成" },
+                  { id: "c1-3", topic: "系统架构图与技术方案反向推演" }
+                ]
+              },
+              {
+                id: "c2",
+                topic: "2. AI Agent 范式演进",
+                direction: 0,
+                children: [
+                  { id: "c2-1", topic: "感知层：多模态输入与工程上下文构建" },
+                  { id: "c2-2", topic: "规划层：CoT 思维链与 ReAct 推理机制" },
+                  { id: "c2-3", topic: "行动层：Tool-Calling 与沙箱安全调度" }
+                ]
+              },
+              {
+                id: "c3",
+                topic: "3. 核心技术栈落地实践",
+                direction: 1,
+                children: [
+                  { id: "c3-1", topic: "提示词工程与上下文工程 (Context Engineering)" },
+                  { id: "c3-2", topic: "检索增强生成 (RAG) 与混合检索策略" },
+                  { id: "c3-3", topic: "领域微调与人类偏好对齐 (DPO/RLHF)" }
+                ]
+              },
+              {
+                id: "c4",
+                topic: "4. 效能提升与未来展望",
+                direction: 1,
+                children: [
+                  { id: "c4-1", topic: "研发流全链路综合提效 > 40%" },
+                  { id: "c4-2", topic: "架构设计评审与代码审查全自动介入" },
+                  { id: "c4-3", topic: "迈向自主式结对编程 (Pair Programming)" }
+                ]
+              }
+            ]
+          }
+        };
+
+        const mockSummaryMarkdown = "# 视频核心总结：AI 赋能的现代软件工程与架构演进\n\n> **核心摘要**：本视频深入探讨了以大语言模型（LLM）与自主智能体（AI Agent）为核心的新一代研发生产力变革。系统梳理了从代码辅助到全自主协同编码的演进路线，并结合一线工程落地实践，解析了从编写代码向“系统设计与意图编排”的转型路径。\n\n---\n\n### 1. 研发周期的全链路智能化\n- **智能补全与重构**：超越传统的单行补全，结合全局工程上下文提供高内聚、低耦合的重构方案。\n- **自动化测试生成**：基于函数签名与边界条件自动推导出高覆盖率的单元测试，提升交付质量。\n- **文档与知识沉淀**：实时解析代码变更与 commit log，自动生成规范的技术方案与发布文档。\n\n### 2. AI Agent 范式：从辅助到自主\n- **感知与上下文**：利用长上下文与代码 AST 解析，精准定位工程内部的调用拓扑图。\n- **ReAct 规划机制**：模型具备“思考-行动-观察”闭环能力，能够自我排查并修正运行报错。\n- **工具沙箱执行**：安全调度终端命令、Git 版本控制与自动化测试套件。\n\n### 3. 工程落地关键洞察\n- **上下文工程 (Context Engineering)**：单一 Prompt 正在让位于结构化上下文注入与动态索引。\n- **混合检索架构**：向量检索 (Dense) + BM25 关键词检索 (Sparse) 兼顾概念与符号精确匹配。\n- **结构化输出保障**：通过严格的 JSON Schema 与重试策略确保输出确定性。\n\n💡 **核心启示**：未来的优秀工程师不再比拼敲代码的速度，而是作为**系统架构师与质量把关人**，指挥 AI Agent 高效落地复杂业务。";
+
+        setItem("preview_mindmap", { mindmapData: mockMindmapData, timestamp: Date.now() });
+        setItem("mindmap_preview", { mindmapData: mockMindmapData, timestamp: Date.now() });
+        setItem("preview_summary", { content: mockSummaryMarkdown, timestamp: Date.now() });
+        setItem("summary_preview", { content: mockSummaryMarkdown, timestamp: Date.now() });
+        setItem("video_panel_pos", { x: 50, y: 50 });
+
+        const createStorageArea = () => ({
+          get: (keys, callback) => {
+            const result = {};
+            const lookup = (k) => {
+              const clean = String(k).replace(/^local:/, "");
+              return storageStore[k] ?? storageStore[clean] ?? storageStore["local:" + clean];
+            };
+            if (typeof keys === "string") {
+              result[keys] = lookup(keys);
+            } else if (Array.isArray(keys)) {
+              keys.forEach((k) => (result[k] = lookup(k)));
+            } else if (typeof keys === "object" && keys !== null) {
+              Object.keys(keys).forEach((k) => {
+                const v = lookup(k);
+                result[k] = v !== undefined ? v : keys[k];
+              });
+            } else {
+              Object.assign(result, storageStore);
+            }
+            if (callback) callback(result);
+            return Promise.resolve(result);
+          },
+          set: (items, callback) => {
+            Object.entries(items).forEach(([k, v]) => setItem(k, v));
+            if (callback) callback();
+            return Promise.resolve();
+          },
+          remove: (keys, callback) => {
+            const arr = Array.isArray(keys) ? keys : [keys];
+            arr.forEach((k) => {
+              delete storageStore[k];
+              delete storageStore[k.replace(/^local:/, "")];
+            });
+            if (callback) callback();
+            return Promise.resolve();
+          }
+        });
+
+        const i18nDict = {
+          videoAssistant: "M10C 助手",
+          youtubeSubtitle: "YouTube 字幕",
+          drag: "拖拽移动",
+          close: "关闭",
+          copy: "复制",
+          download: "下载",
+          fullscreen: "全屏",
+          subtitles: "字幕",
+          summary: "AI 总结",
+          aiSummary: "AI 总结",
+          mindmap: "思维导图",
+          generateMindmap: "生成导图",
+          generateMindmapBtn: "生成思维导图",
+          regenerate: "重新生成",
+          generateSummary: "生成总结",
+          openInDesktop: "在桌面打开",
+          exportPng: "导出 PNG",
+          exportSvg: "导出 SVG",
+          exportMarkdown: "导出 Markdown",
+          exportJson: "导出 JSON",
+          contentReady: "内容已就绪",
+          freeQuotaNotice: "今日免费额度",
+          noContentAvailable: "暂无可用内容",
+          aiSummaryGenerated: "AI 总结已生成",
+          aiMindmapGenerated: "思维导图已生成",
+          cached: "已缓存",
+          noMindmap: "暂无思维导图",
+          noSummary: "暂无总结",
+          copied: "已复制"
+        };
+
+        const polyfill = {
+          runtime: {
+            id: "m10c-preview-extension-id",
+            sendMessage: (msg, cb) => cb && cb({ success: false }),
+            connect: () => ({
+              onMessage: { addListener: () => {} },
+              postMessage: () => {},
+              disconnect: () => {}
+            }),
+            lastError: null
+          },
+          i18n: {
+            getMessage: (key) => i18nDict[key] || key,
+            getUILanguage: () => "zh-CN"
+          },
+          storage: {
+            local: createStorageArea(),
+            sync: createStorageArea()
+          }
+        };
+
+        window.chrome = polyfill;
+        window.browser = polyfill;
+      })();
+    </script>
+  </head>
+  <body class="bg-slate-100 min-h-screen text-slate-800">
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
