@@ -1,0 +1,45 @@
+{
+  "version": "3.6.0",
+  "date": "2026.09.08",
+  "cards": [
+    {
+      "kind": "cover",
+      "id": "01-cover",
+      "accent": "violet",
+      "label": "RELEASE NOTES",
+      "kicker": "M10C",
+      "hook": ["模型自由，", "从这一版开始。"],
+      "sub": "AI 模型不再锁死一个，设置页与浮窗也一并翻新。",
+      "count": "更新 6 项"
+    },
+    {
+      "kind": "list",
+      "id": "02-updates",
+      "accent": "violet",
+      "label": "CHANGELOG",
+      "headline": ["这次更新了什么。"],
+      "items": [
+        { "tag": "新增", "title": "190+ AI 供应商接入", "desc": "模型配置升级 V3，models.dev 全量集成，统一 OpenAI 兼容路由。" },
+        { "tag": "新增", "title": "多模型自由切换", "desc": "可同时配置多个模型，随时切换默认，支持复制与自定义配置。" },
+        { "tag": "新增", "title": "全新设置页", "desc": "卡片式界面重新设计，模型走弹窗管理，账户与星球余额实时可见。" },
+        { "tag": "新增", "title": "浮窗品牌标识", "desc": "字幕面板与文章导图面板加上 M10C 图标，一眼认出。" },
+        { "tag": "改进", "title": "导图语法加固", "desc": "重写提示词规则并补上反例，跨模型输出不再串结构。" },
+        { "tag": "改进", "title": "六语言文案清理", "desc": "中、英、日、韩、西与繁中同步更新，清掉过期说明。" }
+      ]
+    },
+    {
+      "kind": "install",
+      "id": "03-install",
+      "accent": "violet",
+      "label": "GET IT",
+      "headline": ["新版本已经上架，", "随时可以更新。"],
+      "platforms": [
+        { "name": "Chrome 应用商店" },
+        { "name": "Edge 加载项" },
+        { "name": "Firefox 附加组件" }
+      ],
+      "searchHint": "扩展商店搜索「M10C」即可",
+      "foot": "v3.6.0 · 2026.09.08"
+    }
+  ]
+}

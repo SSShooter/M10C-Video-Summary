@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>M10C Release Cards</title>
+<style>
+  :root {
+    /* 品牌色（与 M10C extension 主题色对齐：深靛紫 + 星光琥珀） */
+    --paper: #F4F2ED;
+    --ink: #0F1230;
+    --dim: rgba(15, 18, 48, .58);
+    --faint: rgba(15, 18, 48, .36);
+    --hair: rgba(15, 18, 48, .14);
+    --rule: rgba(15, 18, 48, .26);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #17181c;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 44px; padding: 44px 0 80px;
+  }
+  .page-title { color: rgba(255,255,255,.8); font: 800 18px/1 -apple-system, "PingFang SC", sans-serif; letter-spacing: .04em; }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .slot .meta { color: rgba(255,255,255,.42); font: 700 12px ui-monospace, Menlo, monospace; letter-spacing: .12em; }
+  .dl-btn {
+    display: none; font: 800 13px -apple-system, "PingFang SC", sans-serif;
+    color: #fff; background: #2c2e35; border: 1px solid rgba(255,255,255,.18);
+    padding: 10px 18px; border-radius: 999px; cursor: pointer;
+  }
+  .dl-btn.on { display: inline-block; }
+  .dl-btn:hover { background: #3a3d46; }
+  .dl-btn[disabled] { opacity: .5; cursor: default; }
+
+  /* ===================== 卡片外壳 ===================== */
+  .card {
+    position: relative; overflow: hidden; isolation: isolate; flex-shrink: 0;
+    width: 540px; height: 720px; padding: 52px 48px;
+    background: var(--paper); color: var(--ink);
+    outline: none; border: 0; box-shadow: none;
+    display: flex; flex-direction: column;
+  }
+  .card, .card * { user-select: none; }
+  .card[data-accent="indigo"]   { --accent: #2A1FA6; --accent-ink: #FFFFFF; }
+  .card[data-accent="violet"]   { --accent: #A18BFF; --accent-ink: #0F1230; } /* 淡紫：extension --accent 255 70% 70% */
+  .card[data-accent="amber"]    { --accent: #FFC400; --accent-ink: #0F1230; }
+  .card[data-accent="rose"]     { --accent: #FF4A8C; --accent-ink: #FFFFFF; }
+  .card[data-accent="ink"]      { --accent: #0F1230; --accent-ink: #F4F2ED; }
+  .frame { position: absolute; inset: 20px; border: 1px solid var(--hair); pointer-events: none; }
+  .foot-space { margin-top: auto; }
+
+  .label {
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+    font: 700 11px/1 ui-monospace, Menlo, monospace;
+    letter-spacing: .22em; text-transform: uppercase; color: var(--faint);
+  }
+  .label i { width: 7px; height: 7px; background: var(--accent); display: block; }
+  .head { margin-top: 20px; font-size: 44px; font-weight: 900; line-height: 1.14; letter-spacing: -.03em; }
+
+  /* ===================== 01 封面 ===================== */
+  .cv-logo { display: flex; align-items: center; gap: 14px; }
+  .cv-logo img { width: 72px; height: 72px; border-radius: 16px; box-shadow: 0 0 0 1px var(--hair); }
+  .cv-logo .wm { display: flex; flex-direction: column; line-height: 1; }
+  .cv-logo .wm b { font: 900 38px/1 -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; letter-spacing: -.04em; color: var(--ink); }
+  .cv-logo .wm i { margin-top: 7px; font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .24em; color: var(--faint); font-style: normal; }
+  .cv-ver { font: 900 118px/1 ui-monospace, Menlo, monospace; letter-spacing: -.05em; margin-top: 28px; }
+  .cv-hook { margin-top: 28px; font-size: 38px; font-weight: 900; line-height: 1.24; letter-spacing: -.03em; }
+  .cv-hook em { font-style: normal; position: relative; z-index: 1; }
+  .cv-hook em::after {
+    content: ''; position: absolute; left: -2px; right: -2px; bottom: 7px; height: 15px;
+    background: var(--accent); z-index: -1;
+  }
+  .cv-sub { margin-top: 24px; max-width: 370px; font-size: 14.5px; line-height: 1.7; color: var(--dim); }
+  .cv-foot {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding-top: 22px; border-top: 1px solid var(--rule);
+  }
+  .cv-foot .k { font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: var(--faint); }
+  .cv-foot .v { display: block; margin-top: 10px; font: 900 21px/1 ui-monospace, Menlo, monospace; letter-spacing: .04em; }
+  .cv-foot .c {
+    font: 700 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .18em;
+    background: var(--accent); color: var(--accent-ink); padding: 9px 12px; white-space: nowrap;
+  }
+
+  /* ===================== 02 更新列表 ===================== */
+  .ls-list { margin-top: 22px; }
+  .ls-item { display: flex; gap: 14px; padding: 12px 0; border-top: 1px solid var(--hair); }
+  .ls-item:last-child { border-bottom: 1px solid var(--hair); }
+  .ls-item .no { font: 700 10px/1 ui-monospace, Menlo, monospace; color: var(--faint); padding-top: 7px; min-width: 16px; }
+  .ls-item .tg {
+    align-self: flex-start; flex-shrink: 0;
+    font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .14em;
+    padding: 5px 8px; background: var(--accent); color: var(--accent-ink); margin-top: 3px;
+  }
+  .ls-item .bd { min-width: 0; }
+  .ls-item .t { font-size: 18.5px; font-weight: 900; letter-spacing: -.01em; line-height: 1.3; }
+  .ls-item .d { margin-top: 5px; font-size: 13px; line-height: 1.55; color: var(--dim); }
+
+  /* ===================== 03 获取方式 ===================== */
+  .in-plats { margin-top: 26px; }
+  .in-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-top: 1px solid var(--rule); }
+  .in-row:last-child { border-bottom: 1px solid var(--rule); }
+  .in-row .n { display: flex; align-items: baseline; gap: 12px; font-size: 21px; font-weight: 900; letter-spacing: -.01em; }
+  .in-row .n i { font: 700 10px/1 ui-monospace, Menlo, monospace; color: var(--faint); font-style: normal; }
+  .in-row .ar { font-size: 20px; font-weight: 700; color: var(--faint); }
+  .in-hint { margin-top: 16px; font: 700 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .14em; color: var(--faint); }
+  .in-note {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--ink); color: var(--paper); border-radius: 12px; padding: 16px 18px;
+    font-size: 13.5px; line-height: 1.6;
+  }
+  .in-note i { width: 10px; height: 10px; background: var(--accent); flex-shrink: 0; display: block; }
+  .in-foot {
+    margin-top: 14px; display: flex; align-items: center; justify-content: space-between;
+    font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .18em; color: var(--faint);
+  }
+  /* 英文文案更长，列表整体收一档 */
+  body[data-lang="en"] .ls-item { padding: 11px 0; }
+  body[data-lang="en"] .ls-item .t { font-size: 17.5px; }
+  body[data-lang="en"] .ls-item .d { font-size: 12.5px; }
+</style>
+</head>
+<body>
+  <h1 class="page-title">M10C Release Cards</h1>
+
+  <script type="module">
+    const qs = new URLSearchParams(location.search);
+    const index = await (await fetch('./releases/index.json')).json();
+    const version = qs.get('v') || index.latest;
+    const lang = qs.get('lang') === 'en' ? 'en' : 'zh';
+    const data = await (await fetch(`./releases/${version}.${lang}.json`)).json();
+    document.querySelector('.page-title').textContent = `M10C ${data.version} · Release Cards (${lang})`;
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+    document.body.dataset.lang = lang;
+
+    const templates = {
+      /* 01 封面 —— 纯排版海报 */
+      cover: c => `
+        <div class="frame"></div>
+        <div class="cv-logo">
+          <img src="./icon.png" alt="M10C" />
+          <div class="wm"><b>M10C</b><i>${c.label}</i></div>
+        </div>
+        <h2 class="cv-ver">${data.version}</h2>
+        <p class="cv-hook">${c.hook[0]}<br /><em>${c.hook[1]}</em></p>
+        <p class="cv-sub">${c.sub}</p>
+        <div class="foot-space"></div>
+        <div class="cv-foot">
+          <div><span class="k">RELEASED</span><span class="v">${data.date}</span></div>
+          <span class="c">${c.count}</span>
+        </div>`,
+
+      /* 02 更新列表 —— 基本款：标签 + 标题 + 一句话说明 */
+      list: c => `
+        <div class="frame"></div>
+        <span class="label"><i></i>${c.label}</span>
+        <h2 class="head">${c.headline[0]}</h2>
+        <div class="ls-list">
+          ${c.items.map((it, i) => `
+            <div class="ls-item">
+              <span class="no">${String(i + 1).padStart(2, '0')}</span>
+              <span class="tg">${it.tag}</span>
+              <div class="bd">
+                <p class="t">${it.title}</p>
+                ${it.desc ? `<p class="d">${it.desc}</p>` : ''}
+              </div>
+            </div>`).join('')}
+        </div>`,
+
+      /* 03 获取方式 */
+      install: c => `
+        <div class="frame"></div>
+        <span class="label"><i></i>${c.label}</span>
+        <h2 class="head">${c.headline[0]}<br />${c.headline[1]}</h2>
+        <div class="in-plats">
+          ${c.platforms.map((p, i) => `
+            <div class="in-row">
+              <span class="n"><i>${String(i + 1).padStart(2, '0')}</i>${p.name}</span>
+              <span class="ar">↗</span>
+            </div>`).join('')}
+        </div>
+        <p class="in-hint">${c.searchHint}</p>
+        <div class="foot-space"></div>
+        ${c.note ? `<div class="in-note"><i></i><span>${c.note}</span></div>` : ''}
+        <div class="in-foot"><span>${c.foot}</span><span>M10C</span></div>`,
+    };
+
+    for (const c of data.cards) {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      const cardId = `m10c-${version}-${lang}-${c.id}`;
+      slot.innerHTML = `
+        <div class="card" data-card="${cardId}" data-accent="${c.accent || 'ink'}" role="img" aria-label="${c.label}">
+          ${templates[c.kind](c)}
+        </div>
+        <span class="meta">${cardId}</span>
+        <button class="dl-btn" data-target="${cardId}">下载 PNG · 1080×1440</button>`;
+      document.body.appendChild(slot);
+    }
+
+    /* snapdom 2x 导出（1080×1440） */
+    try {
+      const { snapdom } = await import('https://cdn.jsdelivr.net/npm/@zumer/snapdom@1.9.13/dist/snapdom.min.mjs');
+      for (const btn of document.querySelectorAll('.dl-btn')) {
+        btn.classList.add('on');
+        btn.addEventListener('click', async () => {
+          const el = document.querySelector(`[data-card="${btn.dataset.target}"]`);
+          btn.disabled = true; btn.textContent = '导出中…';
+          try {
+            await document.fonts.ready;
+            await snapdom.download(el, { scale: 2, embedFonts: true, filename: btn.dataset.target });
+          } finally {
+            btn.disabled = false; btn.textContent = '下载 PNG · 1080×1440';
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('snapdom 不可用，按钮已隐藏', e);
+    }
+  </script>
+</body>
+</html>

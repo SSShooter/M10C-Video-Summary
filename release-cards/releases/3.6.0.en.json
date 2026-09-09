@@ -1,0 +1,44 @@
+{
+  "version": "3.6.0",
+  "date": "2026.09.08",
+  "cards": [
+    {
+      "kind": "cover",
+      "id": "01-cover",
+      "accent": "violet",
+      "label": "RELEASE NOTES",
+      "kicker": "M10C",
+      "hook": ["Model freedom,", "starts with this release."],
+      "sub": "Your AI model is no longer locked to a single one — the settings page and floating panels got a refresh too.",
+      "count": "5 updates"
+    },
+    {
+      "kind": "list",
+      "id": "02-updates",
+      "accent": "violet",
+      "label": "CHANGELOG",
+      "headline": ["What's new."],
+      "items": [
+        { "tag": "NEW", "title": "190+ AI providers", "desc": "Config upgraded to V3, with every models.dev provider on board." },
+        { "tag": "NEW", "title": "Multi-model switching", "desc": "Keep several models configured, switch the default anytime." },
+        { "tag": "NEW", "title": "Redesigned settings", "desc": "Card-based UI with a modal for adding and editing models." },
+        { "tag": "NEW", "title": "Branded panels", "desc": "The M10C icon now marks both floating panels." },
+        { "tag": "IMPROVED", "title": "Prompt hardening", "desc": "Rewritten rules and counter-examples keep output well-formed." }
+      ]
+    },
+    {
+      "kind": "install",
+      "id": "03-install",
+      "accent": "violet",
+      "label": "GET IT",
+      "headline": ["New version", "is live."],
+      "platforms": [
+        { "name": "Chrome Web Store" },
+        { "name": "Edge Add-ons" },
+        { "name": "Firefox Add-ons" }
+      ],
+      "searchHint": "Search “M10C” in the extension store",
+      "foot": "v3.6.0 · 2026.09.08"
+    }
+  ]
+}

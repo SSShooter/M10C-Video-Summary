@@ -1,0 +1,37 @@
+{
+  "version": "X.Y.Z",
+  "date": "YYYY.MM.DD",
+  "cards": [
+    {
+      "kind": "cover",
+      "id": "01-cover",
+      "accent": "violet",
+      "label": "RELEASE NOTES",
+      "kicker": "M10C",
+      "hook": ["钩子第一行，", "第二行会被高亮。"],
+      "sub": "一句话说明这版到底变了什么。",
+      "count": "更新 N 项"
+    },
+    {
+      "kind": "list",
+      "id": "02-updates",
+      "accent": "violet",
+      "label": "CHANGELOG",
+      "headline": ["这次更新了什么。"],
+      "items": [
+        { "tag": "新增", "title": "更新条目标题", "desc": "一句话说明（可省略）。" }
+      ]
+    },
+    {
+      "kind": "install",
+      "id": "03-install",
+      "accent": "violet",
+      "label": "GET IT",
+      "headline": ["新版本已经上架，", "随时可以更新。"],
+      "platforms": [{ "name": "Chrome 应用商店" }],
+      "searchHint": "搜索提示",
+      "note": "可选：给已安装用户的一句话，不填则不渲染黑色提示条。",
+      "foot": "vX.Y.Z · YYYY.MM.DD"
+    }
+  ]
+}

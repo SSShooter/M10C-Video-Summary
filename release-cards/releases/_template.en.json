@@ -1,0 +1,37 @@
+{
+  "version": "X.Y.Z",
+  "date": "YYYY.MM.DD",
+  "cards": [
+    {
+      "kind": "cover",
+      "id": "01-cover",
+      "accent": "violet",
+      "label": "RELEASE NOTES",
+      "kicker": "M10C",
+      "hook": ["Hook line one,", "line two gets highlighted."],
+      "sub": "One sentence on what actually changed in this release.",
+      "count": "N updates"
+    },
+    {
+      "kind": "list",
+      "id": "02-updates",
+      "accent": "violet",
+      "label": "CHANGELOG",
+      "headline": ["What's new."],
+      "items": [
+        { "tag": "NEW", "title": "Update title", "desc": "One-sentence description (optional)." }
+      ]
+    },
+    {
+      "kind": "install",
+      "id": "03-install",
+      "accent": "violet",
+      "label": "GET IT",
+      "headline": ["New version", "is live."],
+      "platforms": [{ "name": "Chrome Web Store" }],
+      "searchHint": "Search hint",
+      "note": "Optional: one line for existing users; leave out to hide the dark note bar.",
+      "foot": "vX.Y.Z · YYYY.MM.DD"
+    }
+  ]
+}
