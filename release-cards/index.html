@@ -91,9 +91,13 @@
   .ls-item .no { font: 700 10px/1 ui-monospace, Menlo, monospace; color: var(--faint); padding-top: 7px; min-width: 16px; }
   .ls-item .tg {
     align-self: flex-start; flex-shrink: 0;
-    font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .14em;
+    font: 700 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .14em; text-align: center;
     padding: 5px 8px; background: var(--accent); color: var(--accent-ink); margin-top: 3px;
   }
+  /* 英文标签长短不一（NEW / IMPROVED），统一宽度让标题左对齐 */
+  body[data-lang="en"] .ls-item .tg { min-width: 80px; }
+  /* 中文标签均为两字，统一宽度避免参差 */
+  body[data-lang="zh"] .ls-item .tg { min-width: 44px; }
   .ls-item .bd { min-width: 0; }
   .ls-item .t { font-size: 18.5px; font-weight: 900; letter-spacing: -.01em; line-height: 1.3; }
   .ls-item .d { margin-top: 5px; font-size: 13px; line-height: 1.55; color: var(--dim); }
@@ -127,10 +131,11 @@
 
   <script type="module">
     const qs = new URLSearchParams(location.search);
-    const index = await (await fetch('./releases/index.json')).json();
+    const noCache = { cache: 'no-store' };
+    const index = await (await fetch('./releases/index.json', noCache)).json();
     const version = qs.get('v') || index.latest;
     const lang = qs.get('lang') === 'en' ? 'en' : 'zh';
-    const data = await (await fetch(`./releases/${version}.${lang}.json`)).json();
+    const data = await (await fetch(`./releases/${version}.${lang}.json`, noCache)).json();
     document.querySelector('.page-title').textContent = `M10C ${data.version} · Release Cards (${lang})`;
     document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
     document.body.dataset.lang = lang;

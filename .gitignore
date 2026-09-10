@@ -33,3 +33,6 @@ web-ext.config.ts
 
 # Local docs
 local-docs/
+
+# Release card exports (generated artifacts, not source)
+screenshots/
