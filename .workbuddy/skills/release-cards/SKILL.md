@@ -89,4 +89,13 @@ python3 -c "import struct,sys;d=open(sys.argv[1],'rb').read();print(struct.unpac
 
 7. 归档核对无误后，清理 `~/Downloads` 里的原始导出文件（用 `mv` 到 `~/.Trash` 而非 `rm`，文件名后加时间戳避免废纸篓冲突）。清理前先 `ls -l` 归档目录，确认 6 张都在且大小与 Downloads 原文件一致。
 
-`screenshots/` 是工作产物目录，不是版本管理的资源。
+`screenshots/` 是产物目录，不是版本管理的资源。`.gitignore` 里写的是 **`screenshots/**/*.png` + `*.jpg`（按后缀忽略，不是整目录）** —— 因为文案 md 和图片放在同一个目录，若写 `screenshots/` 整目录，父目录被排除后子文件的 `!` 例外不生效，md 会一起被吞掉。若之前已 `git add` 过图片，需 `git rm -r --cached screenshots` 才真正生效。
+
+## 社媒文案（X / @x.com）
+
+出图后同步产出官博文案，存 `screenshots/release/v<version>/x-post.md` —— **和图片同目录**，整个文件夹可直接打包带走。链接别留占位符，直接填好真实 URL，做到复制即发。
+
+- 提供三档：A 单帖（写完收工，推荐）/ B 三条 thread / C 极简一句话。
+- **必须按 X 加权规则校验长度**（上限 280）：URL 固定计 23，`east_asian_width` 为 `W/F` 的字符（CJK、全角标点）计 2，其余计 1。`——` 这种全角破折号很容易把中文帖顶超，写完用脚本量一遍再交付。
+- 若中文帖超了，优先砍「设置页重做」这类次要条目而不是硬缩写句子。
+- **链接默认放官网 `https://app.mind-elixir.com/m10c`**（自动跳 `/en/m10c`，页内三个商店入口齐全），一条推文只放一个链接。商店直链作为备选留底。X 对所有 URL 统一计 23 字符，换哪个链接长度都不变。
