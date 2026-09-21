@@ -31,6 +31,7 @@ import {
   SelectValue
 } from "~/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group"
+import { AnchorDropdown } from "~/components/ui/anchor-dropdown"
 import { Toaster } from "~/components/ui/sonner"
 import {
   Dialog,
@@ -100,6 +101,9 @@ function OptionsPage() {
   const providerSearchRef = useRef<HTMLInputElement>(null)
   const providerDropdownRef = useRef<HTMLDivElement>(null)
   const modelDropdownRef = useRef<HTMLDivElement>(null)
+  // 下拉浮层被 portal 到 body，outside-click 判断需要把浮层自身也算进来
+  const providerDropdownContentRef = useRef<HTMLDivElement>(null)
+  const modelDropdownContentRef = useRef<HTMLDivElement>(null)
 
   const [user, setUser] = useState<UserData | null>(null)
   const [loadingUser, setLoadingUser] = useState(false)
@@ -262,16 +266,13 @@ function OptionsPage() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        providerDropdownRef.current &&
-        !providerDropdownRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node
+      const inside = (anchor: HTMLDivElement | null, content: HTMLDivElement | null) =>
+        (anchor && anchor.contains(target)) || (content && content.contains(target))
+      if (!inside(providerDropdownRef.current, providerDropdownContentRef.current)) {
         setProviderDropdownOpen(false)
       }
-      if (
-        modelDropdownRef.current &&
-        !modelDropdownRef.current.contains(event.target as Node)
-      ) {
+      if (!inside(modelDropdownRef.current, modelDropdownContentRef.current)) {
         setModelDropdownOpen(false)
       }
     }
@@ -891,7 +892,10 @@ function OptionsPage() {
                     />
                   </button>
                   {providerDropdownOpen && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-popover border rounded-xl shadow-lg animate-in fade-in-50 zoom-in-95 duration-100">
+                    <AnchorDropdown
+                      open={providerDropdownOpen}
+                      anchorRef={providerDropdownRef}
+                      contentRef={providerDropdownContentRef}>
                       <div className="p-2.5 border-b border-border">
                         <div className="relative">
                           <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -904,7 +908,7 @@ function OptionsPage() {
                           />
                         </div>
                       </div>
-                      <div className="max-h-[240px] overflow-y-auto p-1.5">
+                      <div className="flex-1 min-h-0 overflow-y-auto p-1.5">
                         {filteredProviderOptions.map((opt) => (
                           <div
                             key={opt.id}
@@ -925,7 +929,7 @@ function OptionsPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </AnchorDropdown>
                   )}
                 </div>
               </div>
@@ -1028,7 +1032,10 @@ function OptionsPage() {
                     </div>
                   )}
                   {modelDropdownOpen && (modelOptions.length > 0 || fetchingModels) && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-popover border rounded-xl shadow-lg animate-in fade-in-50 zoom-in-95 duration-100">
+                    <AnchorDropdown
+                      open={modelDropdownOpen}
+                      anchorRef={modelDropdownRef}
+                      contentRef={modelDropdownContentRef}>
                       {fetchingModels ? (
                         <div className="py-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
                           <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -1036,10 +1043,10 @@ function OptionsPage() {
                         </div>
                       ) : (
                         <>
-                          <div className="px-3 py-1.5 text-[11px] font-medium text-muted-foreground border-b border-border flex items-center justify-between">
+                          <div className="px-3 py-1.5 text-[11px] font-medium text-muted-foreground border-b border-border flex items-center justify-between shrink-0">
                             <span>{modelOptions.length} {t("modelSelection")}</span>
                           </div>
-                          <div className="max-h-[220px] overflow-y-auto p-1.5">
+                          <div className="flex-1 min-h-0 overflow-y-auto p-1.5">
                             {modelOptions
                               .filter((m) =>
                                 m
@@ -1070,7 +1077,7 @@ function OptionsPage() {
                           </div>
                         </>
                       )}
-                    </div>
+                    </AnchorDropdown>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
