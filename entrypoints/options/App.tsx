@@ -9,8 +9,6 @@ import {
   Pencil,
   Copy,
   Trash2,
-  ChevronDown,
-  Search,
   Eye,
   EyeOff,
   X
@@ -31,7 +29,7 @@ import {
   SelectValue
 } from "~/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group"
-import { AnchorDropdown } from "~/components/ui/anchor-dropdown"
+import { SearchableDropdown } from "~/components/ui/searchable-dropdown"
 import { Toaster } from "~/components/ui/sonner"
 import {
   Dialog,
@@ -92,13 +90,13 @@ function OptionsPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [providerOptions, setProviderOptions] = useState<ProviderOption[]>([])
   const [providerDropdownOpen, setProviderDropdownOpen] = useState(false)
-  const [providerSearch, setProviderSearch] = useState("")
+  // null 表示输入框跟随当前服务商名称，非 null 表示用户正在输入的过滤词
+  const [providerQuery, setProviderQuery] = useState<string | null>(null)
   const [modelOptions, setModelOptions] = useState<string[]>([])
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false)
   const [fetchingModels, setFetchingModels] = useState(false)
   const [avatarError, setAvatarError] = useState(false)
 
-  const providerSearchRef = useRef<HTMLInputElement>(null)
   const providerDropdownRef = useRef<HTMLDivElement>(null)
   const modelDropdownRef = useRef<HTMLDivElement>(null)
   // 下拉浮层被 portal 到 body，outside-click 判断需要把浮层自身也算进来
@@ -303,14 +301,24 @@ function OptionsPage() {
     (p) => p.id === formData.provider
   )
 
+  // 输入框文本：编辑中显示过滤词，否则显示当前服务商名称
+  const providerInputValue =
+    providerQuery ?? (formData.provider ? getProviderLabel(formData.provider) : "")
+
   const filteredProviderOptions = useMemo(() => {
-    const q = providerSearch.trim().toLowerCase()
+    const q = providerQuery?.trim().toLowerCase()
     if (!q) return providerOptions
     return providerOptions.filter(
       (p) =>
         p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
     )
-  }, [providerOptions, providerSearch])
+  }, [providerOptions, providerQuery])
+
+  const filteredModelOptions = useMemo(() => {
+    const q = (formData.model || "").toLowerCase()
+    if (!q) return modelOptions
+    return modelOptions.filter((m) => m.toLowerCase().includes(q))
+  }, [modelOptions, formData.model])
 
   const loadModelOptions = async (baseUrl?: string, apiKey?: string) => {
     if (!baseUrl || !apiKey?.trim()) {
@@ -354,7 +362,7 @@ function OptionsPage() {
       baseUrl: ""
     })
     setModelOptions([])
-    setProviderSearch("")
+    setProviderQuery(null)
     setShowApiKey(false)
     setHasSubmitted(false)
     setFormOpen(true)
@@ -365,7 +373,7 @@ function OptionsPage() {
     setEditingModelId(model.id)
     setFormData({ ...model })
     setModelOptions([])
-    setProviderSearch("")
+    setProviderQuery(null)
     setShowApiKey(false)
     setHasSubmitted(false)
     setFormOpen(true)
@@ -385,7 +393,7 @@ function OptionsPage() {
       baseUrl: model.baseUrl
     })
     setModelOptions([])
-    setProviderSearch("")
+    setProviderQuery(null)
     setShowApiKey(false)
     setHasSubmitted(false)
     setFormOpen(true)
@@ -412,7 +420,7 @@ function OptionsPage() {
       baseUrl: option?.baseUrlEditable ? "" : option?.baseUrl || ""
     }))
     setProviderDropdownOpen(false)
-    setProviderSearch("")
+    setProviderQuery(null)
   }
 
   const handleFormApiKeyChange = (apiKey: string) => {
@@ -865,73 +873,40 @@ function OptionsPage() {
 
               {/* Searchable provider dropdown */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">
+                <Label htmlFor="provider-name" className="text-sm font-medium text-foreground">
                   {t("aiProvider")}
                 </Label>
-                <div ref={providerDropdownRef} className="relative">
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3.5 py-2 text-sm transition-colors hover:border-border",
-                      hasSubmitted && !formData.provider && "border-destructive"
-                    )}
-                    onClick={() => {
-                      setProviderDropdownOpen((v) => !v)
-                      setTimeout(() => providerSearchRef.current?.focus(), 0)
-                    }}>
-                    <span className={cn(!formData.provider && "text-muted-foreground")}>
-                      {formData.provider
-                        ? getProviderLabel(formData.provider)
-                        : t("searchProvider")}
+                <SearchableDropdown
+                  id="provider-name"
+                  value={providerInputValue}
+                  onValueChange={(v) => {
+                    setProviderQuery(v)
+                    setProviderDropdownOpen(true)
+                  }}
+                  onFocus={(e) => {
+                    // 聚焦即全选，直接输入即可替换当前服务商名
+                    e.currentTarget.select()
+                    setProviderDropdownOpen(true)
+                  }}
+                  onBlur={() => setProviderQuery(null)}
+                  placeholder={t("searchProvider")}
+                  invalid={hasSubmitted && !formData.provider}
+                  open={providerDropdownOpen}
+                  items={filteredProviderOptions.map((opt) => ({
+                    key: opt.id,
+                    label: opt.name
+                  }))}
+                  selectedKey={formData.provider || null}
+                  onSelect={(item) => handleFormProviderChange(item.key)}
+                  listHeader={
+                    <span>
+                      {filteredProviderOptions.length} {t("aiProvider")}
                     </span>
-                    <ChevronDown
-                      className={cn(
-                        "h-4 w-4 opacity-50 transition-transform",
-                        providerDropdownOpen && "rotate-180"
-                      )}
-                    />
-                  </button>
-                  {providerDropdownOpen && (
-                    <AnchorDropdown
-                      open={providerDropdownOpen}
-                      anchorRef={providerDropdownRef}
-                      contentRef={providerDropdownContentRef}>
-                      <div className="p-2.5 border-b border-border">
-                        <div className="relative">
-                          <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            ref={providerSearchRef}
-                            className="h-9 pl-8 text-sm rounded-lg"
-                            value={providerSearch}
-                            onChange={(e) => setProviderSearch(e.target.value)}
-                            placeholder={t("searchProvider")}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-h-0 overflow-y-auto p-1.5">
-                        {filteredProviderOptions.map((opt) => (
-                          <div
-                            key={opt.id}
-                            className={cn(
-                              "flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent transition-colors",
-                              formData.provider === opt.id && "bg-accent font-medium"
-                            )}
-                            onMouseDown={(e) => {
-                              e.preventDefault()
-                              handleFormProviderChange(opt.id)
-                            }}>
-                            <span className="truncate">{opt.name}</span>
-                          </div>
-                        ))}
-                        {filteredProviderOptions.length === 0 && (
-                          <div className="py-5 text-center text-sm text-muted-foreground">
-                            {t("noProvidersFound")}
-                          </div>
-                        )}
-                      </div>
-                    </AnchorDropdown>
-                  )}
-                </div>
+                  }
+                  emptyText={t("noProvidersFound")}
+                  anchorRef={providerDropdownRef}
+                  contentRef={providerDropdownContentRef}
+                />
               </div>
             </div>
 
@@ -1011,75 +986,40 @@ function OptionsPage() {
                     </button>
                   )}
                 </div>
-                <div ref={modelDropdownRef} className="relative">
-                  <Input
-                    id="model-id"
-                    className={cn(
-                      "h-10 text-sm rounded-lg pr-8",
-                      hasSubmitted && !formData.model?.trim() && "border-destructive focus-visible:ring-destructive"
-                    )}
-                    value={formData.model || ""}
-                    onChange={(e) => {
-                      setFormData({ ...formData, model: e.target.value })
-                      setModelDropdownOpen(true)
-                    }}
-                    onFocus={() => setModelDropdownOpen(true)}
-                    placeholder={t("enterCustomModelName")}
-                  />
-                  {fetchingModels && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
-                  {modelDropdownOpen && (modelOptions.length > 0 || fetchingModels) && (
-                    <AnchorDropdown
-                      open={modelDropdownOpen}
-                      anchorRef={modelDropdownRef}
-                      contentRef={modelDropdownContentRef}>
-                      {fetchingModels ? (
-                        <div className="py-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
-                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                          <span>{t("fetchingModels")}</span>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="px-3 py-1.5 text-[11px] font-medium text-muted-foreground border-b border-border flex items-center justify-between shrink-0">
-                            <span>{modelOptions.length} {t("modelSelection")}</span>
-                          </div>
-                          <div className="flex-1 min-h-0 overflow-y-auto p-1.5">
-                            {modelOptions
-                              .filter((m) =>
-                                m
-                                  .toLowerCase()
-                                  .includes((formData.model || "").toLowerCase())
-                              )
-                              .map((m) => (
-                                <div
-                                  key={m}
-                                  className={cn(
-                                    "flex items-center px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent transition-colors",
-                                    formData.model === m && "bg-accent font-medium"
-                                  )}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault()
-                                    setFormData({ ...formData, model: m })
-                                    setModelDropdownOpen(false)
-                                  }}>
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      formData.model === m ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {m}
-                                </div>
-                              ))}
-                          </div>
-                        </>
-                      )}
-                    </AnchorDropdown>
-                  )}
-                </div>
+                <SearchableDropdown
+                  id="model-id"
+                  value={formData.model || ""}
+                  onValueChange={(v) => {
+                    setFormData({ ...formData, model: v })
+                    setModelDropdownOpen(true)
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.select()
+                    setModelDropdownOpen(true)
+                  }}
+                  placeholder={t("enterCustomModelName")}
+                  invalid={hasSubmitted && !formData.model?.trim()}
+                  loading={fetchingModels}
+                  open={modelDropdownOpen && (modelOptions.length > 0 || fetchingModels)}
+                  items={filteredModelOptions.map((m) => ({ key: m, label: m }))}
+                  selectedKey={formData.model || null}
+                  onSelect={(item) => {
+                    setFormData({ ...formData, model: item.key })
+                    setModelDropdownOpen(false)
+                  }}
+                  listHeader={
+                    !fetchingModels ? (
+                      <span>
+                        {modelOptions.length} {t("modelSelection")}
+                      </span>
+                    ) : undefined
+                  }
+                  emptyText={
+                    fetchingModels ? t("fetchingModels") : t("enterCustomModelName")
+                  }
+                  anchorRef={modelDropdownRef}
+                  contentRef={modelDropdownContentRef}
+                />
                 <p className="text-xs text-muted-foreground mt-1">
                   {formData.baseUrl && formData.apiKey
                     ? t("supportsAutoFetchModels")
