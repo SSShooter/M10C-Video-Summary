@@ -80,7 +80,7 @@ M10C is a browser extension that turns YouTube & Bilibili videos and web article
 ## ✨ Technical Highlights
 
 - 🔒 **Privacy & Security**: API Keys stored locally only, no server uploads
-- 💾 **Smart Caching**: Automatically saves analysis results for enhanced user experience
+- 💾 **Smart Caching, Free Re-fetch**: Content generated with the built-in hosted model is saved to the cloud, so when you hit the same video or article again you can fetch the ready-made result for free instead of generating it twice (5 free fetches per month)
 - 🌐 **Multi-Platform Support**: YouTube, Bilibili, and other mainstream video platforms
 - ⚡ **High Performance**: Optimized data processing and rendering mechanisms
 
