@@ -95,14 +95,6 @@
     "message": "AIサービス設定",
     "description": "AIサービス設定見出し"
   },
-  "enableAiSummary": {
-    "message": "AI要約機能を有効にする",
-    "description": "AI要約機能の有効化ラベル"
-  },
-  "enableSubtitleAiSummary": {
-    "message": "字幕AI要約を有効にする",
-    "description": "字幕AI要約チェックボックス"
-  },
   "aiProvider": {
     "message": "AIプロバイダー",
     "description": "AIプロバイダーラベル"
@@ -115,29 +107,9 @@
     "message": "モデルの選択",
     "description": "モデル選択ラベル"
   },
-  "searchModels": {
-    "message": "モデルを検索...",
-    "description": "モデル検索入力のプレースホルダー"
-  },
-  "usePresetModel": {
-    "message": "プリセットモデルを使用",
-    "description": "プリセットモデルオプション"
-  },
-  "useCustomModel": {
-    "message": "カスタムモデル名",
-    "description": "カスタムモデルオプション"
-  },
   "apiAddress": {
     "message": "APIアドレス",
     "description": "APIアドレスラベル"
-  },
-  "customApiAddressTip": {
-    "message": "カスタムAPIアドレスを使用する場合は、ここで変更してください",
-    "description": "カスタムAPIアドレスヒント"
-  },
-  "saving": {
-    "message": "保存中...",
-    "description": "保存中ステータス"
   },
   "saved": {
     "message": "保存完了",
@@ -163,17 +135,9 @@
     "message": "モデルリストを取得中...",
     "description": "モデルリスト取得ステータス"
   },
-  "autoFetchModelsTip": {
-    "message": "APIキーを入力すると、モデルリストが自動的に取得されます",
-    "description": "自動モデル取得ヒント"
-  },
   "enterCustomModelName": {
     "message": "モデル名を入力してください（例：gpt-4-1106-preview）",
     "description": "カスタムモデル名入力のヒント"
-  },
-  "subtitlePanel": {
-    "message": "字幕パネル",
-    "description": "字幕パネル見出し"
   },
   "loading": {
     "message": "読み込み中...",
@@ -182,10 +146,6 @@
   "error": {
     "message": "エラー",
     "description": "エラーステータス"
-  },
-  "noSubtitles": {
-    "message": "字幕データがありません",
-    "description": "字幕なしのヒント"
   },
   "aiSummary": {
     "message": "AI要約",
@@ -203,10 +163,6 @@
     "message": "全画面",
     "description": "全画面ボタン"
   },
-  "exitFullscreen": {
-    "message": "全画面表示を終了",
-    "description": "全画面表示終了ボタン"
-  },
   "generating": {
     "message": "作成中...",
     "description": "作成中ステータス"
@@ -214,10 +170,6 @@
   "summarizing": {
     "message": "要約中...",
     "description": "要約中ステータス"
-  },
-  "jumpToTime": {
-    "message": "ジャンプ",
-    "description": "指定時間へのジャンプ"
   },
   "seconds": {
     "message": "秒",
@@ -251,25 +203,9 @@
     "message": "AI要約を作成",
     "description": "AI要約作成ボタン"
   },
-  "viewSummary": {
-    "message": "要約を表示",
-    "description": "要約表示ボタン"
-  },
   "regenerate": {
     "message": "再作成",
     "description": "再作成ボタン"
-  },
-  "getSubtitlesFirst": {
-    "message": "AI要約を作成する前に、まず字幕を取得してください",
-    "description": "字幕取得を促すヒント"
-  },
-  "generatingAiSummary": {
-    "message": "AI要約を作成中...",
-    "description": "AI要約作成中ステータス"
-  },
-  "aiContentSummaryTitle": {
-    "message": "AI内容要約",
-    "description": "AI内容要約見出し"
   },
   "cached": {
     "message": "キャッシュ済み",
@@ -278,22 +214,6 @@
   "summary": {
     "message": "概要:",
     "description": "概要ラベル"
-  },
-  "keyPoints": {
-    "message": "重要なポイント:",
-    "description": "重要ポイントラベル"
-  },
-  "mainTopics": {
-    "message": "主なトピック:",
-    "description": "主要トピックラベル"
-  },
-  "generatingMindmap": {
-    "message": "マインドマップを作成中...",
-    "description": "マインドマップ作成中ステータス"
-  },
-  "mindmapGenerated": {
-    "message": "マインドマップが正常に作成されました",
-    "description": "マインドマップ作成成功メッセージ"
   },
   "aiSummaryGenerated": {
     "message": "AI要約が正常に作成されました",
@@ -310,10 +230,6 @@
   "opening": {
     "message": "開いています...",
     "description": "オープン中ステータス"
-  },
-  "getSubtitlesForMindmap": {
-    "message": "マインドマップを作成する前に、まず字幕を取得してください",
-    "description": "マインドマップ作成のための字幕取得ヒント"
   },
   "fetchSubtitlesFailed": {
     "message": "字幕の取得に失敗しました:",
@@ -363,10 +279,6 @@
     "message": "記事アシスタント",
     "description": "記事アシスタント見出し"
   },
-  "noArticleContent": {
-    "message": "要約する記事内容がありません",
-    "description": "記事内容なしエラーメッセージ"
-  },
   "summaryFailed": {
     "message": "要約に失敗しました。AI設定を確認してください",
     "description": "要約失敗错误消息"
@@ -383,17 +295,9 @@
     "message": "Mind Elixir の起動に失敗しました",
     "description": "Mind Elixirオープン失敗エラーメッセージ"
   },
-  "checkCacheFailed": {
-    "message": "キャッシュの確認に失敗しました",
-    "description": "キャッシュ確認失敗ログメッセージ"
-  },
   "articleDetectionFailed": {
     "message": "記事の検出に失敗しました",
     "description": "記事検出失敗エラーメッセージ"
-  },
-  "wordCount": {
-    "message": "文字数",
-    "description": "文字数ラベル"
   },
   "noAiSummary": {
     "message": "現在、AI要約はありません",
@@ -418,10 +322,6 @@
   "saveConfigFailed": {
     "message": "設定の保存に失敗しました",
     "description": "設定保存失敗エラーメッセージ"
-  },
-  "fetchModelsFailed": {
-    "message": "モデルリストの取得に失敗しました",
-    "description": "モデルリスト取得失敗エラーメッセージ"
   },
   "enterApiKeyPlaceholder": {
     "message": "$1 のAPIキーを入力してください",
@@ -455,22 +355,6 @@
     "message": "接続中...",
     "description": "接続中ステータス"
   },
-  "defaultModelTitle": {
-    "message": "内蔵 Mind Elixir モデル（APIキー不要）",
-    "description": "デフォルトモデルバナーのタイトル"
-  },
-  "defaultModelDesc": {
-    "message": "AIプロバイダーを設定していなくても、内蔵の Mind Elixir ホストモデルをすぐに使用できます。これは Mind Elixir アカウントのスター残高を消費します。",
-    "description": "デフォルトモデルバナーの説明"
-  },
-  "defaultModelEndpoint": {
-    "message": "デフォルトエンドポイント",
-    "description": "デフォルトモデルインターフェースラベル"
-  },
-  "defaultModelRecharge": {
-    "message": "スターのチャージはこちら：",
-    "description": "デフォルトモデルチャージリンクラベル"
-  },
   "meProviderDesc": {
     "message": "内蔵の Mind Elixir モデルを使用しています。APIキーは不要で、リクエストは Mind Elixir スター残高から差し引かれます。",
     "description": "Mind Elixirサービス提供パネルの説明"
@@ -478,10 +362,6 @@
   "meProviderRecharge": {
     "message": "スターをチャージ：",
     "description": "Mind Elixirプロバイダーチャージラベル"
-  },
-  "userProfile": {
-    "message": "ユーザープロフィール",
-    "description": "ユーザー個人プロフィール見出し"
   },
   "notLoggedIn": {
     "message": "未ログイン",

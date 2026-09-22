@@ -95,14 +95,6 @@
     "message": "Configuración del servicio de IA",
     "description": "AI service config title"
   },
-  "enableAiSummary": {
-    "message": "Activar función de resumen de IA",
-    "description": "Enable AI summary label"
-  },
-  "enableSubtitleAiSummary": {
-    "message": "Activar resumen de subtítulos por IA",
-    "description": "Enable subtitle AI summary checkbox"
-  },
   "aiProvider": {
     "message": "Proveedor de IA",
     "description": "AI provider label"
@@ -115,29 +107,9 @@
     "message": "Selección de modelo",
     "description": "Model selection label"
   },
-  "searchModels": {
-    "message": "Buscar modelos...",
-    "description": "Placeholder for search models input"
-  },
-  "usePresetModel": {
-    "message": "Usar modelo preestablecido",
-    "description": "Use preset model option"
-  },
-  "useCustomModel": {
-    "message": "Nombre de modelo personalizado",
-    "description": "Custom model option"
-  },
   "apiAddress": {
     "message": "Dirección de la API",
     "description": "API address label"
-  },
-  "customApiAddressTip": {
-    "message": "Modifica aquí si necesitas usar una dirección de API personalizada",
-    "description": "Custom API address tip"
-  },
-  "saving": {
-    "message": "Guardando...",
-    "description": "Saving status"
   },
   "saved": {
     "message": "Guardado",
@@ -163,17 +135,9 @@
     "message": "Obteniendo lista de modelos...",
     "description": "Fetching models status"
   },
-  "autoFetchModelsTip": {
-    "message": "La lista de modelos se obtendrá automáticamente después de ingresar la clave API",
-    "description": "Auto fetch models tip"
-  },
   "enterCustomModelName": {
     "message": "Por favor, introduce el nombre del modelo, ej.: gpt-4-1106-preview",
     "description": "Enter custom model name tip"
-  },
-  "subtitlePanel": {
-    "message": "Panel de subtítulos",
-    "description": "Subtitle panel title"
   },
   "loading": {
     "message": "Cargando...",
@@ -182,10 +146,6 @@
   "error": {
     "message": "Error",
     "description": "Error status"
-  },
-  "noSubtitles": {
-    "message": "No hay datos de subtítulos disponibles",
-    "description": "No subtitles tip"
   },
   "aiSummary": {
     "message": "Resumen de IA",
@@ -203,10 +163,6 @@
     "message": "Pantalla completa",
     "description": "Fullscreen button"
   },
-  "exitFullscreen": {
-    "message": "Salir de pantalla completa",
-    "description": "Exit fullscreen button"
-  },
   "generating": {
     "message": "Generando...",
     "description": "Generating status"
@@ -214,10 +170,6 @@
   "summarizing": {
     "message": "Resumiendo...",
     "description": "Summarizing status"
-  },
-  "jumpToTime": {
-    "message": "Ir a",
-    "description": "Jump to time"
   },
   "seconds": {
     "message": "segundos",
@@ -251,25 +203,9 @@
     "message": "Generar resumen de IA",
     "description": "Generate AI summary button"
   },
-  "viewSummary": {
-    "message": "Ver resumen",
-    "description": "View summary button"
-  },
   "regenerate": {
     "message": "Regenerar",
     "description": "Regenerate button"
-  },
-  "getSubtitlesFirst": {
-    "message": "Por favor, obtén los subtítulos primero antes de generar el resumen de IA",
-    "description": "Get subtitles tip"
-  },
-  "generatingAiSummary": {
-    "message": "Generando resumen de IA...",
-    "description": "Generating AI summary status"
-  },
-  "aiContentSummaryTitle": {
-    "message": "Resumen de contenido por IA",
-    "description": "AI content summary title"
   },
   "cached": {
     "message": "Almacenado en caché",
@@ -278,22 +214,6 @@
   "summary": {
     "message": "Resumen:",
     "description": "Summary label"
-  },
-  "keyPoints": {
-    "message": "Puntos clave:",
-    "description": "Key points label"
-  },
-  "mainTopics": {
-    "message": "Temas principales:",
-    "description": "Main topics label"
-  },
-  "generatingMindmap": {
-    "message": "Generando mapa mental...",
-    "description": "Generating mindmap status"
-  },
-  "mindmapGenerated": {
-    "message": "Mapa mental generado con éxito",
-    "description": "Mindmap generated successfully message"
   },
   "aiSummaryGenerated": {
     "message": "Resumen de IA generado con éxito",
@@ -310,10 +230,6 @@
   "opening": {
     "message": "Abriendo...",
     "description": "Opening status"
-  },
-  "getSubtitlesForMindmap": {
-    "message": "Por favor, obtén los subtítulos primero antes de generar el mapa mental",
-    "description": "Get subtitles for mindmap tip"
   },
   "fetchSubtitlesFailed": {
     "message": "Error al obtener los subtítulos:",
@@ -363,10 +279,6 @@
     "message": "Asistente de artículos",
     "description": "Article assistant title"
   },
-  "noArticleContent": {
-    "message": "No hay contenido de artículo para resumir",
-    "description": "No article content error message"
-  },
   "summaryFailed": {
     "message": "Error en el resumen, por favor verifica la configuración de IA",
     "description": "Summary failed error message"
@@ -383,17 +295,9 @@
     "message": "Error al abrir Mind Elixir",
     "description": "Open Mind Elixir failed error message"
   },
-  "checkCacheFailed": {
-    "message": "Error al verificar la caché",
-    "description": "Check cache failed log message"
-  },
   "articleDetectionFailed": {
     "message": "Error en la detección del artículo",
     "description": "Article detection failed error message"
-  },
-  "wordCount": {
-    "message": "Número de palabras",
-    "description": "Word count label"
   },
   "noAiSummary": {
     "message": "No hay resumen de IA disponible",
@@ -418,10 +322,6 @@
   "saveConfigFailed": {
     "message": "Error al guardar la configuración",
     "description": "Save config failed error message"
-  },
-  "fetchModelsFailed": {
-    "message": "Error al obtener la lista de modelos",
-    "description": "Fetch models failed error message"
   },
   "enterApiKeyPlaceholder": {
     "message": "Por favor, introduce la clave API de $1",
@@ -455,22 +355,6 @@
     "message": "Conectando...",
     "description": "Connecting status"
   },
-  "defaultModelTitle": {
-    "message": "Modelo integrado de Mind Elixir (no requiere clave API)",
-    "description": "Default model banner title"
-  },
-  "defaultModelDesc": {
-    "message": "Incluso sin configurar un proveedor de IA, puedes usar el modelo alojado integrado de Mind Elixir de inmediato. Consume el saldo de estrellas de tu cuenta de Mind Elixir.",
-    "description": "Default model banner description"
-  },
-  "defaultModelEndpoint": {
-    "message": "Punto final predeterminado",
-    "description": "Default model endpoint label"
-  },
-  "defaultModelRecharge": {
-    "message": "Recargar estrellas en",
-    "description": "Default model recharge link label"
-  },
   "meProviderDesc": {
     "message": "Usando el modelo integrado de Mind Elixir. No se necesita clave API — las solicitudes se facturan desde tu saldo de estrellas de Mind Elixir.",
     "description": "Mind Elixir provider inline panel description"
@@ -478,10 +362,6 @@
   "meProviderRecharge": {
     "message": "Recargar estrellas:",
     "description": "Mind Elixir provider recharge label"
-  },
-  "userProfile": {
-    "message": "Perfil de usuario",
-    "description": "User profile section title"
   },
   "notLoggedIn": {
     "message": "Sesión no iniciada",

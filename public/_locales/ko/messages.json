@@ -95,14 +95,6 @@
     "message": "AI 서비스 설정",
     "description": "AI 서비스 설정 제목"
   },
-  "enableAiSummary": {
-    "message": "AI 요약 기능 활성화",
-    "description": "AI 요약 활성화 라벨"
-  },
-  "enableSubtitleAiSummary": {
-    "message": "자막 AI 요약 활성화",
-    "description": "자막 AI 요약 활성화 체크박스"
-  },
   "aiProvider": {
     "message": "AI 서비스 제공업체",
     "description": "AI 서비스 제공업체 라벨"
@@ -115,29 +107,9 @@
     "message": "모델 선택",
     "description": "모델 선택 라벨"
   },
-  "searchModels": {
-    "message": "모델 검색...",
-    "description": "모델 검색 플레이스홀더"
-  },
-  "usePresetModel": {
-    "message": "사전 설정된 모델 사용",
-    "description": "사전 설정된 모델 옵션"
-  },
-  "useCustomModel": {
-    "message": "사용자 정의 모델 이름",
-    "description": "사용자 정의 모델 옵션"
-  },
   "apiAddress": {
     "message": "API 주소",
     "description": "API 주소 라벨"
-  },
-  "customApiAddressTip": {
-    "message": "사용자 정의 API 주소를 사용하려면 여기서 수정하세요.",
-    "description": "사용자 정의 API 주소 팁"
-  },
-  "saving": {
-    "message": "저장 중...",
-    "description": "저장 중 상태"
   },
   "saved": {
     "message": "저장됨",
@@ -163,17 +135,9 @@
     "message": "모델 목록을 가져오는 중...",
     "description": "모델 목록 가져오는 상태"
   },
-  "autoFetchModelsTip": {
-    "message": "API Key를 입력하면 사용 가능한 모델 목록이 자동으로 다운로드됩니다.",
-    "description": "모델 자동 다운로드 팁"
-  },
   "enterCustomModelName": {
     "message": "모델 이름을 입력하세요 (예: gpt-4-1106-preview)",
     "description": "모델 이름 입력 팁"
-  },
-  "subtitlePanel": {
-    "message": "자막 패널",
-    "description": "자막 패널 제목"
   },
   "loading": {
     "message": "로딩 중...",
@@ -182,10 +146,6 @@
   "error": {
     "message": "오류",
     "description": "오류 상태"
-  },
-  "noSubtitles": {
-    "message": "자막 데이터가 없습니다",
-    "description": "자막 데이터 없음 팁"
   },
   "aiSummary": {
     "message": "AI 요약",
@@ -203,10 +163,6 @@
     "message": "전체 화면",
     "description": "전체 화면 버튼"
   },
-  "exitFullscreen": {
-    "message": "전체 화면 종료",
-    "description": "전체 화면 종료 버튼"
-  },
   "generating": {
     "message": "생성 중...",
     "description": "생성 중 상태"
@@ -214,10 +170,6 @@
   "summarizing": {
     "message": "요약 중...",
     "description": "요약 중 상태"
-  },
-  "jumpToTime": {
-    "message": "이동",
-    "description": "시간 이동"
   },
   "seconds": {
     "message": "초",
@@ -251,25 +203,9 @@
     "message": "AI 요약 생성",
     "description": "AI 요약 생성 버튼"
   },
-  "viewSummary": {
-    "message": "요약 보기",
-    "description": "요약 보기 버튼"
-  },
   "regenerate": {
     "message": "다시 생성",
     "description": "다시 생성 버튼"
-  },
-  "getSubtitlesFirst": {
-    "message": "AI 요약을 생성하기 전에 먼저 자막을 가져오세요",
-    "description": "자막 먼저 가져오기 팁"
-  },
-  "generatingAiSummary": {
-    "message": "AI 요약 생성 중...",
-    "description": "AI 요약 생성 중 상태"
-  },
-  "aiContentSummaryTitle": {
-    "message": "AI 콘텐츠 요약",
-    "description": "AI 콘텐츠 요약 제목"
   },
   "cached": {
     "message": "캐시됨",
@@ -278,22 +214,6 @@
   "summary": {
     "message": "요약:",
     "description": "요약 라벨"
-  },
-  "keyPoints": {
-    "message": "핵심 요점:",
-    "description": "핵심 요점 라벨"
-  },
-  "mainTopics": {
-    "message": "주요 항목:",
-    "description": "주요 항목 라벨"
-  },
-  "generatingMindmap": {
-    "message": "마인드맵 생성 중...",
-    "description": "마인드맵 생성 중 상태"
-  },
-  "mindmapGenerated": {
-    "message": "마인드맵이 성공적으로 생성되었습니다",
-    "description": "마인드맵 생성 완료 메시지"
   },
   "aiSummaryGenerated": {
     "message": "AI 요약이 성공적으로 생성되었습니다",
@@ -310,10 +230,6 @@
   "opening": {
     "message": "열리는 중...",
     "description": "열리는 중 상태"
-  },
-  "getSubtitlesForMindmap": {
-    "message": "마인드맵을 생성하기 전에 먼저 자막을 가져오세요",
-    "description": "마인드맵 자막 필요 팁"
   },
   "fetchSubtitlesFailed": {
     "message": "자막 가져오기 실패:",
@@ -363,10 +279,6 @@
     "message": "아티클 어시스턴트",
     "description": "아티클 어시스턴트 제목"
   },
-  "noArticleContent": {
-    "message": "요약할 아티클 내용이 없습니다",
-    "description": "아티클 내용 없음 오류"
-  },
   "summaryFailed": {
     "message": "요약 실패. AI 설정을 확인해 주세요.",
     "description": "요약 실패 오류"
@@ -383,17 +295,9 @@
     "message": "Mind Elixir 열기 실패",
     "description": "Mind Elixir 열기 실패 오류"
   },
-  "checkCacheFailed": {
-    "message": "캐시 확인 실패",
-    "description": "캐시 확인 실패 로그"
-  },
   "articleDetectionFailed": {
     "message": "아티클 감지 실패",
     "description": "아티클 감지 실패 오류"
-  },
-  "wordCount": {
-    "message": "자수",
-    "description": "자수 라벨"
   },
   "noAiSummary": {
     "message": "사용 가능한 AI 요약이 없습니다",
@@ -418,10 +322,6 @@
   "saveConfigFailed": {
     "message": "설정 저장 실패",
     "description": "설정 저장 실패 오류"
-  },
-  "fetchModelsFailed": {
-    "message": "모델 목록 가져오기 실패",
-    "description": "모델 목록 로드 실패 오류"
   },
   "enterApiKeyPlaceholder": {
     "message": "$1 API Key를 입력하세요",
@@ -455,22 +355,6 @@
     "message": "연결 중...",
     "description": "연결 중 상태"
   },
-  "defaultModelTitle": {
-    "message": "내장형 Mind Elixir 모델 (API Key 불필요)",
-    "description": "기본 모델 제목"
-  },
-  "defaultModelDesc": {
-    "message": "AI 서비스 제공업체를 설정하지 않아도 내장된 Mind Elixir 호스팅 모델을 즉시 사용할 수 있습니다. Mind Elixir 계정의 스타 잔액이 차감됩니다.",
-    "description": "기본 모델 설명"
-  },
-  "defaultModelEndpoint": {
-    "message": "기본 엔드포인트",
-    "description": "기본 모델 엔드포인트 라벨"
-  },
-  "defaultModelRecharge": {
-    "message": "스타 충전소",
-    "description": "스타 충전 링크"
-  },
   "meProviderDesc": {
     "message": "내장형 Mind Elixir 모델을 사용합니다. API 키가 필요 없으며 요청은 귀하의 Mind Elixir 스타 잔액에서 차감됩니다.",
     "description": "Mind Elixir 제공업체 설명"
@@ -478,10 +362,6 @@
   "meProviderRecharge": {
     "message": "스타 충전:",
     "description": "스타 충전 라벨"
-  },
-  "userProfile": {
-    "message": "사용자 프로필",
-    "description": "사용자 프로필 제목"
   },
   "notLoggedIn": {
     "message": "로그인 안 됨",

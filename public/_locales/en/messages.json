@@ -95,14 +95,6 @@
     "message": "AI Service Configuration",
     "description": "AI service config title"
   },
-  "enableAiSummary": {
-    "message": "Enable AI Summary Feature",
-    "description": "Enable AI summary label"
-  },
-  "enableSubtitleAiSummary": {
-    "message": "Enable subtitle AI summary",
-    "description": "Enable subtitle AI summary checkbox"
-  },
   "aiProvider": {
     "message": "AI Provider",
     "description": "AI provider label"
@@ -115,29 +107,9 @@
     "message": "Model Selection",
     "description": "Model selection label"
   },
-  "searchModels": {
-    "message": "Search models...",
-    "description": "Placeholder for search models input"
-  },
-  "usePresetModel": {
-    "message": "Use preset model",
-    "description": "Use preset model option"
-  },
-  "useCustomModel": {
-    "message": "Custom model name",
-    "description": "Custom model option"
-  },
   "apiAddress": {
     "message": "API Address",
     "description": "API address label"
-  },
-  "customApiAddressTip": {
-    "message": "Modify here if you need to use a custom API address",
-    "description": "Custom API address tip"
-  },
-  "saving": {
-    "message": "Saving...",
-    "description": "Saving status"
   },
   "saved": {
     "message": "Saved",
@@ -163,17 +135,9 @@
     "message": "Fetching model list...",
     "description": "Fetching models status"
   },
-  "autoFetchModelsTip": {
-    "message": "Model list will be automatically fetched after entering API Key",
-    "description": "Auto fetch models tip"
-  },
   "enterCustomModelName": {
     "message": "Please enter model name, e.g.: gpt-4-1106-preview",
     "description": "Enter custom model name tip"
-  },
-  "subtitlePanel": {
-    "message": "Subtitle Panel",
-    "description": "Subtitle panel title"
   },
   "loading": {
     "message": "Loading...",
@@ -182,10 +146,6 @@
   "error": {
     "message": "Error",
     "description": "Error status"
-  },
-  "noSubtitles": {
-    "message": "No subtitle data available",
-    "description": "No subtitles tip"
   },
   "aiSummary": {
     "message": "AI Summary",
@@ -203,10 +163,6 @@
     "message": "Fullscreen",
     "description": "Fullscreen button"
   },
-  "exitFullscreen": {
-    "message": "Exit Fullscreen",
-    "description": "Exit fullscreen button"
-  },
   "generating": {
     "message": "Generating...",
     "description": "Generating status"
@@ -214,10 +170,6 @@
   "summarizing": {
     "message": "Summarizing...",
     "description": "Summarizing status"
-  },
-  "jumpToTime": {
-    "message": "Jump to",
-    "description": "Jump to time"
   },
   "seconds": {
     "message": "seconds",
@@ -251,25 +203,9 @@
     "message": "Generate AI Summary",
     "description": "Generate AI summary button"
   },
-  "viewSummary": {
-    "message": "View Summary",
-    "description": "View summary button"
-  },
   "regenerate": {
     "message": "Regenerate",
     "description": "Regenerate button"
-  },
-  "getSubtitlesFirst": {
-    "message": "Please get subtitles first before generating AI summary",
-    "description": "Get subtitles tip"
-  },
-  "generatingAiSummary": {
-    "message": "Generating AI summary...",
-    "description": "Generating AI summary status"
-  },
-  "aiContentSummaryTitle": {
-    "message": "AI Content Summary",
-    "description": "AI content summary title"
   },
   "cached": {
     "message": "Cached",
@@ -278,22 +214,6 @@
   "summary": {
     "message": "Summary:",
     "description": "Summary label"
-  },
-  "keyPoints": {
-    "message": "Key Points:",
-    "description": "Key points label"
-  },
-  "mainTopics": {
-    "message": "Main Topics:",
-    "description": "Main topics label"
-  },
-  "generatingMindmap": {
-    "message": "Generating mindmap...",
-    "description": "Generating mindmap status"
-  },
-  "mindmapGenerated": {
-    "message": "Mindmap generated successfully",
-    "description": "Mindmap generated successfully message"
   },
   "aiSummaryGenerated": {
     "message": "AI summary generated successfully",
@@ -310,10 +230,6 @@
   "opening": {
     "message": "Opening...",
     "description": "Opening status"
-  },
-  "getSubtitlesForMindmap": {
-    "message": "Please get subtitles first before generating mindmap",
-    "description": "Get subtitles for mindmap tip"
   },
   "fetchSubtitlesFailed": {
     "message": "Failed to fetch subtitles:",
@@ -363,10 +279,6 @@
     "message": "Article Assistant",
     "description": "Article assistant title"
   },
-  "noArticleContent": {
-    "message": "No article content to summarize",
-    "description": "No article content error message"
-  },
   "summaryFailed": {
     "message": "Summary failed, please check AI configuration",
     "description": "Summary failed error message"
@@ -383,17 +295,9 @@
     "message": "Failed to open Mind Elixir",
     "description": "Open Mind Elixir failed error message"
   },
-  "checkCacheFailed": {
-    "message": "Failed to check cache",
-    "description": "Check cache failed log message"
-  },
   "articleDetectionFailed": {
     "message": "Article detection failed",
     "description": "Article detection failed error message"
-  },
-  "wordCount": {
-    "message": "Word count",
-    "description": "Word count label"
   },
   "noAiSummary": {
     "message": "No AI summary available",
@@ -418,10 +322,6 @@
   "saveConfigFailed": {
     "message": "Failed to save configuration",
     "description": "Save config failed error message"
-  },
-  "fetchModelsFailed": {
-    "message": "Failed to fetch model list",
-    "description": "Fetch models failed error message"
   },
   "enterApiKeyPlaceholder": {
     "message": "Please enter $1 API Key",
@@ -455,22 +355,6 @@
     "message": "Connecting...",
     "description": "Connecting status"
   },
-  "defaultModelTitle": {
-    "message": "Built-in Mind Elixir Model (No API Key Required)",
-    "description": "Default model banner title"
-  },
-  "defaultModelDesc": {
-    "message": "Even without configuring an AI provider, you can use the built-in Mind Elixir hosted model right away. It consumes Star balance from your Mind Elixir account.",
-    "description": "Default model banner description"
-  },
-  "defaultModelEndpoint": {
-    "message": "Default endpoint",
-    "description": "Default model endpoint label"
-  },
-  "defaultModelRecharge": {
-    "message": "Recharge Stars at",
-    "description": "Default model recharge link label"
-  },
   "meProviderDesc": {
     "message": "Using the built-in Mind Elixir model. No API key needed — requests are billed from your Mind Elixir Star balance.",
     "description": "Mind Elixir provider inline panel description"
@@ -478,10 +362,6 @@
   "meProviderRecharge": {
     "message": "Recharge Stars:",
     "description": "Mind Elixir provider recharge label"
-  },
-  "userProfile": {
-    "message": "User Profile",
-    "description": "User profile section title"
   },
   "notLoggedIn": {
     "message": "Not logged in",

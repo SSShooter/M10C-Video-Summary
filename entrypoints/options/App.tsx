@@ -1,5 +1,4 @@
 import {
-  Check,
   Star,
   RefreshCw,
   LogOut,
@@ -78,8 +77,6 @@ function createInitialConfig(): AIModelsConfig {
 
 function OptionsPage() {
   const [aiConfig, setAiConfig] = useState<AIModelsConfig>(createInitialConfig)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
 
   // ── Model edit form state ────────────────────────────────────────────────
   const [formOpen, setFormOpen] = useState(false)
@@ -226,12 +223,14 @@ function OptionsPage() {
     }
   }
 
+  // Single write path for the whole page: every change is persisted immediately.
   const persistConfig = async (next: AIModelsConfig) => {
     setAiConfig(next)
     try {
       await saveAIModelsConfig(next)
     } catch (error) {
       console.error(t("saveConfigFailed"), error)
+      toast.error(t("saveConfigFailed") || "Failed to save configuration")
     }
   }
 
@@ -241,21 +240,6 @@ function OptionsPage() {
     const stored = await loadAIModelsConfig()
     if (stored) return
     persistConfig(createInitialConfig())
-  }
-
-  const saveConfig = async () => {
-    try {
-      setSaving(true)
-      await saveAIModelsConfig(aiConfig)
-      setSaved(true)
-      toast.success(t("saved") || "Configuration saved")
-      setTimeout(() => setSaved(false), 2000)
-    } catch (error) {
-      console.error(t("saveConfigFailed"), error)
-      toast.error(t("saveConfigFailed") || "Failed to save configuration")
-    } finally {
-      setSaving(false)
-    }
   }
 
   // ── Dropdown outside-click & keyboard dismissal ───────────────────────────
@@ -790,10 +774,7 @@ function OptionsPage() {
               <Select
                 value={aiConfig.replyLanguage || getMatchedBrowserLanguage(navigator.language)}
                 onValueChange={(value) => {
-                  const next = { ...aiConfig, replyLanguage: value }
-                  persistConfig(next)
-                  setSaved(true)
-                  setTimeout(() => setSaved(false), 2000)
+                  persistConfig({ ...aiConfig, replyLanguage: value })
                 }}>
                 <SelectTrigger id="reply-language" className="h-9.5 text-sm">
                   <SelectValue />
@@ -808,27 +789,6 @@ function OptionsPage() {
               </Select>
             </div>
           </section>
-
-          {/* ── Bottom Save & Status Bar ───────────────────────────────────── */}
-          <div className="pt-4 flex items-center justify-between border-t border-border/60">
-            <div className="text-xs text-muted-foreground min-h-[20px] flex items-center">
-              {saved && (
-                <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
-                  <Check className="h-3.5 w-3.5" />
-                  {t("saved")}
-                </span>
-              )}
-            </div>
-            <Button
-              onClick={saveConfig}
-              disabled={saving}
-              className={cn(
-                "h-9 px-5 text-xs font-semibold transition-all",
-                saved ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""
-              )}>
-              {saving ? t("saving") : saved ? t("saved") : t("saveConfig")}
-            </Button>
-          </div>
         </div>
       </div>
 

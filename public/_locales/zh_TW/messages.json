@@ -95,14 +95,6 @@
     "message": "AI 服務配置",
     "description": "AI服務配置標題"
   },
-  "enableAiSummary": {
-    "message": "啟用 AI 總結功能",
-    "description": "啟用AI总结功能標籤"
-  },
-  "enableSubtitleAiSummary": {
-    "message": "啟用字幕 AI 總結",
-    "description": "啟用字幕AI总结複選框"
-  },
   "aiProvider": {
     "message": "AI 服務商",
     "description": "AI服務商標籤"
@@ -115,29 +107,9 @@
     "message": "模型選擇",
     "description": "模型選擇標籤"
   },
-  "searchModels": {
-    "message": "搜尋模型...",
-    "description": "搜尋模型佔位符"
-  },
-  "usePresetModel": {
-    "message": "使用預設模型",
-    "description": "使用預設模型選項"
-  },
-  "useCustomModel": {
-    "message": "自訂模型名稱",
-    "description": "自訂模型選項"
-  },
   "apiAddress": {
     "message": "API 位址",
     "description": "API地址標籤"
-  },
-  "customApiAddressTip": {
-    "message": "如需使用自訂 API 位址，請在此修改",
-    "description": "自訂API地址提示"
-  },
-  "saving": {
-    "message": "儲存中...",
-    "description": "儲存中狀態"
   },
   "saved": {
     "message": "已儲存",
@@ -163,17 +135,9 @@
     "message": "正在獲取模型清單...",
     "description": "獲取模型清單狀態"
   },
-  "autoFetchModelsTip": {
-    "message": "填寫 API Key 後將自動獲取可用模型清單",
-    "description": "自動獲取模型提示"
-  },
   "enterCustomModelName": {
     "message": "請輸入模型名稱，例如：gpt-4-1106-preview",
     "description": "輸入自訂模型名稱提示"
-  },
-  "subtitlePanel": {
-    "message": "字幕面板",
-    "description": "字幕面板標題"
   },
   "loading": {
     "message": "載入中...",
@@ -182,10 +146,6 @@
   "error": {
     "message": "錯誤",
     "description": "錯誤狀態"
-  },
-  "noSubtitles": {
-    "message": "暫無字幕資料",
-    "description": "無字幕資料提示"
   },
   "aiSummary": {
     "message": "AI 總結",
@@ -203,10 +163,6 @@
     "message": "全螢幕",
     "description": "全螢幕按鈕"
   },
-  "exitFullscreen": {
-    "message": "退出全螢幕",
-    "description": "退出全螢幕按鈕"
-  },
   "generating": {
     "message": "生成中...",
     "description": "生成中狀態"
@@ -214,10 +170,6 @@
   "summarizing": {
     "message": "總結中...",
     "description": "總結中狀態"
-  },
-  "jumpToTime": {
-    "message": "跳轉到",
-    "description": "跳轉到時間"
   },
   "seconds": {
     "message": "秒",
@@ -251,25 +203,9 @@
     "message": "生成 AI 總結",
     "description": "生成AI總結按鈕"
   },
-  "viewSummary": {
-    "message": "查看總結",
-    "description": "查看總結按鈕"
-  },
   "regenerate": {
     "message": "重新生成",
     "description": "重新生成按鈕"
-  },
-  "getSubtitlesFirst": {
-    "message": "請先獲取字幕後再生成 AI 總結",
-    "description": "獲取字幕提示"
-  },
-  "generatingAiSummary": {
-    "message": "正在生成 AI 總結...",
-    "description": "生成AI總結狀態"
-  },
-  "aiContentSummaryTitle": {
-    "message": "AI 內容總結",
-    "description": "AI內容總結標題"
   },
   "cached": {
     "message": "已快取",
@@ -278,22 +214,6 @@
   "summary": {
     "message": "概要:",
     "description": "概要標籤"
-  },
-  "keyPoints": {
-    "message": "關鍵要點:",
-    "description": "關鍵要點標籤"
-  },
-  "mainTopics": {
-    "message": "主要話題:",
-    "description": "主要話題標籤"
-  },
-  "generatingMindmap": {
-    "message": "正在生成心智圖...",
-    "description": "生成心智圖狀態"
-  },
-  "mindmapGenerated": {
-    "message": "心智圖生成成功",
-    "description": "心智圖生成成功提示"
   },
   "aiSummaryGenerated": {
     "message": "AI 總結生成成功",
@@ -310,10 +230,6 @@
   "opening": {
     "message": "正在開啟...",
     "description": "正在開啟狀態"
-  },
-  "getSubtitlesForMindmap": {
-    "message": "請先獲取字幕後再生成心智圖",
-    "description": "獲取字幕生成心智圖提示"
   },
   "fetchSubtitlesFailed": {
     "message": "獲取字幕失敗:",
@@ -363,10 +279,6 @@
     "message": "文章助手",
     "description": "文章助手標題"
   },
-  "noArticleContent": {
-    "message": "沒有文章內容可以總結",
-    "description": "沒有文章內容錯誤消息"
-  },
   "summaryFailed": {
     "message": "總結失敗，請檢查 AI 配置",
     "description": "總結失敗錯誤消息"
@@ -383,17 +295,9 @@
     "message": "開啟 Mind Elixir 失敗",
     "description": "開啟Mind Elixir失敗錯誤消息"
   },
-  "checkCacheFailed": {
-    "message": "檢查快取失敗",
-    "description": "檢查快取失敗日誌消息"
-  },
   "articleDetectionFailed": {
     "message": "文章檢測失敗",
     "description": "文章檢測失敗錯誤消息"
-  },
-  "wordCount": {
-    "message": "字數",
-    "description": "字數標籤"
   },
   "noAiSummary": {
     "message": "暫無 AI 總結",
@@ -418,10 +322,6 @@
   "saveConfigFailed": {
     "message": "儲存配置失敗",
     "description": "儲存配置失敗錯誤消息"
-  },
-  "fetchModelsFailed": {
-    "message": "獲取模型清單失敗",
-    "description": "獲取模型清單失敗錯誤消息"
   },
   "enterApiKeyPlaceholder": {
     "message": "請輸入 $1 的 API Key",
@@ -455,22 +355,6 @@
     "message": "連線中...",
     "description": "連線中狀態"
   },
-  "defaultModelTitle": {
-    "message": "內建 Mind Elixir 模型（無需 API Key）",
-    "description": "預設模型橫幅標題"
-  },
-  "defaultModelDesc": {
-    "message": "即使不配置 AI 服務商，也可以直接使用內建的 Mind Elixir 託管模型，消耗 Mind Elixir 帳戶的星星餘額。",
-    "description": "預設模型橫幅描述"
-  },
-  "defaultModelEndpoint": {
-    "message": "預設介面",
-    "description": "預設模型介面標籤"
-  },
-  "defaultModelRecharge": {
-    "message": "加值星星請造訪",
-    "description": "預設模型充值連結標籤"
-  },
   "meProviderDesc": {
     "message": "使用內建 Mind Elixir 模型，無需 API Key，請求將從您的 Mind Elixir 星星餘額中扣除。",
     "description": "Mind Elixir 服務商面板描述"
@@ -478,10 +362,6 @@
   "meProviderRecharge": {
     "message": "加值星星：",
     "description": "Mind Elixir 服務商充值標籤"
-  },
-  "userProfile": {
-    "message": "使用者資料",
-    "description": "使用者個人資料標題"
   },
   "notLoggedIn": {
     "message": "未登入",
