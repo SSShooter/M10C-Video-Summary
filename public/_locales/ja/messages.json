@@ -195,6 +195,14 @@
     "message": "字幕",
     "description": "字幕タブ"
   },
+  "autoTrack": {
+    "message": "自動追従",
+    "description": "字幕の自動追従スイッチ"
+  },
+  "autoTrackHint": {
+    "message": "オンにすると字幕リストが再生位置に合わせて自動スクロールします",
+    "description": "字幕の自動追従スイッチのヒント"
+  },
   "mindmap": {
     "message": "マインドマップ",
     "description": "マインドマップタブ"

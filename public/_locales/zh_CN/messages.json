@@ -195,6 +195,14 @@
     "message": "字幕",
     "description": "字幕标签"
   },
+  "autoTrack": {
+    "message": "自动跟踪",
+    "description": "字幕自动跟踪开关"
+  },
+  "autoTrackHint": {
+    "message": "开启后字幕列表跟随视频播放自动跳转到对应字幕",
+    "description": "字幕自动跟踪开关提示"
+  },
   "mindmap": {
     "message": "思维导图",
     "description": "思维导图标签"

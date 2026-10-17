@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { storage } from "@wxt-dev/storage";
 import { GripVertical } from "lucide-react";
 import brandLogoUrl from "~/assets/logo-64.png?inline";
 
@@ -22,6 +23,9 @@ export interface SubtitleItem {
   content?: string;
   text?: string;
 }
+
+// 自动跟踪开关的持久化键
+const AUTO_TRACK_STORAGE_KEY = "local:subtitle_auto_track";
 
 // Use VideoInfo from subtitle-utils
 
@@ -60,7 +64,21 @@ export function SubtitlePanel({
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [isByok, setIsByok] = useState(false);
   const [configuredLanguage, setConfiguredLanguage] = useState<string | null>(null);
+  const [autoTrack, setAutoTrack] = useState(false);
+  const [activeSubtitleIndex, setActiveSubtitleIndex] = useState(-1);
+  const subtitleListRef = useRef<HTMLDivElement>(null);
+  const subtitleItemRefs = useRef<Array<HTMLDivElement | null>>([]);
   const currentUrl = window.location.href;
+
+  // 读取上次保存的自动跟踪开关状态（默认关闭）
+  useEffect(() => {
+    storage
+      .getItem<boolean>(AUTO_TRACK_STORAGE_KEY)
+      .then((saved) => {
+        if (typeof saved === "boolean") setAutoTrack(saved);
+      })
+      .catch(() => {});
+  }, []);
 
   // Detect BYOK and get configured reply language
   useEffect(() => {
@@ -137,6 +155,68 @@ export function SubtitlePanel({
       .replace(/\s+/g, " ")
       .trim();
   };
+
+  // 切换自动跟踪开关并持久化
+  const toggleAutoTrack = () => {
+    setAutoTrack((prev) => {
+      const next = !prev;
+      storage.setItem(AUTO_TRACK_STORAGE_KEY, next).catch(() => {});
+      return next;
+    });
+  };
+
+  // 自动跟踪：跟随 <video> 播放进度定位当前字幕
+  useEffect(() => {
+    if (!autoTrack || activeTab !== "subtitles" || subtitles.length === 0) return;
+
+    const updateActiveIndex = () => {
+      const video = document.querySelector("video") as HTMLVideoElement | null;
+      if (!video || video.paused) return;
+      const currentTime = video.currentTime;
+      if (!Number.isFinite(currentTime)) return;
+
+      let index = -1;
+      for (let i = 0; i < subtitles.length; i++) {
+        if (getSubtitleTime(subtitles[i]).start <= currentTime) {
+          index = i;
+        } else {
+          break;
+        }
+      }
+      setActiveSubtitleIndex((prev) => (prev === index ? prev : index));
+    };
+
+    updateActiveIndex();
+    const timer = window.setInterval(updateActiveIndex, 400);
+    return () => window.clearInterval(timer);
+  }, [autoTrack, activeTab, subtitles]);
+
+  // 自动跟踪：把当前字幕滚动到列表中部（已在中部区间内则不打扰阅读）
+  useEffect(() => {
+    if (!autoTrack || activeTab !== "subtitles" || activeSubtitleIndex < 0) return;
+    const container = subtitleListRef.current;
+    const item = subtitleItemRefs.current[activeSubtitleIndex];
+    if (!container || !item) return;
+
+    const viewport = container.querySelector<HTMLElement>(
+      "[data-radix-scroll-area-viewport]"
+    );
+    if (!viewport) return;
+
+    const viewportRect = viewport.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    const upperBound = viewportRect.top + viewportRect.height * 0.2;
+    const lowerBound = viewportRect.bottom - viewportRect.height * 0.2;
+
+    if (itemRect.top >= upperBound && itemRect.bottom <= lowerBound) return;
+
+    const delta =
+      itemRect.top - viewportRect.top - (viewportRect.height - itemRect.height) / 2;
+    viewport.scrollTo({
+      top: viewport.scrollTop + delta,
+      behavior: "smooth",
+    });
+  }, [autoTrack, activeTab, activeSubtitleIndex]);
 
   // AI总结生成配置
   const summaryGenerateConfig: SummaryGenerateConfig = {
@@ -274,26 +354,62 @@ export function SubtitlePanel({
           )}
 
           {subtitles.length > 0 && (
-            <ScrollArea className="h-full">
-              {subtitles.map((subtitle, index) => {
-                const time = getSubtitleTime(subtitle);
-                const content = getSubtitleContent(subtitle);
-                return (
-                  <div
-                    key={index}
-                    className="py-[8px] border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50"
-                    onClick={() => onJumpToTime(time.start)}
-                  >
-                    <div className="text-[12px] text-blue-500 mb-[4px] font-medium">
-                      {formatTime(time.start)} - {formatTime(time.end)}
+            <div ref={subtitleListRef} className="flex-1 min-h-0 flex flex-col">
+              <div className="flex h-8 shrink-0 items-center justify-between rounded-md bg-gray-50 px-2 mb-2 select-none">
+                <span className="text-[12px] text-gray-600">{t("autoTrack")}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoTrack}
+                  aria-label={t("autoTrack")}
+                  title={t("autoTrackHint")}
+                  onClick={toggleAutoTrack}
+                  className={cn(
+                    "relative inline-flex h-[18px] w-[32px] shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1",
+                    autoTrack ? "bg-blue-500" : "bg-gray-300"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-[14px] w-[14px] rounded-full bg-white shadow transition-transform duration-200",
+                      autoTrack ? "translate-x-[16px]" : "translate-x-[2px]"
+                    )}
+                  />
+                </button>
+              </div>
+              <ScrollArea className="flex-1 min-h-0">
+                {subtitles.map((subtitle, index) => {
+                  const time = getSubtitleTime(subtitle);
+                  const content = getSubtitleContent(subtitle);
+                  const isActive = autoTrack && index === activeSubtitleIndex;
+                  return (
+                    <div
+                      key={index}
+                      ref={(el) => {
+                        subtitleItemRefs.current[index] = el;
+                      }}
+                      className={cn(
+                        "py-[8px] border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50",
+                        isActive && "bg-blue-50"
+                      )}
+                      onClick={() => onJumpToTime(time.start)}
+                    >
+                      <div
+                        className={cn(
+                          "text-[12px] mb-[4px] font-medium",
+                          isActive ? "text-blue-600" : "text-blue-500"
+                        )}
+                      >
+                        {formatTime(time.start)} - {formatTime(time.end)}
+                      </div>
+                      <div className="text-[14px] text-gray-900 leading-relaxed">
+                        {content}
+                      </div>
                     </div>
-                    <div className="text-[14px] text-gray-900 leading-relaxed">
-                      {content}
-                    </div>
-                  </div>
-                );
-              })}
-            </ScrollArea>
+                  );
+                })}
+              </ScrollArea>
+            </div>
           )}
         </TabsContent>
 

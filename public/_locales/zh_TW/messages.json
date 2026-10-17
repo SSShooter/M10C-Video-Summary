@@ -195,6 +195,14 @@
     "message": "字幕",
     "description": "字幕標籤"
   },
+  "autoTrack": {
+    "message": "自動跟隨",
+    "description": "字幕自動跟隨開關"
+  },
+  "autoTrackHint": {
+    "message": "開啟後字幕列表跟隨影片播放自動跳轉到對應字幕",
+    "description": "字幕自動跟隨開關提示"
+  },
   "mindmap": {
     "message": "心智圖",
     "description": "心智圖標籤"

@@ -195,6 +195,14 @@
     "message": "Subtítulos",
     "description": "Subtitles tab"
   },
+  "autoTrack": {
+    "message": "Seguir video",
+    "description": "Interruptor de seguimiento de subtítulos"
+  },
+  "autoTrackHint": {
+    "message": "Desplaza la lista de subtítulos automáticamente según la reproducción",
+    "description": "Ayuda del interruptor de seguimiento de subtítulos"
+  },
   "mindmap": {
     "message": "Mapa mental",
     "description": "Mindmap tab"

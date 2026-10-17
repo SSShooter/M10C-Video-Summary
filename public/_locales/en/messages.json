@@ -195,6 +195,14 @@
     "message": "Subtitles",
     "description": "Subtitles tab"
   },
+  "autoTrack": {
+    "message": "Auto-follow",
+    "description": "Auto-follow subtitles toggle"
+  },
+  "autoTrackHint": {
+    "message": "Scroll the subtitle list automatically to match the playing video",
+    "description": "Auto-follow subtitles toggle hint"
+  },
   "mindmap": {
     "message": "Mindmap",
     "description": "Mindmap tab"
