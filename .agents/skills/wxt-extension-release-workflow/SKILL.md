@@ -66,8 +66,8 @@ Use the unified WXT submit tool to upload the zip packages to the Chrome Web Sto
 
 WXT will automatically read `.env.submit` to acquire tokens and API keys, upload all files in parallel, wait for Firefox validation (verifying `0 errors`), and submit the updates for store review.
 
-## 5. Git Tagging
-After a successful submission, create and push a git tag to permanently mark the release in version control.
+## 5. Git Tagging & Automated GitHub Release
+After a successful submission, create and push an annotated git tag.
 
 1. Commit the version bump and changelog changes (if not already committed):
    ```bash
@@ -84,3 +84,9 @@ After a successful submission, create and push a git tag to permanently mark the
    ```
 
 The tag should follow the format `v<MAJOR>.<MINOR>.<PATCH>` (e.g., `v3.1.1`) to match the version in `package.json`.
+
+> **💡 Automated GitHub Release:**  
+> Pushing the tag (`v*`) automatically triggers the GitHub Actions workflow in [.github/workflows/release.yml](file:///Users/darksouls/projects/m10c/.github/workflows/release.yml). The workflow will:
+> 1. Build the Chrome MV3 and Firefox MV2 extension ZIPs in CI.
+> 2. Automatically parse the corresponding version notes from [CHANGELOG.md](file:///Users/darksouls/projects/m10c/CHANGELOG.md).
+> 3. Create the GitHub Release and upload all `.output/*.zip` artifacts.
