@@ -1,0 +1,43 @@
+{
+  "version": "3.7.0",
+  "date": "2026.10.17",
+  "cards": [
+    {
+      "kind": "cover",
+      "id": "01-cover",
+      "accent": "violet",
+      "label": "RELEASE NOTES",
+      "kicker": "M10C",
+      "hook": ["字幕同步跟随，", "观影节奏一手掌握。"],
+      "sub": "新增实时字幕自动跟踪、搜索式模型选择器与配置即时自动保存。",
+      "count": "更新 4 项"
+    },
+    {
+      "kind": "list",
+      "id": "02-updates",
+      "accent": "violet",
+      "label": "CHANGELOG",
+      "headline": ["这次更新了什么。"],
+      "items": [
+        { "tag": "新增", "title": "字幕自动同步跟随", "desc": "播放时自动高亮当前字幕并平滑滚动，无需手动拉进度。" },
+        { "tag": "新增", "title": "模型搜索选择器", "desc": "统一搜索下拉组件，190+ 模型与供应商快速定位。" },
+        { "tag": "改进", "title": "配置自动即时保存", "desc": "设置变更实时生效，无需反复点击保存按钮。" },
+        { "tag": "修复", "title": "弹窗下拉框防裁切", "desc": "优化模型配置弹窗内的下拉菜单定位，不再被边框遮挡。" }
+      ]
+    },
+    {
+      "kind": "install",
+      "id": "03-install",
+      "accent": "violet",
+      "label": "GET IT",
+      "headline": ["新版本已经上架，", "随时可以更新。"],
+      "platforms": [
+        { "name": "Chrome 应用商店" },
+        { "name": "Edge 加载项" },
+        { "name": "Firefox 附加组件" }
+      ],
+      "searchHint": "扩展商店搜索「M10C」即可",
+      "foot": "v3.7.0 · 2026.10.17"
+    }
+  ]
+}

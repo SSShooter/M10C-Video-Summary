@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.7.0] - 2026-10-17
+
+### Added
+- **Subtitle Auto-Follow & Active Tracking**: Introduced an auto-follow toggle for the subtitle panel. When enabled, the panel continuously monitors video playback time, smoothly scrolls to keep active captions within comfortable reading view (20%–80% viewport bounds), and highlights the current subtitle line in real time. The toggle preference is automatically persisted across sessions.
+- **Searchable Provider & Model Picker**: Integrated a unified `SearchableDropdown` component in the options settings, allowing instant fuzzy searching and quick selection across 190+ AI providers and models.
+
+### Changed / Refactored
+- **Instant Configuration Persistence**: Refactored the options page to automatically persist AI configuration and model adjustments immediately without requiring manual save button clicks, streamlining the setup flow.
+
+### Fixed
+- **Model Settings Dropdowns**: Fixed an issue where provider and model selection menus inside the model configuration dialog were cut off by the dialog window edges, ensuring all options are fully visible and easy to select.
+
+---
+
 ## [3.6.0] - 2026-09-08
 
 ### Added

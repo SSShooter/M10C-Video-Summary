@@ -1,0 +1,43 @@
+{
+  "version": "3.7.0",
+  "date": "2026.10.17",
+  "cards": [
+    {
+      "kind": "cover",
+      "id": "01-cover",
+      "accent": "violet",
+      "label": "RELEASE NOTES",
+      "kicker": "M10C",
+      "hook": ["Subtitle auto-follow,", "stay in perfect sync."],
+      "sub": "Sync subtitles smoothly with playback, search models instantly, and enjoy auto-saved settings.",
+      "count": "4 updates"
+    },
+    {
+      "kind": "list",
+      "id": "02-updates",
+      "accent": "violet",
+      "label": "CHANGELOG",
+      "headline": ["What's new."],
+      "items": [
+        { "tag": "NEW", "title": "Subtitle auto-follow", "desc": "Highlight and smoothly scroll active captions with playback." },
+        { "tag": "NEW", "title": "Searchable model picker", "desc": "Quickly search and switch across 190+ AI providers." },
+        { "tag": "IMPROVED", "title": "Instant auto-save", "desc": "Option changes are saved automatically without clicking save." },
+        { "tag": "FIXED", "title": "Model settings dropdown", "desc": "Selection menus in the config dialog are no longer cut off by window edges." }
+      ]
+    },
+    {
+      "kind": "install",
+      "id": "03-install",
+      "accent": "violet",
+      "label": "GET IT",
+      "headline": ["New version", "is live."],
+      "platforms": [
+        { "name": "Chrome Web Store" },
+        { "name": "Edge Add-ons" },
+        { "name": "Firefox Add-ons" }
+      ],
+      "searchHint": "Search “M10C” in the extension store",
+      "foot": "v3.7.0 · 2026.10.17"
+    }
+  ]
+}
