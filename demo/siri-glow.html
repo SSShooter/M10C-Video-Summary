@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>点击生成 · 光波下落 + 光环效果</title>
+<title>点击生成 · 光雾弥漫 + 光环效果</title>
 <style>
   /* ---------- 1. 角度变量必须注册，conic-gradient 才能逐帧插值 ---------- */
   @property --angle {
@@ -12,14 +12,21 @@
     initial-value: 0deg;
   }
 
+  /* 光环点亮瞬间的亮度脉冲 */
+  @property --boost {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+  }
+
   :root {
     /* 光圈 */
     --ring-width: 4px;
     --ring-blur: 10px;
     --ring-speed: 4s;
-    /* 光波 */
-    --wave-duration: 0.5s;
-    --wave-blur: 26px;
+    /* 光雾 */
+    --wave-duration: 1.4s;
+    --wave-blur: 56px;
     --wave-size: 260px;
     /* Apple 六色，首尾同色才能无缝衔接 */
     --c1: #ff9f0a;
@@ -137,41 +144,54 @@
     animation: caret .9s steps(2, start) infinite;
   }
 
-  /* ---------- 4. 光波：一个边缘模糊的圆球，平时在框外 ---------- */
+  /* ---------- 4. 光雾：多色极光团，大模糊、低透明，缓缓漫过整个框 ---------- */
   .wave {
     position: absolute;
     z-index: 2;
-    top: 0;
+    top: 50%;
     left: 50%;
-    width: var(--wave-size);
-    height: var(--wave-size);
-    margin-left: calc(var(--wave-size) / -2);
+    width: calc(var(--wave-size) * 2.4);
+    height: calc(var(--wave-size) * 2.4);
     border-radius: 50%;
     background:
-      radial-gradient(circle closest-side,
-        rgba(255, 255, 255, 0.85) 0%,
-        rgba(255, 255, 255, 0) 42%),
-      radial-gradient(circle closest-side,
-        rgba(255, 214, 178, 0.95) 0%,
-        rgba(255, 164, 112, 0.74) 28%,
-        rgba(255, 104, 136, 0.50) 54%,
-        rgba(178, 104, 255, 0.26) 78%,
-        rgba(178, 104, 255, 0) 100%);
-    filter: blur(var(--wave-blur));
+      radial-gradient(ellipse 38% 34% at 32% 28%,
+        rgba(255, 159, 10, 0.55) 0%, rgba(255, 159, 10, 0) 70%),
+      radial-gradient(ellipse 42% 36% at 68% 30%,
+        rgba(255, 69, 58, 0.50) 0%, rgba(255, 69, 58, 0) 70%),
+      radial-gradient(ellipse 40% 38% at 55% 62%,
+        rgba(191, 90, 242, 0.50) 0%, rgba(191, 90, 242, 0) 70%),
+      radial-gradient(ellipse 38% 34% at 30% 68%,
+        rgba(10, 132, 255, 0.50) 0%, rgba(10, 132, 255, 0) 70%),
+      radial-gradient(ellipse 36% 32% at 74% 66%,
+        rgba(255, 55, 95, 0.45) 0%, rgba(255, 55, 95, 0) 70%);
+    filter: blur(var(--wave-blur)) saturate(1.15);
     opacity: 0;
+    transform: translate(-50%, -88%) scale(0.55);
     pointer-events: none;
     will-change: transform, opacity;
   }
 
   .card.is-waving .wave {
-    animation: m10c-wave var(--wave-duration) linear forwards;
+    animation: m10c-wave var(--wave-duration) cubic-bezier(.4, 0, .2, 1) forwards;
   }
 
+  /* 从顶边（按钮正下方）凝聚冒出，一边下沉一边摊开变淡——
+     起点小且亮，读得出方向；全程大模糊，看不出形状 */
   @keyframes m10c-wave {
-    0%   { transform: translateY(-100%); opacity: 0; }
-    10%  { opacity: 1; }
-    82%  { opacity: .95; }
-    100% { transform: translateY(var(--travel)); opacity: 0; }
+    0% {
+      transform: translate(-50%, -88%) scale(0.55) rotate(-4deg);
+      opacity: 0;
+    }
+    14% { opacity: .55; }
+    45% {
+      transform: translate(-50%, -60%) scale(0.95) rotate(1deg);
+      opacity: .48;
+    }
+    75% { opacity: .36; }
+    100% {
+      transform: translate(-50%, -30%) scale(1.22) rotate(5deg);
+      opacity: 0;
+    }
   }
 
   /* ---------- 5. 柔光带：mask 在 ::before，blur 留在父级 ---------- */
@@ -180,9 +200,9 @@
     z-index: 3;
     inset: 0;
     border-radius: inherit;
-    filter: blur(var(--ring-blur));
+    filter: blur(var(--ring-blur)) brightness(var(--boost, 1));
     opacity: 0;
-    transition: opacity .5s ease;
+    transition: opacity .6s ease;
     pointer-events: none;
   }
 
@@ -230,8 +250,24 @@
     animation: m10c-spin var(--ring-speed) linear infinite;
   }
 
-  .card.is-ring .glow { opacity: .9; }
-  .card.is-ring .glow-edge { opacity: .85; }
+  /* 光波到底瞬间光环"点亮"一下（亮度脉冲），再回落到常亮，
+     像是光波的能量灌进了边框 */
+  .card.is-ring .glow {
+    animation: m10c-ring-in 1.15s ease-out forwards;
+  }
+  .card.is-ring .glow-edge {
+    animation: m10c-edge-in 1.3s .12s ease-out forwards;
+  }
+
+  @keyframes m10c-ring-in {
+    0%   { opacity: 0; --boost: 2; }
+    35%  { opacity: 1; --boost: 1.4; }
+    100% { opacity: .88; --boost: 1; }
+  }
+  @keyframes m10c-edge-in {
+    from { opacity: 0; }
+    to   { opacity: .8; }
+  }
 
   @keyframes m10c-spin { to { --angle: 360deg; } }
   @keyframes caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
@@ -278,6 +314,8 @@
     .card.is-waving .wave { animation: none; }
     .glow::before, .glow-edge::before { animation: none; }
     .card.is-generating { animation: none; }
+    .card.is-ring .glow { animation: none; opacity: .88; }
+    .card.is-ring .glow-edge { animation: none; opacity: .8; }
   }
 
   @media (max-width: 720px) {
@@ -293,7 +331,7 @@
     <div class="mark">M</div>
     <div>
       <h1>AI 总结</h1>
-      <p>点击生成，看光波从按钮落下来</p>
+      <p>点击生成，看光雾从按钮漫下来</p>
     </div>
   </div>
 
@@ -328,16 +366,16 @@
     <input id="rs" type="range" min="1" max="12" step="0.5" value="4" />
   </div>
   <div class="row">
-    <label for="wd">光波时长 <span id="wd-val"></span></label>
-    <input id="wd" type="range" min="0.2" max="1.2" step="0.05" value="0.5" />
+    <label for="wd">光雾时长 <span id="wd-val"></span></label>
+    <input id="wd" type="range" min="0.6" max="3" step="0.1" value="1.4" />
   </div>
   <div class="row">
-    <label for="ws">光球直径 <span id="ws-val"></span></label>
+    <label for="ws">光雾大小 <span id="ws-val"></span></label>
     <input id="ws" type="range" min="180" max="420" step="10" value="260" />
   </div>
   <div class="row">
-    <label for="wb">光波模糊 <span id="wb-val"></span></label>
-    <input id="wb" type="range" min="0" max="48" step="2" value="26" />
+    <label for="wb">光雾模糊 <span id="wb-val"></span></label>
+    <input id="wb" type="range" min="20" max="96" step="2" value="56" />
   </div>
 </aside>
 
@@ -403,9 +441,6 @@
     outEl.classList.remove('is-streaming');
     emptyEl.hidden = true;
 
-    // 量一下当前高度，光波要正好飞出去
-    card.style.setProperty('--travel', (card.offsetHeight + 60) + 'px');
-
     // 强制回流，动画才能重新播
     void card.offsetWidth;
     card.classList.add('is-waving', 'is-generating');
@@ -414,13 +449,13 @@
       getComputedStyle(card).getPropertyValue('--wave-duration')
     ) * 1000;
 
-    // 光波扫到一半时，光圈开始淡入
-    later(() => card.classList.add('is-ring'), waveMs * 0.38);
+    // 光雾漫到中段时点亮光环，衔接"能量灌入"的亮度脉冲
+    later(() => card.classList.add('is-ring'), waveMs * 0.45);
 
-    // 光波结束后摘掉 class，方便下次重播
+    // 光雾结束后摘掉 class，方便下次重播
     later(() => card.classList.remove('is-waving'), waveMs + 400);
 
-    // 让光波先走一步，再开始吐字
+    // 光雾一渗进来就开始吐字，不用等它散完
     later(() => {
       streamText(SUMMARY, () => {
         later(() => {
@@ -431,7 +466,7 @@
           busy = false;
         }, 1100);
       });
-    }, Math.max(260, waveMs * 0.8));
+    }, Math.max(300, waveMs * 0.5));
   }
 
   genBtn.addEventListener('click', generate);
