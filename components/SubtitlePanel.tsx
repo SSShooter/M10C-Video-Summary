@@ -200,8 +200,12 @@ export function SubtitlePanel({
     if (entries.length === 0) return;
 
     let content = "";
-    let ext = "srt";
-    let mime = "text/plain;charset=utf-8";
+    // 扩展名直接跟随所选格式，避免 txt/md 被存成 .srt
+    const ext = format;
+    const mime =
+      format === "md"
+        ? "text/markdown;charset=utf-8"
+        : "text/plain;charset=utf-8";
 
     if (format === "srt") {
       content = entries
@@ -215,8 +219,6 @@ export function SubtitlePanel({
     } else if (format === "txt") {
       content = entries.map((entry) => entry.content).join("\n");
     } else {
-      ext = "md";
-      mime = "text/markdown;charset=utf-8";
       const title = videoInfo?.title?.trim() || "Subtitles";
       content = [
         `# ${title}`,
