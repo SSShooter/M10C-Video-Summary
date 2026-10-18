@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>点击生成 · 光波下落 + 光环效果</title>
+<style>
+  /* ---------- 1. 角度变量必须注册，conic-gradient 才能逐帧插值 ---------- */
+  @property --angle {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+  }
+
+  :root {
+    /* 光圈 */
+    --ring-width: 4px;
+    --ring-blur: 10px;
+    --ring-speed: 4s;
+    /* 光波 */
+    --wave-duration: 0.5s;
+    --wave-blur: 26px;
+    --wave-size: 260px;
+    /* Apple 六色，首尾同色才能无缝衔接 */
+    --c1: #ff9f0a;
+    --c2: #ff453a;
+    --c3: #ff375f;
+    --c4: #bf5af2;
+    --c5: #0a84ff;
+    --c6: #ff9f0a;
+    --travel: 320px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 56px;
+    padding: 40px 24px;
+    background: #f2f3f7;
+    color: #1c1c1e;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  }
+
+  /* ---------- 2. 面板骨架 ---------- */
+  .panel {
+    width: 380px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 1px 2px rgba(16, 18, 27, 0.04), 0 12px 32px rgba(16, 18, 27, 0.08);
+  }
+
+  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .mark {
+    width: 26px; height: 26px; border-radius: 8px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #534ab7, #7f77dd);
+    color: #fff; font-size: 13px; font-weight: 600;
+  }
+  .head h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: .2px; }
+  .head p { margin: 2px 0 0; font-size: 11px; color: #8a8a92; }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+
+  .btn-gen {
+    flex: 1;
+    height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: #534ab7;
+    color: #fff;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .2s, transform .12s;
+  }
+  .btn-gen:hover:not(:disabled) { background: #4a41a8; }
+  .btn-gen:active:not(:disabled) { transform: scale(.99); }
+  .btn-gen:disabled { background: #b9b6dd; cursor: default; }
+
+  .btn-ghost {
+    height: 34px; padding: 0 12px;
+    border: 1px solid #e2e2e8; border-radius: 8px;
+    background: #fff; color: #55555e; font-size: 12px;
+    font-family: inherit; cursor: pointer;
+    transition: opacity .2s, border-color .2s;
+  }
+  .btn-ghost[hidden] { display: none; }
+  .btn-ghost:hover { border-color: #c9c7e0; }
+
+  /* ---------- 3. 输出框：overflow 裁掉向外的光 ---------- */
+  .card {
+    position: relative;
+    min-height: 300px;
+    border: 1px solid #e6e6ea;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .body {
+    position: relative;
+    z-index: 1;
+    min-height: 300px;
+    max-height: 380px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 16px;
+    scrollbar-width: thin;
+  }
+
+  .empty { margin: 0; padding-top: 96px; text-align: center; font-size: 12px; color: #a0a0a8; }
+  .empty[hidden] { display: none; }
+
+  .out {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.78;
+    color: #33333a;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .out.is-streaming::after {
+    content: "";
+    display: inline-block;
+    width: 2px; height: 1em;
+    margin-left: 2px;
+    vertical-align: -2px;
+    background: #534ab7;
+    animation: caret .9s steps(2, start) infinite;
+  }
+
+  /* ---------- 4. 光波：一个边缘模糊的圆球，平时在框外 ---------- */
+  .wave {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 50%;
+    width: var(--wave-size);
+    height: var(--wave-size);
+    margin-left: calc(var(--wave-size) / -2);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle closest-side,
+        rgba(255, 255, 255, 0.85) 0%,
+        rgba(255, 255, 255, 0) 42%),
+      radial-gradient(circle closest-side,
+        rgba(255, 214, 178, 0.95) 0%,
+        rgba(255, 164, 112, 0.74) 28%,
+        rgba(255, 104, 136, 0.50) 54%,
+        rgba(178, 104, 255, 0.26) 78%,
+        rgba(178, 104, 255, 0) 100%);
+    filter: blur(var(--wave-blur));
+    opacity: 0;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  .card.is-waving .wave {
+    animation: m10c-wave var(--wave-duration) linear forwards;
+  }
+
+  @keyframes m10c-wave {
+    0%   { transform: translateY(-100%); opacity: 0; }
+    10%  { opacity: 1; }
+    82%  { opacity: .95; }
+    100% { transform: translateY(var(--travel)); opacity: 0; }
+  }
+
+  /* ---------- 5. 柔光带：mask 在 ::before，blur 留在父级 ---------- */
+  .glow {
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    border-radius: inherit;
+    filter: blur(var(--ring-blur));
+    opacity: 0;
+    transition: opacity .5s ease;
+    pointer-events: none;
+  }
+
+  .glow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-sizing: border-box;
+    padding: var(--ring-width);
+    background: conic-gradient(from var(--angle),
+      var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: m10c-spin var(--ring-speed) linear infinite;
+  }
+
+  /* ---------- 6. 细亮边：给柔光带一条清晰的芯 ---------- */
+  .glow-edge {
+    position: absolute;
+    z-index: 4;
+    inset: 0;
+    border-radius: inherit;
+    filter: blur(1px);
+    opacity: 0;
+    transition: opacity .5s ease;
+    pointer-events: none;
+  }
+
+  .glow-edge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-sizing: border-box;
+    padding: 1.5px;
+    background: conic-gradient(from var(--angle),
+      var(--c1), var(--c2), var(--c3), var(--c4), var(--c5), var(--c6));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: m10c-spin var(--ring-speed) linear infinite;
+  }
+
+  .card.is-ring .glow { opacity: .9; }
+  .card.is-ring .glow-edge { opacity: .85; }
+
+  @keyframes m10c-spin { to { --angle: 360deg; } }
+  @keyframes caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ---------- 7. 输出框轻微收缩 ---------- */
+  .card.is-generating {
+    animation: m10c-squeeze .7s cubic-bezier(.4, 0, .2, 1);
+  }
+  @keyframes m10c-squeeze { 40% { transform: scale(.985); } }
+
+  /* ---------- 8. 调参面板 ---------- */
+  .controls {
+    width: 240px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 18, 27, 0.04), 0 12px 32px rgba(16, 18, 27, 0.06);
+  }
+  .controls h2 {
+    margin: 0 0 14px;
+    font-size: 12px; font-weight: 600;
+    color: #55555e; letter-spacing: .4px;
+  }
+  .row { margin-bottom: 14px; }
+  .row:last-child { margin-bottom: 0; }
+  .row label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: #6a6a74; margin-bottom: 6px;
+  }
+  .row label span { color: #a0a0a8; font-variant-numeric: tabular-nums; }
+  .row input[type="range"] {
+    width: 100%; height: 3px;
+    -webkit-appearance: none; appearance: none;
+    background: #e6e6ea; border-radius: 2px; outline: none;
+  }
+  .row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #534ab7; cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(83, 74, 183, .12);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card.is-waving .wave { animation: none; }
+    .glow::before, .glow-edge::before { animation: none; }
+    .card.is-generating { animation: none; }
+  }
+
+  @media (max-width: 720px) {
+    body { flex-direction: column; gap: 28px; }
+    .controls { width: 380px; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<main class="panel">
+  <div class="head">
+    <div class="mark">M</div>
+    <div>
+      <h1>AI 总结</h1>
+      <p>点击生成，看光波从按钮落下来</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn-gen" id="gen">生成 AI 总结</button>
+    <button class="btn-ghost" id="copy" hidden>复制</button>
+  </div>
+
+  <div class="card" id="card">
+    <div class="wave" aria-hidden="true"></div>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="glow-edge" aria-hidden="true"></div>
+    <div class="body" id="body">
+      <p class="empty" id="empty">还没有生成总结</p>
+      <p class="out" id="out"></p>
+    </div>
+  </div>
+</main>
+
+<aside class="controls">
+  <h2>参数</h2>
+  <div class="row">
+    <label for="rw">光环宽度 <span id="rw-val"></span></label>
+    <input id="rw" type="range" min="0" max="26" step="1" value="4" />
+  </div>
+  <div class="row">
+    <label for="rb">柔光模糊 <span id="rb-val"></span></label>
+    <input id="rb" type="range" min="0" max="26" step="1" value="10" />
+  </div>
+  <div class="row">
+    <label for="rs">旋转周期 <span id="rs-val"></span></label>
+    <input id="rs" type="range" min="1" max="12" step="0.5" value="4" />
+  </div>
+  <div class="row">
+    <label for="wd">光波时长 <span id="wd-val"></span></label>
+    <input id="wd" type="range" min="0.2" max="1.2" step="0.05" value="0.5" />
+  </div>
+  <div class="row">
+    <label for="ws">光球直径 <span id="ws-val"></span></label>
+    <input id="ws" type="range" min="180" max="420" step="10" value="260" />
+  </div>
+  <div class="row">
+    <label for="wb">光波模糊 <span id="wb-val"></span></label>
+    <input id="wb" type="range" min="0" max="48" step="2" value="26" />
+  </div>
+</aside>
+
+<script>
+  const card = document.getElementById('card');
+  const genBtn = document.getElementById('gen');
+  const copyBtn = document.getElementById('copy');
+  const outEl = document.getElementById('out');
+  const emptyEl = document.getElementById('empty');
+  const bodyEl = document.getElementById('body');
+
+  const SUMMARY = `这段视频拆解了 iPhone 上 Apple Intelligence 的发光边框，并用纯 HTML + CSS 在网页里复刻了一遍。
+
+整块屏幕只有四层：壁纸、光波、光圈、柔光。光波是一个 560px 的模糊圆，平时藏在屏幕右侧外面，靠 overflow: hidden 遮住，按下按钮才向左扫过。
+
+光圈用 conic-gradient 画出六色彩虹，再用两层 mask 加 exclude，只留下 padding 那一圈。
+
+最容易踩的坑是顺序：同一个元素上 filter 先于 mask 执行，模糊出来的光会被随后的遮罩重新裁掉。所以要把 mask 放到伪元素上，blur 留在父级 —— 先裁出圈，再整体模糊。
+
+最后用 @property 注册一个角度变量，颜色就能沿着四边一直流动。`;
+
+  let busy = false;
+  let streamTimer = null;
+  let stageTimers = [];
+
+  function clearTimers() {
+    stageTimers.forEach(clearTimeout);
+    stageTimers = [];
+    if (streamTimer) { clearInterval(streamTimer); streamTimer = null; }
+  }
+
+  function later(fn, ms) {
+    stageTimers.push(setTimeout(fn, ms));
+  }
+
+  function streamText(text, onDone) {
+    let i = 0;
+    outEl.classList.add('is-streaming');
+    streamTimer = setInterval(() => {
+      i += 2;
+      outEl.textContent = text.slice(0, i);
+      bodyEl.scrollTop = bodyEl.scrollHeight;
+      if (i >= text.length) {
+        clearInterval(streamTimer);
+        streamTimer = null;
+        outEl.classList.remove('is-streaming');
+        onDone();
+      }
+    }, 16);
+  }
+
+  function generate() {
+    if (busy) return;
+    busy = true;
+    genBtn.disabled = true;
+    genBtn.textContent = '生成中…';
+    copyBtn.hidden = true;
+    clearTimers();
+
+    // 复位：先把上一轮的状态和动画都清干净
+    card.classList.remove('is-ring', 'is-waving', 'is-generating');
+    outEl.textContent = '';
+    outEl.classList.remove('is-streaming');
+    emptyEl.hidden = true;
+
+    // 量一下当前高度，光波要正好飞出去
+    card.style.setProperty('--travel', (card.offsetHeight + 60) + 'px');
+
+    // 强制回流，动画才能重新播
+    void card.offsetWidth;
+    card.classList.add('is-waving', 'is-generating');
+
+    const waveMs = parseFloat(
+      getComputedStyle(card).getPropertyValue('--wave-duration')
+    ) * 1000;
+
+    // 光波扫到一半时，光圈开始淡入
+    later(() => card.classList.add('is-ring'), waveMs * 0.38);
+
+    // 光波结束后摘掉 class，方便下次重播
+    later(() => card.classList.remove('is-waving'), waveMs + 400);
+
+    // 让光波先走一步，再开始吐字
+    later(() => {
+      streamText(SUMMARY, () => {
+        later(() => {
+          card.classList.remove('is-ring');
+          copyBtn.hidden = false;
+          genBtn.disabled = false;
+          genBtn.textContent = '重新生成';
+          busy = false;
+        }, 1100);
+      });
+    }, Math.max(260, waveMs * 0.8));
+  }
+
+  genBtn.addEventListener('click', generate);
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(outEl.textContent);
+      copyBtn.textContent = '已复制';
+      setTimeout(() => (copyBtn.textContent = '复制'), 1400);
+    } catch (e) { /* 忽略 */ }
+  });
+
+  // 调参：直接改根上的 CSS 变量
+  const bind = (id, varName, unit) => {
+    const input = document.getElementById(id);
+    const label = document.getElementById(id + '-val');
+    const apply = () => {
+      document.documentElement.style.setProperty(varName, input.value + unit);
+      label.textContent = input.value + unit;
+    };
+    input.addEventListener('input', apply);
+    apply();
+  };
+
+  bind('rw', '--ring-width', 'px');
+  bind('rb', '--ring-blur', 'px');
+  bind('rs', '--ring-speed', 's');
+  bind('wd', '--wave-duration', 's');
+  bind('wb', '--wave-blur', 'px');
+  bind('ws', '--wave-size', 'px');
+</script>
+</body>
+</html>
