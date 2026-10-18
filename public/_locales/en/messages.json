@@ -203,6 +203,22 @@
     "message": "Scroll the subtitle list automatically to match the playing video",
     "description": "Auto-follow subtitles toggle hint"
   },
+  "downloadSubtitles": {
+    "message": "Download subtitles",
+    "description": "Download subtitles button title"
+  },
+  "subtitleFormatSrt": {
+    "message": "SRT",
+    "description": "Download subtitles as SRT"
+  },
+  "subtitleFormatTxt": {
+    "message": "TXT text",
+    "description": "Download subtitles as plain text"
+  },
+  "subtitleFormatMarkdown": {
+    "message": "Markdown notes",
+    "description": "Download subtitles as Markdown"
+  },
   "mindmap": {
     "message": "Mindmap",
     "description": "Mindmap tab"

@@ -203,6 +203,22 @@
     "message": "オンにすると字幕リストが再生位置に合わせて自動スクロールします",
     "description": "字幕の自動追従スイッチのヒント"
   },
+  "downloadSubtitles": {
+    "message": "字幕をダウンロード",
+    "description": "字幕ダウンロードボタンのタイトル"
+  },
+  "subtitleFormatSrt": {
+    "message": "SRT",
+    "description": "字幕を SRT 形式でダウンロード"
+  },
+  "subtitleFormatTxt": {
+    "message": "TXT テキスト",
+    "description": "字幕をプレーンテキストでダウンロード"
+  },
+  "subtitleFormatMarkdown": {
+    "message": "Markdown ノート",
+    "description": "字幕を Markdown 形式でダウンロード"
+  },
   "mindmap": {
     "message": "マインドマップ",
     "description": "マインドマップタブ"

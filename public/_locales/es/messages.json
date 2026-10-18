@@ -203,6 +203,22 @@
     "message": "Desplaza la lista de subtítulos automáticamente según la reproducción",
     "description": "Ayuda del interruptor de seguimiento de subtítulos"
   },
+  "downloadSubtitles": {
+    "message": "Descargar subtítulos",
+    "description": "Título del botón de descarga de subtítulos"
+  },
+  "subtitleFormatSrt": {
+    "message": "SRT",
+    "description": "Descargar subtítulos en SRT"
+  },
+  "subtitleFormatTxt": {
+    "message": "Texto TXT",
+    "description": "Descargar subtítulos en texto plano"
+  },
+  "subtitleFormatMarkdown": {
+    "message": "Notas Markdown",
+    "description": "Descargar subtítulos en Markdown"
+  },
   "mindmap": {
     "message": "Mapa mental",
     "description": "Mindmap tab"

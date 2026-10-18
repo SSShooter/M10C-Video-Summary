@@ -203,6 +203,22 @@
     "message": "켜면 자막 목록이 재생 위치에 맞춰 자동으로 이동합니다",
     "description": "자막 자동 추적 스위치 안내"
   },
+  "downloadSubtitles": {
+    "message": "자막 다운로드",
+    "description": "자막 다운로드 버튼 제목"
+  },
+  "subtitleFormatSrt": {
+    "message": "SRT",
+    "description": "자막을 SRT 형식으로 다운로드"
+  },
+  "subtitleFormatTxt": {
+    "message": "TXT 텍스트",
+    "description": "자막을 일반 텍스트로 다운로드"
+  },
+  "subtitleFormatMarkdown": {
+    "message": "Markdown 노트",
+    "description": "자막을 Markdown 형식으로 다운로드"
+  },
   "mindmap": {
     "message": "마인드맵",
     "description": "마인드맵 탭"

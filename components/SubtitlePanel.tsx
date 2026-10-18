@@ -1,9 +1,16 @@
 import React, { useRef, useState, useEffect } from "react";
 import { storage } from "@wxt-dev/storage";
-import { GripVertical } from "lucide-react";
+import { Download, GripVertical } from "lucide-react";
 import brandLogoUrl from "~/assets/logo-64.png?inline";
 
 import { Button } from "~components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from "~components/ui/dropdown-menu";
 import { Toaster } from "~components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
@@ -154,6 +161,84 @@ export function SubtitlePanel({
       .join(" ")
       .replace(/\s+/g, " ")
       .trim();
+  };
+
+  // 秒 -> SRT 时间戳（00:00:01,000）
+  const toSrtTimestamp = (seconds: number): string => {
+    const totalMs = Math.max(0, Math.round(seconds * 1000));
+    const hours = Math.floor(totalMs / 3600000);
+    const minutes = Math.floor((totalMs % 3600000) / 60000);
+    const secs = Math.floor((totalMs % 60000) / 1000);
+    const ms = totalMs % 1000;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")},${ms
+      .toString()
+      .padStart(3, "0")}`;
+  };
+
+  // 生成下载文件名（过滤非法字符）
+  const getSubtitleFileName = (ext: string): string => {
+    const rawTitle = (videoInfo?.title || "").trim();
+    const safeTitle =
+      rawTitle.replace(/[\\/:*?"<>|\r\n\t]/g, "_").slice(0, 80) || "subtitles";
+    return `${safeTitle}.${ext}`;
+  };
+
+  // 导出字幕文件：srt 带时间轴，txt 纯文本逐句，md 为带时间戳的列表
+  const downloadSubtitles = (format: "srt" | "txt" | "md") => {
+    if (subtitles.length === 0) return;
+
+    const entries = subtitles
+      .map((subtitle) => ({
+        start: getSubtitleTime(subtitle).start,
+        end: getSubtitleTime(subtitle).end,
+        content: getSubtitleContent(subtitle).replace(/\s+/g, " ").trim(),
+      }))
+      .filter((entry) => entry.content.length > 0);
+
+    if (entries.length === 0) return;
+
+    let content = "";
+    let ext = "srt";
+    let mime = "text/plain;charset=utf-8";
+
+    if (format === "srt") {
+      content = entries
+        .map(
+          (entry, index) =>
+            `${index + 1}\n${toSrtTimestamp(entry.start)} --> ${toSrtTimestamp(
+              entry.end
+            )}\n${entry.content}`
+        )
+        .join("\n\n");
+    } else if (format === "txt") {
+      content = entries.map((entry) => entry.content).join("\n");
+    } else {
+      ext = "md";
+      mime = "text/markdown;charset=utf-8";
+      const title = videoInfo?.title?.trim() || "Subtitles";
+      content = [
+        `# ${title}`,
+        "",
+        ...entries.map(
+          (entry) =>
+            `- \`${formatTime(entry.start)}\` ${entry.content}`
+        ),
+      ].join("\n");
+    }
+
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = getSubtitleFileName(ext);
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    // 稍后释放，避免部分浏览器取消下载
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   // 切换自动跟踪开关并持久化
@@ -355,27 +440,59 @@ export function SubtitlePanel({
 
           {subtitles.length > 0 && (
             <div ref={subtitleListRef} className="flex-1 min-h-0 flex flex-col">
-              <div className="flex h-8 shrink-0 items-center justify-between rounded-md bg-gray-50 px-2 mb-2 select-none">
-                <span className="text-[12px] text-gray-600">{t("autoTrack")}</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={autoTrack}
-                  aria-label={t("autoTrack")}
-                  title={t("autoTrackHint")}
-                  onClick={toggleAutoTrack}
-                  className={cn(
-                    "relative inline-flex h-[18px] w-[32px] shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1",
-                    autoTrack ? "bg-blue-500" : "bg-gray-300"
-                  )}
-                >
-                  <span
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-9 flex-1 min-w-0 items-center justify-between rounded-md bg-gray-50 px-2 select-none">
+                  <span className="text-[12px] text-gray-600">
+                    {t("autoTrack")}
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={autoTrack}
+                    aria-label={t("autoTrack")}
+                    title={t("autoTrackHint")}
+                    onClick={toggleAutoTrack}
                     className={cn(
-                      "inline-block h-[14px] w-[14px] rounded-full bg-white shadow transition-transform duration-200",
-                      autoTrack ? "translate-x-[16px]" : "translate-x-[2px]"
+                      "relative inline-flex h-[18px] w-[32px] shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                      autoTrack ? "bg-primary" : "bg-gray-300"
                     )}
-                  />
-                </button>
+                  >
+                    <span
+                      className={cn(
+                        "inline-block h-[14px] w-[14px] rounded-full bg-white shadow transition-transform duration-200",
+                        autoTrack ? "translate-x-[16px]" : "translate-x-[2px]"
+                      )}
+                    />
+                  </button>
+                </div>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="px-3 shrink-0"
+                      aria-label={t("downloadSubtitles")}
+                      title={t("downloadSubtitles")}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuPortal container={panelRef.current}>
+                    <DropdownMenuContent
+                      align="end"
+                      className="text-[13px] z-[10000]"
+                    >
+                      <DropdownMenuItem onClick={() => downloadSubtitles("srt")}>
+                        {t("subtitleFormatSrt")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => downloadSubtitles("txt")}>
+                        {t("subtitleFormatTxt")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => downloadSubtitles("md")}>
+                        {t("subtitleFormatMarkdown")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenuPortal>
+                </DropdownMenu>
               </div>
               <ScrollArea className="flex-1 min-h-0">
                 {subtitles.map((subtitle, index) => {
