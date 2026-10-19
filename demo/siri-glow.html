@@ -148,7 +148,7 @@
   .wave {
     position: absolute;
     z-index: 2;
-    top: 50%;
+    top: 0;
     left: 50%;
     width: calc(var(--wave-size) * 2.4);
     height: calc(var(--wave-size) * 2.4);
@@ -166,7 +166,29 @@
         rgba(255, 55, 95, 0.45) 0%, rgba(255, 55, 95, 0) 70%);
     filter: blur(var(--wave-blur)) saturate(1.15);
     opacity: 0;
-    transform: translate(-50%, -88%) scale(0.55);
+    transform: translate(-50%, -50%) scale(0.15);
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  /* 种子光球：按钮正下方的一颗亮点，亮起后化开，把舞台交给光雾 */
+  .seed {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    margin: -60px 0 0 -60px;
+    border-radius: 50%;
+    background: radial-gradient(circle closest-side,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 224, 190, 0.75) 35%,
+      rgba(255, 170, 120, 0.35) 60%,
+      rgba(255, 140, 140, 0) 100%);
+    filter: blur(14px);
+    opacity: 0;
+    transform: scale(.35);
     pointer-events: none;
     will-change: transform, opacity;
   }
@@ -174,22 +196,38 @@
   .card.is-waving .wave {
     animation: m10c-wave var(--wave-duration) cubic-bezier(.4, 0, .2, 1) forwards;
   }
+  .card.is-waving .seed {
+    animation: m10c-seed calc(var(--wave-duration) * .6) ease-out forwards;
+  }
 
-  /* 从顶边（按钮正下方）凝聚冒出，一边下沉一边摊开变淡——
-     起点小且亮，读得出方向；全程大模糊，看不出形状 */
+  /* 种子钉在按钮下方原地亮起、化开，不做任何位移——
+     用户看到的是"光从按钮处蔓延开"，而不是"一个球飞下去" */
+  @keyframes m10c-seed {
+    0%   { opacity: 0; transform: scale(.35); }
+    12%  { opacity: .95; }
+    60%  { opacity: .55; }
+    100% { opacity: 0; transform: scale(1.4); }
+  }
+
+  /* 雾的锚点固定在顶边中点，只靠缩放向下撑满全框——
+     先铺满（50% 时 scale 1.05 已盖住全框）再整体淡出，
+     顶部全程有光，色彩不会"跟着球跑掉" */
   @keyframes m10c-wave {
     0% {
-      transform: translate(-50%, -88%) scale(0.55) rotate(-4deg);
+      transform: translate(-50%, -50%) scale(0.15) rotate(-4deg);
       opacity: 0;
     }
-    14% { opacity: .55; }
-    45% {
-      transform: translate(-50%, -60%) scale(0.95) rotate(1deg);
-      opacity: .48;
+    15% { opacity: .6; }
+    50% {
+      transform: translate(-50%, -50%) scale(1.05) rotate(0deg);
+      opacity: .55;
     }
-    75% { opacity: .36; }
+    78% {
+      transform: translate(-50%, -50%) scale(1.22);
+      opacity: .45;
+    }
     100% {
-      transform: translate(-50%, -30%) scale(1.22) rotate(5deg);
+      transform: translate(-50%, -50%) scale(1.35) rotate(5deg);
       opacity: 0;
     }
   }
@@ -311,7 +349,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .card.is-waving .wave { animation: none; }
+    .card.is-waving .wave, .card.is-waving .seed { animation: none; }
     .glow::before, .glow-edge::before { animation: none; }
     .card.is-generating { animation: none; }
     .card.is-ring .glow { animation: none; opacity: .88; }
@@ -342,6 +380,7 @@
 
   <div class="card" id="card">
     <div class="wave" aria-hidden="true"></div>
+    <div class="seed" aria-hidden="true"></div>
     <div class="glow" aria-hidden="true"></div>
     <div class="glow-edge" aria-hidden="true"></div>
     <div class="body" id="body">
