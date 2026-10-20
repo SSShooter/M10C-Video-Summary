@@ -8,6 +8,7 @@ import { t } from "~/utils/i18n"
 
 import { ReasoningDisplay } from "./ReasoningDisplay"
 import { SimpleMarkdown } from "./SimpleMarkdown"
+import { GenerationGlow } from "./GenerationGlow"
 
 export interface SummaryGenerateConfig {
   getContent: () => string | null
@@ -202,23 +203,27 @@ export function SummaryDisplay({
         </div>
       )}
 
-      {aiLoading && !markdownContent && (
-        <ReasoningDisplay reasoning={reasoning} />
-      )}
-
-      {(markdownContent || (aiLoading && markdownContent)) && (
-        <div className="flex-1 overflow-auto">
-          <ScrollArea className="h-full" ref={scrollAreaRef}>
-            <div className="relative prose p-[12px] border border-gray-300 rounded-[6px]">
-              {cacheLoaded && (
-                <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
-                  {t("cached")}
-                </span>
-              )}
-              <SimpleMarkdown content={markdownContent} />
-            </div>
-          </ScrollArea>
-        </div>
+      {/* 生成中与已有内容共用同一个容器，光效时序不会因为内容切换被打断 */}
+      {(aiLoading || markdownContent) && (
+        <GenerationGlow
+          active={aiLoading}
+          streaming={aiLoading && !!markdownContent}
+          className="flex-1 min-h-0">
+          {markdownContent ? (
+            <ScrollArea className="h-full" ref={scrollAreaRef}>
+              <div className="relative prose p-[12px]">
+                {cacheLoaded && (
+                  <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
+                    {t("cached")}
+                  </span>
+                )}
+                <SimpleMarkdown content={markdownContent} />
+              </div>
+            </ScrollArea>
+          ) : (
+            <ReasoningDisplay reasoning={reasoning} />
+          )}
+        </GenerationGlow>
       )}
     </div>
   )

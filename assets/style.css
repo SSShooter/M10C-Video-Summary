@@ -64,3 +64,363 @@ html body[data-scroll-locked] {
   overflow: visible !important;
   margin-right: 0 !important;
 }
+
+/* ==========================================================================
+   AI 生成光效（Siri Glow）
+   --------------------------------------------------------------------------
+   视觉实现参考 demo/siri-glow.html，抽成通用图层：
+   .m10c-glow-frame 是容器，内部固定 4 个空图层（wave / seed / ring / edge），
+   由 components/GenerationGlow.tsx 驱动状态类，业务侧只传 active / streaming。
+
+   三个状态类：
+     .m10c-is-waving      光雾从顶边中点漫下来（生成开始时加）
+     .m10c-is-ring        六色光环点亮（光雾到 45% 时加，生成结束后淡出）
+     .m10c-is-generating  容器轻微收缩（一次性，生成开始时加）
+   ========================================================================== */
+
+/* conic-gradient 要逐帧插值，角度变量必须注册；--boost 是光环点亮的亮度脉冲 */
+@property --m10c-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --m10c-boost {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+.m10c-glow-frame {
+  /* 光圈 */
+  --m10c-ring-width: 2px;
+  --m10c-ring-blur: 8px;
+  --m10c-ring-speed: 4s;
+  /* 光雾 */
+  --m10c-wave-duration: 1.4s;
+  --m10c-wave-blur: 56px;
+  /* 光团直径：随宽度走，但封顶 460px——面板再高，雾也只漫在顶部一片，
+     不会糊满整块内容区 */
+  --m10c-wave-size: min(170%, 460px);
+  /* 底色 */
+  --m10c-surface: #fff;
+  /* Apple 六色，首尾同色才能无缝衔接 */
+  --m10c-c1: #ff9f0a;
+  --m10c-c2: #ff453a;
+  --m10c-c3: #ff375f;
+  --m10c-c4: #bf5af2;
+  --m10c-c5: #0a84ff;
+  --m10c-c6: #ff9f0a;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 裁掉向外溢出的光 */
+  isolation: isolate;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  background: var(--m10c-surface);
+}
+
+/* 内容层：z-index 压在光雾之下，光雾才会"漫过"文字 */
+.m10c-glow-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 流式光标：挂在最后一个块级元素尾部，不额外占行。
+   第二个选择器负责去重——祖先里只要有一个不是 last-child，
+   就说明它不在文档序的最后，关掉光标（否则列表末项和末段落会各挂一个）。 */
+.m10c-glow-content.m10c-is-streaming
+  :is(p, li, h1, h2, h3):last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: hsl(var(--primary));
+  animation: m10c-caret 0.9s steps(2, start) infinite;
+}
+
+.m10c-glow-content.m10c-is-streaming
+  :not(:last-child)
+  :is(p, li, h1, h2, h3):last-child::after {
+  content: none;
+}
+
+/* 光雾：多色极光团，大模糊、低透明。
+   关键点：元素必须远大于容器（--m10c-wave-size 默认 170% 宽，封顶 460px），
+   靠 frame 的 overflow 裁掉外圈，所以任何尺寸下都看不到它的边界——
+   一旦让它和容器同尺寸，就会露出一块可见的矩形色块。
+   mask 再把边缘化开一层，避免极端比例下露出圆的硬边。 */
+.m10c-glow-wave {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  width: var(--m10c-wave-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      ellipse 38% 34% at 32% 28%,
+      rgba(255, 159, 10, 0.42) 0%,
+      rgba(255, 159, 10, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 42% 36% at 68% 30%,
+      rgba(255, 69, 58, 0.4) 0%,
+      rgba(255, 69, 58, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 40% 38% at 55% 62%,
+      rgba(191, 90, 242, 0.4) 0%,
+      rgba(191, 90, 242, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 38% 34% at 30% 68%,
+      rgba(10, 132, 255, 0.4) 0%,
+      rgba(10, 132, 255, 0) 70%
+    ),
+    radial-gradient(
+      ellipse 36% 32% at 74% 66%,
+      rgba(255, 55, 95, 0.36) 0%,
+      rgba(255, 55, 95, 0) 70%
+    );
+  filter: blur(var(--m10c-wave-blur)) saturate(1.15);
+  -webkit-mask-image: radial-gradient(
+    circle closest-side,
+    #000 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    circle closest-side,
+    #000 55%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.15);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* 种子光球：按钮正下方的一颗亮点，亮起后化开，把舞台交给光雾 */
+.m10c-glow-seed {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle closest-side,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 224, 190, 0.75) 35%,
+    rgba(255, 170, 120, 0.35) 60%,
+    rgba(255, 140, 140, 0) 100%
+  );
+  filter: blur(14px);
+  opacity: 0;
+  transform: scale(0.35);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* 柔光带：mask 在 ::before，blur 留在父级（同一元素上 filter 先于 mask 执行） */
+.m10c-glow-ring {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border-radius: inherit;
+  filter: blur(var(--m10c-ring-blur)) brightness(var(--m10c-boost, 1));
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.m10c-glow-ring::before,
+.m10c-glow-edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--m10c-angle),
+    var(--m10c-c1),
+    var(--m10c-c2),
+    var(--m10c-c3),
+    var(--m10c-c4),
+    var(--m10c-c5),
+    var(--m10c-c6)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: m10c-spin var(--m10c-ring-speed) linear infinite;
+}
+
+.m10c-glow-ring::before {
+  padding: var(--m10c-ring-width);
+}
+
+/* 细亮边：给柔光带一条清晰的芯 */
+.m10c-glow-edge {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  border-radius: inherit;
+  filter: blur(1px);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.m10c-glow-edge::before {
+  padding: 1.5px;
+}
+
+/* ---- 状态类：由组件按时间轴挂载 ---- */
+.m10c-glow-frame.m10c-is-waving .m10c-glow-wave {
+  animation: m10c-wave var(--m10c-wave-duration) cubic-bezier(0.4, 0, 0.2, 1)
+    forwards;
+}
+
+.m10c-glow-frame.m10c-is-waving .m10c-glow-seed {
+  animation: m10c-seed calc(var(--m10c-wave-duration) * 0.6) ease-out forwards;
+}
+
+/* 光波到底瞬间光环"点亮"一下，再回落到常亮 */
+.m10c-glow-frame.m10c-is-ring .m10c-glow-ring {
+  animation: m10c-ring-in 1.15s ease-out forwards;
+}
+
+.m10c-glow-frame.m10c-is-ring .m10c-glow-edge {
+  animation: m10c-edge-in 1.3s 0.12s ease-out forwards;
+}
+
+.m10c-glow-frame.m10c-is-generating {
+  animation: m10c-squeeze 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes m10c-seed {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  12% {
+    opacity: 0.95;
+  }
+  60% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes m10c-wave {
+  0% {
+    transform: translate(-50%, -50%) scale(0.15) rotate(-4deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05) rotate(0deg);
+    opacity: 0.45;
+  }
+  78% {
+    transform: translate(-50%, -50%) scale(1.22);
+    opacity: 0.36;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.35) rotate(5deg);
+    opacity: 0;
+  }
+}
+
+@keyframes m10c-ring-in {
+  0% {
+    opacity: 0;
+    --m10c-boost: 2;
+  }
+  35% {
+    opacity: 1;
+    --m10c-boost: 1.4;
+  }
+  100% {
+    opacity: 0.88;
+    --m10c-boost: 1;
+  }
+}
+
+@keyframes m10c-edge-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
+@keyframes m10c-spin {
+  to {
+    --m10c-angle: 360deg;
+  }
+}
+
+@keyframes m10c-caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes m10c-squeeze {
+  40% {
+    transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m10c-glow-frame.m10c-is-waving .m10c-glow-wave,
+  .m10c-glow-frame.m10c-is-waving .m10c-glow-seed {
+    animation: none;
+  }
+  .m10c-glow-ring::before,
+  .m10c-glow-edge::before {
+    animation: none;
+  }
+  .m10c-glow-frame.m10c-is-generating {
+    animation: none;
+  }
+  .m10c-glow-content.m10c-is-streaming :is(p, li, h1, h2, h3):last-child::after {
+    animation: none;
+  }
+  .m10c-glow-frame.m10c-is-ring .m10c-glow-ring {
+    animation: none;
+    opacity: 0.88;
+  }
+  .m10c-glow-frame.m10c-is-ring .m10c-glow-edge {
+    animation: none;
+    opacity: 0.8;
+  }
+}

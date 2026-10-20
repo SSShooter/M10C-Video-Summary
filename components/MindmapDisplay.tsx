@@ -12,6 +12,7 @@ import { storage } from "@wxt-dev/storage"
 import MindElixirReact, {
   type MindElixirReactRef
 } from "~/components/MindElixirReact"
+import { GenerationGlow } from "~/components/GenerationGlow"
 import { ReasoningDisplay } from "~/components/ReasoningDisplay"
 import { Button } from "~/components/ui/button"
 import { Tooltip } from "~/components/ui/tooltip"
@@ -530,23 +531,28 @@ export function MindmapDisplay({
         </div>
       )}
 
-      {mindmapLoading && !mindmapData && (
-        <ReasoningDisplay reasoning={reasoning} />
-      )}
-
-      {mindmapData && (
-        <div className="relative flex-1 w-full border border-gray-300 rounded-[6px] overflow-hidden">
-          {cacheLoaded && (
-            <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
-              {t("cached")}
-            </span>
+      {/* 生成中与已生成共用同一个容器，光效时序不会因为内容切换被打断 */}
+      {(mindmapLoading || mindmapData) && (
+        <GenerationGlow
+          active={mindmapLoading}
+          className="flex-1 min-h-0 w-full">
+          {mindmapData ? (
+            <>
+              {cacheLoaded && (
+                <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
+                  {t("cached")}
+                </span>
+              )}
+              <MindElixirReact
+                data={mindmapData}
+                ref={mindmapRef}
+                options={options}
+              />
+            </>
+          ) : (
+            <ReasoningDisplay reasoning={reasoning} />
           )}
-          <MindElixirReact
-            data={mindmapData}
-            ref={mindmapRef}
-            options={options}
-          />
-        </div>
+        </GenerationGlow>
       )}
     </div>
   )
