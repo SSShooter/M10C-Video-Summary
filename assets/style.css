@@ -292,6 +292,31 @@ html body[data-scroll-locked] {
   padding: 1.5px;
 }
 
+/* ---- 深色画布变体 ----
+   白底那套"大模糊柔光"放到深底上会糊成一层彩灰：模糊把六种颜色拌在一起，
+   在暗背景上既不发亮也不分辨不出色相。
+   深底要走另一套：模糊收小保住色相、饱和度拉高、再加 plus-lighter 加色混合，
+   光才是"从边上发出来"，而不是蒙在画布上的一层脏边。 */
+.m10c-glow-frame.m10c-is-dark {
+  /* 画布是深色时，边框内底也跟着深，避免生成初期闪一下白底 */
+  --m10c-surface: #252526;
+  /* 深底上要更多"光通量"：环加宽、模糊收小，亮度才不会被摊薄 */
+  --m10c-ring-width: 4px;
+  --m10c-ring-blur: 6px;
+}
+
+.m10c-glow-frame.m10c-is-dark .m10c-glow-ring {
+  /* 保留 --m10c-boost 的点亮脉冲，只是整体再抬 1.5 倍 */
+  filter: blur(var(--m10c-ring-blur)) saturate(2)
+    brightness(calc(var(--m10c-boost, 1) * 1.5));
+  mix-blend-mode: plus-lighter;
+}
+
+.m10c-glow-frame.m10c-is-dark .m10c-glow-edge {
+  filter: blur(0.6px) saturate(1.4) brightness(1.35);
+  mix-blend-mode: plus-lighter;
+}
+
 /* ---- 状态类：由组件按时间轴挂载 ---- */
 .m10c-glow-frame.m10c-is-waving .m10c-glow-wave {
   animation: m10c-wave var(--m10c-wave-duration) cubic-bezier(0.4, 0, 0.2, 1)

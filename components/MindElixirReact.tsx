@@ -8,6 +8,19 @@ import {
   useState
 } from "react"
 
+export type MindmapThemeType = "light" | "dark"
+
+/**
+ * MindElixir 构造时自己也读 prefers-color-scheme，这里保持一致，
+ * 供外部在实例挂载前就能取到初值（否则光效会先按浅色闪一下再翻深色）。
+ */
+export function getMindmapThemeType(): MindmapThemeType {
+  if (typeof window === "undefined") return "light"
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light"
+}
+
 interface MindElixirReactProps {
   data: MindElixirData
   options?: Partial<Options>
@@ -15,6 +28,8 @@ interface MindElixirReactProps {
   initScale?: number
   className?: string
   fitPage?: boolean
+  /** 实例实际使用的主题变化时回调，供外部（如光效）跟随画布深浅 */
+  onThemeChange?: (type: MindmapThemeType) => void
 }
 
 export interface MindElixirReactRef {
@@ -22,10 +37,16 @@ export interface MindElixirReactRef {
 }
 
 const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
-  ({ data, options, plugins, initScale, className, fitPage }, ref) => {
+  (
+    { data, options, plugins, initScale, className, fitPage, onThemeChange },
+    ref
+  ) => {
     const mindmapEl = useRef<HTMLDivElement>(null)
     const meInstance = useRef<MindElixirInstance | null>(null)
     const isInitialized = useRef<boolean>(false)
+    // 用 ref 转存，避免调用方传内联函数时把实例重建掉
+    const onThemeChangeRef = useRef(onThemeChange)
+    onThemeChangeRef.current = onThemeChange
 
     useImperativeHandle(ref, () => ({
       instance: meInstance.current
@@ -47,11 +68,9 @@ const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
       const initializeMindElixir = async () => {
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
         const changeTheme = (e: MediaQueryListEvent) => {
-          if (e.matches) {
-            meInstance.current?.changeTheme(MindElixir.DARK_THEME)
-          } else {
-            meInstance.current?.changeTheme(MindElixir.THEME)
-          }
+          const next = e.matches ? MindElixir.DARK_THEME : MindElixir.THEME
+          meInstance.current?.changeTheme(next)
+          onThemeChangeRef.current?.(next.type as MindmapThemeType)
         }
 
         const mergedOptions = {
@@ -60,6 +79,11 @@ const MindElixirReact = forwardRef<MindElixirReactRef, MindElixirReactProps>(
         }
 
         meInstance.current = new MindElixir(mergedOptions)
+
+        // 构造时 MindElixir 已按系统偏好选好主题，这里回报一次实际值
+        onThemeChangeRef.current?.(
+          meInstance.current.theme.type as MindmapThemeType
+        )
 
         // Install plugins
         if (plugins) {

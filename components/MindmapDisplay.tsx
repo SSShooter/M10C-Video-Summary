@@ -10,7 +10,9 @@ import React, { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { storage } from "@wxt-dev/storage"
 import MindElixirReact, {
-  type MindElixirReactRef
+  type MindElixirReactRef,
+  type MindmapThemeType,
+  getMindmapThemeType
 } from "~/components/MindElixirReact"
 import { GenerationGlow } from "~/components/GenerationGlow"
 import { ReasoningDisplay } from "~/components/ReasoningDisplay"
@@ -66,6 +68,10 @@ export function MindmapDisplay({
   const [mindmapData, setMindmapData] = useState<MindElixirData | null>(null)
   const [cacheLoaded, setCacheLoaded] = useState(false)
   const [reasoning, setReasoning] = useState("")
+  // 画布深浅：MindElixir 会跟随系统切主题，光效需要知道底是深是浅
+  const [canvasTone, setCanvasTone] = useState<MindmapThemeType>(
+    getMindmapThemeType
+  )
   // Server-side cache state (Mind Elixir model only, non-BYOK)
   const [serverCacheAvailable, setServerCacheAvailable] = useState<boolean | null>(null)
   const [serverCacheFetching, setServerCacheFetching] = useState(false)
@@ -535,6 +541,9 @@ export function MindmapDisplay({
       {(mindmapLoading || mindmapData) && (
         <GenerationGlow
           active={mindmapLoading}
+          // 画布没渲染出来之前（Connecting / 思考中）底还是浅色的白框，
+          // 这时按深色调光环会过曝，也会把 ReasoningDisplay 的灰字埋掉
+          tone={mindmapData ? canvasTone : "light"}
           className="flex-1 min-h-0 w-full">
           {mindmapData ? (
             <>
@@ -547,6 +556,7 @@ export function MindmapDisplay({
                 data={mindmapData}
                 ref={mindmapRef}
                 options={options}
+                onThemeChange={setCanvasTone}
               />
             </>
           ) : (

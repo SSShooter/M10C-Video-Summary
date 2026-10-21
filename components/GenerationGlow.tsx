@@ -37,6 +37,11 @@ export interface GenerationGlowProps {
   active: boolean
   /** 流式输出中：在最后一个块级元素尾部挂一个闪烁光标 */
   streaming?: boolean
+  /**
+   * 容器内实际的底色深浅。光环在深底上要走另一套参数
+   * （小模糊 + 高饱和 + 加色混合），否则会糊成一层彩灰。
+   */
+  tone?: "light" | "dark"
   /** 生成结束后光环停留多久再淡出（ms） */
   fadeDelay?: number
   className?: string
@@ -59,6 +64,7 @@ function readWaveDuration(el: HTMLElement): number {
 export function GenerationGlow({
   active,
   streaming = false,
+  tone = "light",
   fadeDelay = DEFAULT_FADE_DELAY,
   className,
   children
@@ -129,7 +135,13 @@ export function GenerationGlow({
   }, [])
 
   return (
-    <div ref={frameRef} className={cn("m10c-glow-frame", className)}>
+    <div
+      ref={frameRef}
+      className={cn(
+        "m10c-glow-frame",
+        tone === "dark" && "m10c-is-dark",
+        className
+      )}>
       <div className="m10c-glow-wave" aria-hidden="true" />
       <div className="m10c-glow-seed" aria-hidden="true" />
       <div className="m10c-glow-ring" aria-hidden="true" />
