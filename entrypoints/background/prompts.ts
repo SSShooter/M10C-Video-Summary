@@ -110,6 +110,7 @@ Rules:
    - "- } Summary Text" summarizes ALL previous siblings at the same level.
    - "- }:n Summary Text" summarizes the previous n siblings at the same level.
    - There MUST be exactly one space between "}" (or "}:n") and the summary text.
+   - DEPTH LIMIT (CRITICAL): a summary line is ONLY allowed from the second level downward, i.e. its "- " line MUST be indented by at least 4 spaces and may only group the children of one first-level branch. Summaries at the first level (2-space indentation, grouping the main branches of the root) and at the root level (0 indentation) are STRICTLY FORBIDDEN — NEVER summarize the whole mindmap with a "}" line.
 7. Relationship links (must be a standalone line, may appear at any position in the outline):
    - Bidirectional: "- > [^id1] <-Label-> [^id2]"
    - Unidirectional: "- > [^id1] >-Label-> [^id2]"
@@ -125,6 +126,8 @@ Common mistakes — NEVER output any of these:
 - "- }> [^id1] <-Label-> [^id2]"  WRONG: "}" must never be combined with ">"
 - "- }Summary Text"             WRONG: missing space after "}"
 - "- } > [^id1] <-Label-> [^id2]" WRONG: relation and summary must be separate lines
+- "  - } All three techniques share this mechanism and reinforce it."  WRONG: a 2-space-indented (first-level) summary of the main branches is forbidden — turn the takeaway into a normal child node of a branch instead
+- "- } Whole-map summary..." at the root level or at the first level  WRONG: summaries are only allowed at 4-space indentation or deeper, or drop it
 `
   },
 
