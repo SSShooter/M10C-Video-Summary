@@ -16,15 +16,15 @@ export function ReasoningDisplay({ reasoning }: ReasoningDisplayProps) {
   }, [reasoning])
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-4 text-gray-600">
+    <div className="flex-1 flex flex-col items-center justify-center p-4 text-muted-foreground">
       <div className="mb-4 text-center">
         {reasoning ? (
-          <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-blue-600">
+          <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-blue-600 dark:text-blue-400">
             <Brain className="w-4 h-4" />
             {t("thinking")}
           </div>
         ) : (
-          <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-gray-500">
+          <div className="animate-pulse flex items-center gap-2 mb-2 justify-center text-sm font-medium text-muted-foreground">
             <Brain className="w-4 h-4" />
             {t("connecting")}
           </div>
@@ -32,7 +32,7 @@ export function ReasoningDisplay({ reasoning }: ReasoningDisplayProps) {
       </div>
       {reasoning && (
         <ScrollArea className="w-full h-full max-h-[300px]">
-          <div className="text-xs text-gray-500 whitespace-pre-wrap font-mono leading-relaxed">
+          <div className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
             {reasoning}
             <div ref={bottomRef} />
           </div>

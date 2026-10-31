@@ -27,7 +27,10 @@
     --radius: 0.5rem;
   }
 
+  /* 注入面板跟随系统外观：面板根节点由 useSystemTheme 挂 .dark，
+     变量在这里统一切换，options / popup 页面没有 .dark 所以保持浅色 */
   .dark {
+    color-scheme: dark;
     --background: 240 50% 8%;
     --foreground: 240 20% 95%;
     --card: 240 45% 12%;
@@ -57,6 +60,21 @@
   :host {
     @apply bg-background text-foreground;
   }
+}
+
+/* 深色画布下的正文：prose 默认按浅底写的，深色要换成前景色系 */
+.dark .prose {
+  --tw-prose-body: hsl(var(--foreground) / 0.9);
+  --tw-prose-headings: hsl(var(--foreground));
+  --tw-prose-bold: hsl(var(--foreground));
+  --tw-prose-counters: hsl(var(--muted-foreground));
+  --tw-prose-bullets: hsl(var(--muted-foreground));
+  --tw-prose-hr: hsl(var(--border));
+  --tw-prose-quotes: hsl(var(--muted-foreground));
+  --tw-prose-quote-borders: hsl(var(--border));
+  --tw-prose-captions: hsl(var(--muted-foreground));
+  --tw-prose-th-borders: hsl(var(--border));
+  --tw-prose-td-borders: hsl(var(--border));
 }
 
 
@@ -102,8 +120,8 @@ html body[data-scroll-locked] {
   /* 光团直径：随宽度走，但封顶 460px——面板再高，雾也只漫在顶部一片，
      不会糊满整块内容区 */
   --m10c-wave-size: min(170%, 460px);
-  /* 底色 */
-  --m10c-surface: #fff;
+  /* 底色：跟随面板变量，深色下不会先闪一下白底 */
+  --m10c-surface: hsl(var(--background));
   /* Apple 六色，首尾同色才能无缝衔接 */
   --m10c-c1: #ff9f0a;
   --m10c-c2: #ff453a;
@@ -297,22 +315,23 @@ html body[data-scroll-locked] {
    在暗背景上既不发亮也不分辨不出色相。
    深底要走另一套：模糊收小保住色相、饱和度拉高、再加 plus-lighter 加色混合，
    光才是"从边上发出来"，而不是蒙在画布上的一层脏边。 */
-.m10c-glow-frame.m10c-is-dark {
-  /* 画布是深色时，边框内底也跟着深，避免生成初期闪一下白底 */
-  --m10c-surface: #252526;
+.m10c-glow-frame.m10c-is-dark,
+.dark .m10c-glow-frame {
   /* 深底上要更多"光通量"：环加宽、模糊收小，亮度才不会被摊薄 */
   --m10c-ring-width: 4px;
   --m10c-ring-blur: 6px;
 }
 
-.m10c-glow-frame.m10c-is-dark .m10c-glow-ring {
+.m10c-glow-frame.m10c-is-dark .m10c-glow-ring,
+.dark .m10c-glow-frame .m10c-glow-ring {
   /* 保留 --m10c-boost 的点亮脉冲，只是整体再抬 1.5 倍 */
   filter: blur(var(--m10c-ring-blur)) saturate(2)
     brightness(calc(var(--m10c-boost, 1) * 1.5));
   mix-blend-mode: plus-lighter;
 }
 
-.m10c-glow-frame.m10c-is-dark .m10c-glow-edge {
+.m10c-glow-frame.m10c-is-dark .m10c-glow-edge,
+.dark .m10c-glow-frame .m10c-glow-edge {
   filter: blur(0.6px) saturate(1.4) brightness(1.35);
   mix-blend-mode: plus-lighter;
 }

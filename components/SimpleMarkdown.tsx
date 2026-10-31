@@ -26,27 +26,27 @@ export const SimpleMarkdown = ({ content }: { content: string }) => {
     if (trimmed.startsWith("# ")) {
       flushList(key)
       elements.push(
-        <h1 key={key} className="text-xl font-bold mt-4 mb-2 text-blue-800">
+        <h1 key={key} className="text-xl font-bold mt-4 mb-2 text-blue-800 dark:text-blue-300">
           {trimmed.replace(/^#\s+/, "")}
         </h1>
       )
     } else if (trimmed.startsWith("### ")) {
       flushList(key)
       elements.push(
-        <h3 key={key} className="text-base font-bold mt-4 mb-2 text-blue-600">
+        <h3 key={key} className="text-base font-bold mt-4 mb-2 text-blue-600 dark:text-blue-400">
           {trimmed.replace(/^###\s+/, "")}
         </h3>
       )
     } else if (trimmed.startsWith("## ")) {
       flushList(key)
       elements.push(
-        <h2 key={key} className="text-lg font-bold mt-4 mb-2 text-blue-700">
+        <h2 key={key} className="text-lg font-bold mt-4 mb-2 text-blue-700 dark:text-blue-300">
           {trimmed.replace(/^##\s+/, "")}
         </h2>
       )
     } else if (/^([-*_])\s*\1\s*\1(\s*\1)*$/.test(trimmed)) {
       flushList(key)
-      elements.push(<hr key={key} className="my-4 border-t border-gray-300" />)
+      elements.push(<hr key={key} className="my-4 border-t border-border" />)
     } else if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
       flushList(key)
       elements.push(
@@ -60,7 +60,7 @@ export const SimpleMarkdown = ({ content }: { content: string }) => {
       const parts = content.split(/(\*\*.*?\*\*)/g).map((part, i) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return (
-            <strong key={i} className="text-blue-600">
+            <strong key={i} className="text-blue-600 dark:text-blue-400">
               {part.slice(2, -2)}
             </strong>
           )
@@ -87,7 +87,7 @@ export const SimpleMarkdown = ({ content }: { content: string }) => {
             return part.split(/(#\S+)/g).map((subPart, j) => {
               if (subPart.startsWith("#")) {
                 return (
-                  <span key={`${i}-${j}`} className="text-blue-500">
+                  <span key={`${i}-${j}`} className="text-blue-500 dark:text-blue-400">
                     {subPart}
                   </span>
                 )
@@ -98,7 +98,7 @@ export const SimpleMarkdown = ({ content }: { content: string }) => {
           return part
         })
         elements.push(
-          <p key={key} className="my-1 text-sm leading-relaxed text-gray-800">
+          <p key={key} className="my-1 text-sm leading-relaxed text-foreground/90">
             {parts.flat()}
           </p>
         )

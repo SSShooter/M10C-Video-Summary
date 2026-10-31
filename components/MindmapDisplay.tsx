@@ -529,7 +529,7 @@ export function MindmapDisplay({
       </div>
 
       {!mindmapData && !mindmapLoading && (
-        <div className="text-center py-[40px] px-[20px] text-gray-600">
+        <div className="text-center py-[40px] px-[20px] text-muted-foreground">
           <div className="mb-[12px]">{noMindmapText || t("noMindmap")}</div>
           <div className="text-[12px]">
             {t("clickToGenerateArticleMindmap")}
@@ -541,14 +541,14 @@ export function MindmapDisplay({
       {(mindmapLoading || mindmapData) && (
         <GenerationGlow
           active={mindmapLoading}
-          // 画布没渲染出来之前（Connecting / 思考中）底还是浅色的白框，
-          // 这时按深色调光环会过曝，也会把 ReasoningDisplay 的灰字埋掉
+          // 画布没渲染出来之前（Connecting / 思考中）底就是面板底色，
+          // 按浅色调处理；画布出来后由 MindElixir 实际主题决定
           tone={mindmapData ? canvasTone : "light"}
           className="flex-1 min-h-0 w-full">
           {mindmapData ? (
             <>
               {cacheLoaded && (
-                <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
+                <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 py-[1px] px-[6px] rounded-full border border-blue-300 dark:border-blue-400/40 h-fit">
                   {t("cached")}
                 </span>
               )}

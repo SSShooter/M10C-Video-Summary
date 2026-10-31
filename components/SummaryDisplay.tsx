@@ -197,7 +197,7 @@ export function SummaryDisplay({
       </div>
 
       {!markdownContent && !aiLoading && (
-        <div className="text-center py-[40px] px-[20px] text-gray-600">
+        <div className="text-center py-[40px] px-[20px] text-muted-foreground">
           <div className="mb-[12px]">{noSummaryText || t("noAiSummary")}</div>
           <div className="text-[12px]">{generatePromptText || t("clickToGenerateVideoSummary")}</div>
         </div>
@@ -213,7 +213,7 @@ export function SummaryDisplay({
             <ScrollArea className="h-full" ref={scrollAreaRef}>
               <div className="relative prose p-[12px]">
                 {cacheLoaded && (
-                  <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 bg-blue-50 py-[1px] px-[6px] rounded-full border border-blue-300 h-fit">
+                  <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 py-[1px] px-[6px] rounded-full border border-blue-300 dark:border-blue-400/40 h-fit">
                     {t("cached")}
                   </span>
                 )}

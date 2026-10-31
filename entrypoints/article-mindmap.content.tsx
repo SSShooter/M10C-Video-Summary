@@ -14,6 +14,7 @@ import { Toaster } from "~/components/ui/sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs"
 import { GripVertical } from "lucide-react"
 import { useDraggable } from "~/hooks/useDraggable"
+import { useSystemTheme } from "~/hooks/useSystemTheme"
 import { detectArticle, type ArticleInfo } from "~/utils/article-detector"
 import { detectAndConvertArticle } from "~/utils/html-to-markdown"
 import { t } from "~/utils/i18n"
@@ -32,6 +33,7 @@ function ArticleMindmapPanelContent({
 }) {
   const [activeTab, setActiveTab] = useState("summary")
   const panelRef = useRef<HTMLDivElement>(null)
+  const colorScheme = useSystemTheme()
   const { onMouseDown, isPositionLoaded } = useDraggable(panelRef, "article_panel_pos")
 
   // 获取文章内容
@@ -78,7 +80,11 @@ function ArticleMindmapPanelContent({
   return (
     <div
       ref={panelRef}
-      className="w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col"
+      className={cn(
+        "w-[350px] h-[600px] bg-background text-foreground border border-border rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col",
+        // 系统深色时给面板挂 .dark，内部的 token 与 dark: 变体才会跟着切
+        colorScheme === "dark" && "dark"
+      )}
       style={{ visibility: isPositionLoaded ? "visible" : "hidden" }}>
       <div className="mb-[12px]">
         <div className="flex justify-between items-center mb-[8px]">
@@ -89,7 +95,7 @@ function ArticleMindmapPanelContent({
               className="w-[20px] h-[20px] rounded-[5px] shadow-sm"
               draggable={false}
             />
-            <h3 className="m-0 text-[16px] font-semibold text-gray-900">
+            <h3 className="m-0 text-[16px] font-semibold text-foreground">
               {t("articleAssistant")}
             </h3>
           </div>
@@ -97,7 +103,7 @@ function ArticleMindmapPanelContent({
             <Button
               variant="ghost"
               size="sm"
-              className="p-1 h-6 w-6 cursor-grab active:cursor-grabbing text-gray-500"
+              className="p-1 h-6 w-6 cursor-grab active:cursor-grabbing text-muted-foreground"
               onMouseDown={onMouseDown}
               title={t("drag")}>
               <GripVertical className="w-4 h-4" />
@@ -106,7 +112,7 @@ function ArticleMindmapPanelContent({
               onClick={() => setIsVisible(false)}
               variant="ghost"
               size="sm"
-              className="p-1 h-6 w-6 text-gray-500"
+              className="p-1 h-6 w-6 text-muted-foreground"
               title={t("close")}>
               <svg
                 className="w-4 h-4"
@@ -123,7 +129,7 @@ function ArticleMindmapPanelContent({
             </Button>
           </div>
         </div>
-        <div className="text-[12px] text-gray-600 leading-relaxed">
+        <div className="text-[12px] text-muted-foreground leading-relaxed">
           {articleInfo.title}
         </div>
       </div>

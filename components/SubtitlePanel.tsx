@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~components/ui/tabs";
 import { cn } from "~/lib/utils";
 import { t, getMatchedBrowserLanguage } from "~utils/i18n";
 import { useDraggable } from "~hooks/useDraggable";
+import { useSystemTheme } from "~hooks/useSystemTheme";
 import { getDefaultModel, isMindElixirModel, loadAIModelsConfig } from "~utils/ai-service";
 
 import { MindmapDisplay, type MindmapGenerateConfig } from "./MindmapDisplay";
@@ -68,6 +69,7 @@ export function SubtitlePanel({
     panelRef,
     disableDrag ? undefined : "video_panel_pos"
   );
+  const colorScheme = useSystemTheme();
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [isByok, setIsByok] = useState(false);
   const [configuredLanguage, setConfiguredLanguage] = useState<string | null>(null);
@@ -328,7 +330,9 @@ export function SubtitlePanel({
     <div
       ref={panelRef}
       className={cn(
-        "w-[350px] h-[600px] bg-white border border-gray-300 rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col",
+        "w-[350px] h-[600px] bg-background text-foreground border border-border rounded p-2 shadow-lg fixed top-[80px] right-[20px] z-[9999] overflow-hidden flex flex-col",
+        // 系统深色时给面板挂 .dark，内部的 token 与 dark: 变体才会跟着切
+        colorScheme === "dark" && "dark",
         className
       )}
       style={{ visibility: isPositionLoaded ? "visible" : "hidden", ...style }}
@@ -342,7 +346,7 @@ export function SubtitlePanel({
               className="w-[20px] h-[20px] rounded-[5px] shadow-sm"
               draggable={false}
             />
-            <h3 className="m-0 text-[16px] font-semibold text-gray-900">
+            <h3 className="m-0 text-[16px] font-semibold text-foreground">
               {platform === "bilibili"
                 ? t("videoAssistant")
                 : t("youtubeSubtitle")}
@@ -352,7 +356,7 @@ export function SubtitlePanel({
             <Button
               variant="ghost"
               size="sm"
-              className="p-1 h-6 w-6 cursor-grab active:cursor-grabbing text-gray-500"
+              className="p-1 h-6 w-6 cursor-grab active:cursor-grabbing text-muted-foreground"
               onMouseDown={onMouseDown}
               title={t("drag")}
             >
@@ -362,7 +366,7 @@ export function SubtitlePanel({
               onClick={onClose}
               variant="ghost"
               size="sm"
-              className="p-1 h-6 w-6 text-gray-500"
+              className="p-1 h-6 w-6 text-muted-foreground"
               title={t("close")}
             >
               <svg
@@ -382,7 +386,7 @@ export function SubtitlePanel({
           </div>
         </div>
         {videoInfo && (
-          <div className="text-[12px] text-gray-600 leading-relaxed">
+          <div className="text-[12px] text-muted-foreground leading-relaxed">
             {videoInfo.title}
           </div>
         )}
@@ -408,14 +412,14 @@ export function SubtitlePanel({
           )}
         >
           {loading && (
-            <div className="text-center p-[20px] text-gray-600">
+            <div className="text-center p-[20px] text-muted-foreground">
               {t("loading")}
             </div>
           )}
 
           {error && (
             <div className="text-center p-[20px]">
-              <div className="text-red-500 mb-4">{error}</div>
+              <div className="text-red-500 dark:text-red-400 mb-4">{error}</div>
               <Button
                 onClick={() => window.location.reload()}
                 variant="outline"
@@ -443,8 +447,8 @@ export function SubtitlePanel({
           {subtitles.length > 0 && (
             <div ref={subtitleListRef} className="flex-1 min-h-0 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
-                <div className="flex h-9 flex-1 min-w-0 items-center justify-between rounded-md bg-gray-50 px-2 select-none">
-                  <span className="text-[12px] text-gray-600">
+                <div className="flex h-9 flex-1 min-w-0 items-center justify-between rounded-md bg-muted/60 px-2 select-none">
+                  <span className="text-[12px] text-muted-foreground">
                     {t("autoTrack")}
                   </span>
                   <button
@@ -456,7 +460,7 @@ export function SubtitlePanel({
                     onClick={toggleAutoTrack}
                     className={cn(
                       "relative inline-flex h-[18px] w-[32px] shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                      autoTrack ? "bg-primary" : "bg-gray-300"
+                      autoTrack ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
                     )}
                   >
                     <span
@@ -508,20 +512,22 @@ export function SubtitlePanel({
                         subtitleItemRefs.current[index] = el;
                       }}
                       className={cn(
-                        "py-[8px] border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-50",
-                        isActive && "bg-blue-50"
+                        "py-[8px] border-b border-border/60 cursor-pointer transition-colors duration-200 hover:bg-muted/50",
+                        isActive && "bg-blue-50 dark:bg-blue-500/15"
                       )}
                       onClick={() => onJumpToTime(time.start)}
                     >
                       <div
                         className={cn(
                           "text-[12px] mb-[4px] font-medium",
-                          isActive ? "text-blue-600" : "text-blue-500"
+                          isActive
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-blue-500 dark:text-blue-400"
                         )}
                       >
                         {formatTime(time.start)} - {formatTime(time.end)}
                       </div>
-                      <div className="text-[14px] text-gray-900 leading-relaxed">
+                      <div className="text-[14px] text-foreground leading-relaxed">
                         {content}
                       </div>
                     </div>
