@@ -336,6 +336,22 @@ html body[data-scroll-locked] {
   mix-blend-mode: plus-lighter;
 }
 
+/* 画布入场：Connecting 阶段露的是面板底色，导图画布自带另一套底色
+   （深色下是 #252526），直接换上会硬切。让画布从透明淡入，两个底色之间
+   就有了过渡，而不是闪一下换背景。 */
+.m10c-canvas-enter {
+  animation: m10c-canvas-in 0.45s ease both;
+}
+
+@keyframes m10c-canvas-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* ---- 状态类：由组件按时间轴挂载 ---- */
 .m10c-glow-frame.m10c-is-waving .m10c-glow-wave {
   animation: m10c-wave var(--m10c-wave-duration) cubic-bezier(0.4, 0, 0.2, 1)
@@ -346,13 +362,19 @@ html body[data-scroll-locked] {
   animation: m10c-seed calc(var(--m10c-wave-duration) * 0.6) ease-out forwards;
 }
 
-/* 光波到底瞬间光环"点亮"一下，再回落到常亮 */
+/* 光波到底瞬间光环“点亮”一下，再回落到常亮。
+   常亮的透明度必须写在类上、动画不能 forwards：靠动画填充值撑着的 opacity
+   在摘掉类时是从“动画值”直接掉到 0，transition 不会触发，光晕就硬消失了。
+   动画收尾值与类上的声明值保持一致，摘掉类时才开始走 opacity 过渡。 */
 .m10c-glow-frame.m10c-is-ring .m10c-glow-ring {
-  animation: m10c-ring-in 1.15s ease-out forwards;
+  opacity: 0.88;
+  animation: m10c-ring-in 1.15s ease-out;
 }
 
 .m10c-glow-frame.m10c-is-ring .m10c-glow-edge {
-  animation: m10c-edge-in 1.3s 0.12s ease-out forwards;
+  opacity: 0.8;
+  /* backwards：延迟的 0.12s 里保持 keyframe 起始值，不会先亮一下再重播 */
+  animation: m10c-edge-in 1.3s 0.12s ease-out backwards;
 }
 
 .m10c-glow-frame.m10c-is-generating {
@@ -454,6 +476,9 @@ html body[data-scroll-locked] {
     animation: none;
   }
   .m10c-glow-frame.m10c-is-generating {
+    animation: none;
+  }
+  .m10c-canvas-enter {
     animation: none;
   }
   .m10c-glow-content.m10c-is-streaming :is(p, li, h1, h2, h3):last-child::after {

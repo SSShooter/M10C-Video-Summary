@@ -556,6 +556,8 @@ export function MindmapDisplay({
                 data={mindmapData}
                 ref={mindmapRef}
                 options={options}
+                // 画布自带底色，从 ReasoningDisplay 的面板底色切过来会硬切，淡入衔接
+                className="m10c-canvas-enter"
                 onThemeChange={setCanvasTone}
               />
             </>

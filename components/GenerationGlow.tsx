@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 import { cn } from "~/lib/utils"
 
@@ -20,11 +20,18 @@ import { cn } from "~/lib/utils"
  *   --m10c-wave-duration / --m10c-wave-blur / --m10c-surface
  */
 
-const GLOW_CLASSES = [
-  "m10c-is-waving",
-  "m10c-is-ring",
-  "m10c-is-generating"
-] as const
+/**
+ * 状态类必须由 React 持有：直接改 classList 会被下一次 className 重设整段抹掉
+ * （例如深色画布切换时 tone 变化，恰好发生在生成中出现画布的那一刻）。
+ */
+interface GlowPhase {
+  /** 光雾 + 一次性收缩 */
+  waving: boolean
+  /** 六色光环常亮 */
+  ring: boolean
+}
+
+const IDLE_PHASE: GlowPhase = { waving: false, ring: false }
 
 /** 光雾铺满后，光环亮起到完全淡出的停留时间（ms） */
 const DEFAULT_FADE_DELAY = 1100
@@ -71,8 +78,10 @@ export function GenerationGlow({
 }: GenerationGlowProps) {
   const frameRef = useRef<HTMLDivElement>(null)
   const timersRef = useRef<number[]>([])
+  const rafRef = useRef<number | null>(null)
   // 初值给 false：容器在生成开始那一刻才挂载时，也能正常播一次光雾
   const prevActiveRef = useRef(false)
+  const [phase, setPhase] = useState<GlowPhase>(IDLE_PHASE)
 
   useEffect(() => {
     const el = frameRef.current
@@ -82,55 +91,70 @@ export function GenerationGlow({
     if (active === prevActiveRef.current) return
     prevActiveRef.current = active
 
-    const clearTimers = () => {
+    const clearScheduled = () => {
       timersRef.current.forEach((id) => window.clearTimeout(id))
       timersRef.current = []
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
     }
     const later = (fn: () => void, ms: number) => {
       timersRef.current.push(window.setTimeout(fn, ms))
     }
 
-    clearTimers()
+    clearScheduled()
     const waveMs = readWaveDuration(el)
 
     if (!active) {
       // 生成结束：光环先保持常亮，再靠 CSS transition 淡出；
       // 光雾若还没走完，让它自己收尾，别中途掐断
-      later(() => el.classList.remove("m10c-is-ring"), fadeDelay)
+      later(() => setPhase((prev) => ({ ...prev, ring: false })), fadeDelay)
       later(
-        () => el.classList.remove(...GLOW_CLASSES),
+        () => setPhase(IDLE_PHASE),
         Math.max(waveMs + 400, fadeDelay + 700)
       )
       return
     }
 
-    // 复位上一轮的状态
-    el.classList.remove(...GLOW_CLASSES)
-    // 强制回流，动画才能重新播
-    void el.offsetWidth
+    // 先回到空闲态、等浏览器真正提交（画到 DOM）后再挂状态类，
+    // 动画才会重播——等价于原来的强制回流，只是要跨两帧才看得到提交
+    setPhase(IDLE_PHASE)
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null
 
-    // 降低动效偏好下不播光雾，直接给到终态
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.classList.add("m10c-is-ring")
-      return
-    }
+        // 降低动效偏好下不播光雾，直接给到终态
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          setPhase({ waving: false, ring: true })
+          return
+        }
 
-    el.classList.add("m10c-is-waving", "m10c-is-generating")
+        setPhase({ waving: true, ring: false })
 
-    // 光雾漫到中段时点亮光环，衔接"能量灌入"的亮度脉冲
-    later(() => el.classList.add("m10c-is-ring"), waveMs * 0.45)
-    // 光雾结束后摘掉 class，方便下次重播
-    later(
-      () => el.classList.remove("m10c-is-waving", "m10c-is-generating"),
-      waveMs + 400
-    )
+        // 光雾漫到中段时点亮光环，衔接"能量灌入"的亮度脉冲
+        later(
+          () => setPhase({ waving: true, ring: true }),
+          waveMs * 0.45
+        )
+        // 光雾结束后收掉雾，光环保持常亮直到生成结束
+        later(
+          () => setPhase((prev) => ({ ...prev, waving: false })),
+          waveMs + 400
+        )
+      })
+    })
   }, [active, fadeDelay])
 
-  // 卸载时清掉计时器，避免往已移除的节点上挂 class
+  // 卸载时清掉计时器与帧回调，避免往已卸载的组件上写状态
   useEffect(() => {
     return () => {
       timersRef.current.forEach((id) => window.clearTimeout(id))
       timersRef.current = []
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
     }
   }, [])
 
@@ -140,6 +164,9 @@ export function GenerationGlow({
       className={cn(
         "m10c-glow-frame",
         tone === "dark" && "m10c-is-dark",
+        phase.waving && "m10c-is-waving",
+        phase.waving && "m10c-is-generating",
+        phase.ring && "m10c-is-ring",
         className
       )}>
       <div className="m10c-glow-wave" aria-hidden="true" />
