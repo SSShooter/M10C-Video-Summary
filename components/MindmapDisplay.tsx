@@ -190,6 +190,8 @@ export function MindmapDisplay({
       setMindmapLoading(true)
       setMindmapData(null) // Clear previous data
       setReasoning("")
+      // 重新生成期间不再展示缓存标记
+      setCacheLoaded(false)
 
       const messageData: any = {
         action: generateConfig.action,
@@ -466,64 +468,69 @@ export function MindmapDisplay({
               size="sm">
               {mindmapLoading ? t("generating") : t("regenerate")}
             </Button>
-            <Button
-              onClick={openInMindElixir}
-              disabled={mindElixirLoading}
-              size="sm"
-              title={mindElixirLoading ? t("opening") : t("openInMindElixir")}>
-              {mindElixirLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ExternalLink className="w-4 h-4" />
-              )}
-            </Button>
-            <Button
-              onClick={() => {
-                fullscreen(mindmapRef.current?.instance!)
-              }}
-              size="sm"
-              title={t("fullscreen")}>
-              <Maximize className="w-4 h-4" />
-            </Button>
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" title={t("copy")}>
-                  <Copy className="w-4 h-4" />
+            {/* 生成中隐藏操作按钮，避免对未完成的内容误操作 */}
+            {!mindmapLoading && (
+              <>
+                <Button
+                  onClick={openInMindElixir}
+                  disabled={mindElixirLoading}
+                  size="sm"
+                  title={mindElixirLoading ? t("opening") : t("openInMindElixir")}>
+                  {mindElixirLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="w-4 h-4" />
+                  )}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuPortal container={panelRef.current}>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleCopy("json")}>
-                    {t("copyJson")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCopy("plaintext")}>
-                    {t("copyPlaintext")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
-            </DropdownMenu>
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" title={t("download")}>
-                  <Download className="w-4 h-4" />
+                <Button
+                  onClick={() => {
+                    fullscreen(mindmapRef.current?.instance!)
+                  }}
+                  size="sm"
+                  title={t("fullscreen")}>
+                  <Maximize className="w-4 h-4" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuPortal container={panelRef.current}>
-                <DropdownMenuContent align="end">
-                  {downloadMethodList.map((method) => (
-                    <DropdownMenuItem
-                      key={method.type}
-                      onClick={() => {
-                        if (mindmapRef.current?.instance) {
-                          method.download(mindmapRef.current.instance)
-                        }
-                      }}>
-                      {method.type}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
-            </DropdownMenu>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" title={t("copy")}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuPortal container={panelRef.current}>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleCopy("json")}>
+                        {t("copyJson")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleCopy("plaintext")}>
+                        {t("copyPlaintext")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenuPortal>
+                </DropdownMenu>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" title={t("download")}>
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuPortal container={panelRef.current}>
+                    <DropdownMenuContent align="end">
+                      {downloadMethodList.map((method) => (
+                        <DropdownMenuItem
+                          key={method.type}
+                          onClick={() => {
+                            if (mindmapRef.current?.instance) {
+                              method.download(mindmapRef.current.instance)
+                            }
+                          }}>
+                          {method.type}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenuPortal>
+                </DropdownMenu>
+              </>
+            )}
           </>
         )}
       </div>
@@ -547,7 +554,7 @@ export function MindmapDisplay({
           className="flex-1 min-h-0 w-full">
           {mindmapData ? (
             <>
-              {cacheLoaded && (
+              {cacheLoaded && !mindmapLoading && (
                 <span className="absolute top-2 right-2 z-10 text-[12px] text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 py-[1px] px-[6px] rounded-full border border-blue-300 dark:border-blue-400/40 h-fit">
                   {t("cached")}
                 </span>
