@@ -104,7 +104,11 @@ Rules:
    - "}:n Summary Text" — one space after "}:n"
    - "> [^id1] <-Label-> [^id2]" — a relation line (see rule 7)
    Combining markers (such as "}>") is STRICTLY FORBIDDEN.
-4. Use "[^id]" at the end of a node topic to define a unique ID for cross-referencing.
+4. Node IDs (CRITICAL): "[^id]" MUST be appended at the VERY END of a line that already contains real node text, e.g. "- Paradoxical Origin [^origin]".
+   - The ID always belongs to the node text in front of it on the same line. There is no other way to define an ID.
+   - "[^id]" at the beginning or in the middle of a line is NOT an ID — it is rendered literally as part of the node text.
+   - A line whose content is only "[^id]" (with no other text) becomes an EMPTY node and its ID is lost. NEVER output an ID-only line.
+   - Do NOT reuse the same ID for two different nodes.
 5. Use JSON-like syntax at the end of a node topic for styling: {"color": "#hex", "background": "#hex", "fontSize": "16"}. Use this feature with extreme restraint. By default, do NOT add colors or background styles to standard nodes. Only apply styling to highly critical or special nodes that require strong visual emphasis.
 6. Summary nodes (must be a standalone line at the same indentation as the siblings they summarize):
    - "- } Summary Text" summarizes ALL previous siblings at the same level.
@@ -114,7 +118,8 @@ Rules:
 7. Relationship links (must be a standalone line, may appear at any position in the outline):
    - Bidirectional: "- > [^id1] <-Label-> [^id2]"
    - Unidirectional: "- > [^id1] >-Label-> [^id2]"
-   - Both [^id] values MUST reference IDs defined earlier via rule 4. A relation line MUST NOT contain "}".
+   - Both [^id] values MUST be IDs that already appear at the END of a text node (rule 4). A relation line MUST NOT contain "}".
+   - An ID that is not attached to the end of a text node does not exist; a relation that references it is dropped and the link disappears from the map. Before writing a relation, confirm both of its IDs are attached to real nodes.
 8. Language Requirement (CRITICAL):
    - You MUST generate all output (node names, titles, labels, and summary texts) strictly in ${language}.
    - Even if the input content (subtitles, transcript, or article) is in English or any other language, you MUST translate and summarize it into ${language}.
@@ -127,6 +132,12 @@ Common mistakes — NEVER output any of these:
 - "- }Summary Text"             WRONG: missing space after "}"
 - "- } > [^id1] <-Label-> [^id2]" WRONG: relation and summary must be separate lines
 - "  - } All three techniques share this mechanism and reinforce it."  WRONG: a 2-space-indented (first-level) summary of the main branches is forbidden — turn the takeaway into a normal child node of a branch instead
+- "    - [^origin]"                    WRONG: ID-only line — an empty node is drawn and the ID is lost; put the ID on the node it refers to instead, e.g. "    - Involves threat perception and avoidance [^origin]"
+- "      -  [^perception]"             WRONG: ID-only line on top of a double space
+- "    - [^amygdala] Amygdala identifies the task as a threat"  WRONG: the ID must be at the END — "    - Amygdala identifies the task as a threat [^amygdala]"
+- "    - [^negative_emotions] Individual Susceptibility"  WRONG: the ID must be at the END — "    - Individual Susceptibility [^negative_emotions]"
+- "    - > [^amygdala] <-Triggers-> [^origin]"   WRONG when "amygdala" was never written at the end of a node — the link is silently dropped
+- "    - Fear of failure [^fear] [^shame]"        WRONG: exactly one ID per node
 - "- } Whole-map summary..." at the root level or at the first level  WRONG: summaries are only allowed at 4-space indentation or deeper, or drop it
 `
   },
