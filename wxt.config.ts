@@ -20,7 +20,7 @@ export default defineConfig({
   webExt: {
     disabled: true,
   },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
@@ -40,13 +40,26 @@ export default defineConfig({
       page: 'entrypoints/options/index.html',
       open_in_tab: true,
     },
-    browser_specific_settings: {
-      gecko: {
-        data_collection_permissions: {
-          required: ["browsingActivity", "websiteContent"],
-          // optional: ["technicalAndInteraction"] 
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: {
+              data_collection_permissions: {
+                required: ["browsingActivity", "websiteContent"],
+                // optional: ["technicalAndInteraction"] 
+              }
+            }
+          }
         }
-      }
-    }
-  },
+      : {}),
+    ...(browser === 'safari'
+      ? {
+          browser_specific_settings: {
+            safari: {
+              strict_min_version: '16.4',
+            },
+          },
+        }
+      : {}),
+  }),
 });

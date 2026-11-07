@@ -11,6 +11,8 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "build:safari": "wxt build -b safari",
+    "zip:safari": "wxt zip -b safari",
     "compile": "tsc --noEmit",
     "screenshot": "node scripts/screenshot.mjs",
     "update:providers": "node scripts/sync-providers.mjs",
