@@ -1,0 +1,639 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		30FB244E309A18EF00CA19F3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FB244D309A18EF00CA19F3 /* AppDelegate.swift */; };
+		30FB2452309A18EF00CA19F3 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2450309A18EF00CA19F3 /* Main.html */; };
+		30FB2454309A18EF00CA19F3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2453309A18EF00CA19F3 /* Icon.png */; };
+		30FB2456309A18EF00CA19F3 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2455309A18EF00CA19F3 /* Style.css */; };
+		30FB2458309A18EF00CA19F3 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2457309A18EF00CA19F3 /* Script.js */; };
+		30FB245A309A18EF00CA19F3 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FB2459309A18EF00CA19F3 /* ViewController.swift */; };
+		30FB245D309A18EF00CA19F3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 30FB245B309A18EF00CA19F3 /* Main.storyboard */; };
+		30FB245F309A18F000CA19F3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 30FB245E309A18F000CA19F3 /* Assets.xcassets */; };
+		30FB2466309A18F000CA19F3 /* M10C Video MindMap Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 30FB2465309A18F000CA19F3 /* M10C Video MindMap Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		30FB246B309A18F000CA19F3 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FB246A309A18F000CA19F3 /* SafariWebExtensionHandler.swift */; };
+		30FB2481309A18F000CA19F3 /* preview.html in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2477309A18F000CA19F3 /* preview.html */; };
+		30FB2482309A18F000CA19F3 /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2478309A18F000CA19F3 /* background.js */; };
+		30FB2483309A18F000CA19F3 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2479309A18F000CA19F3 /* popup.html */; };
+		30FB2484309A18F000CA19F3 /* chunks in Resources */ = {isa = PBXBuildFile; fileRef = 30FB247A309A18F000CA19F3 /* chunks */; };
+		30FB2485309A18F000CA19F3 /* content-scripts in Resources */ = {isa = PBXBuildFile; fileRef = 30FB247B309A18F000CA19F3 /* content-scripts */; };
+		30FB2486309A18F000CA19F3 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 30FB247C309A18F000CA19F3 /* manifest.json */; };
+		30FB2487309A18F000CA19F3 /* options.html in Resources */ = {isa = PBXBuildFile; fileRef = 30FB247D309A18F000CA19F3 /* options.html */; };
+		30FB2488309A18F000CA19F3 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = 30FB247E309A18F000CA19F3 /* _locales */; };
+		30FB2489309A18F000CA19F3 /* icon in Resources */ = {isa = PBXBuildFile; fileRef = 30FB247F309A18F000CA19F3 /* icon */; };
+		30FB248A309A18F000CA19F3 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 30FB2480309A18F000CA19F3 /* assets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		30FB2467309A18F000CA19F3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 30FB2442309A18EF00CA19F3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 30FB2464309A18F000CA19F3;
+			remoteInfo = "M10C Video MindMap Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		30FB2472309A18F000CA19F3 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				30FB2466309A18F000CA19F3 /* M10C Video MindMap Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		30FB244A309A18EF00CA19F3 /* M10C Video MindMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "M10C Video MindMap.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		30FB244D309A18EF00CA19F3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		30FB2451309A18EF00CA19F3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		30FB2453309A18EF00CA19F3 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		30FB2455309A18EF00CA19F3 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		30FB2457309A18EF00CA19F3 /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		30FB2459309A18EF00CA19F3 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		30FB245C309A18EF00CA19F3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		30FB245E309A18F000CA19F3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		30FB2460309A18F000CA19F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		30FB2465309A18F000CA19F3 /* M10C Video MindMap Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "M10C Video MindMap Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		30FB246A309A18F000CA19F3 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		30FB246C309A18F000CA19F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		30FB2477309A18F000CA19F3 /* preview.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = preview.html; path = Resources/preview.html; sourceTree = "<group>"; };
+		30FB2478309A18F000CA19F3 /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = Resources/background.js; sourceTree = "<group>"; };
+		30FB2479309A18F000CA19F3 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = Resources/popup.html; sourceTree = "<group>"; };
+		30FB247A309A18F000CA19F3 /* chunks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = chunks; path = Resources/chunks; sourceTree = "<group>"; };
+		30FB247B309A18F000CA19F3 /* content-scripts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "content-scripts"; path = "Resources/content-scripts"; sourceTree = "<group>"; };
+		30FB247C309A18F000CA19F3 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = Resources/manifest.json; sourceTree = "<group>"; };
+		30FB247D309A18F000CA19F3 /* options.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = options.html; path = Resources/options.html; sourceTree = "<group>"; };
+		30FB247E309A18F000CA19F3 /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = Resources/_locales; sourceTree = "<group>"; };
+		30FB247F309A18F000CA19F3 /* icon */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icon; path = Resources/icon; sourceTree = "<group>"; };
+		30FB2480309A18F000CA19F3 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = Resources/assets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		30FB2447309A18EF00CA19F3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30FB2462309A18F000CA19F3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		30FB2441309A18EF00CA19F3 = {
+			isa = PBXGroup;
+			children = (
+				30FB244C309A18EF00CA19F3 /* M10C Video MindMap */,
+				30FB2469309A18F000CA19F3 /* M10C Video MindMap Extension */,
+				30FB244B309A18EF00CA19F3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		30FB244B309A18EF00CA19F3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				30FB244A309A18EF00CA19F3 /* M10C Video MindMap.app */,
+				30FB2465309A18F000CA19F3 /* M10C Video MindMap Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		30FB244C309A18EF00CA19F3 /* M10C Video MindMap */ = {
+			isa = PBXGroup;
+			children = (
+				30FB244D309A18EF00CA19F3 /* AppDelegate.swift */,
+				30FB2459309A18EF00CA19F3 /* ViewController.swift */,
+				30FB245B309A18EF00CA19F3 /* Main.storyboard */,
+				30FB245E309A18F000CA19F3 /* Assets.xcassets */,
+				30FB2460309A18F000CA19F3 /* Info.plist */,
+				30FB244F309A18EF00CA19F3 /* Resources */,
+			);
+			path = "M10C Video MindMap";
+			sourceTree = "<group>";
+		};
+		30FB244F309A18EF00CA19F3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				30FB2450309A18EF00CA19F3 /* Main.html */,
+				30FB2453309A18EF00CA19F3 /* Icon.png */,
+				30FB2455309A18EF00CA19F3 /* Style.css */,
+				30FB2457309A18EF00CA19F3 /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		30FB2469309A18F000CA19F3 /* M10C Video MindMap Extension */ = {
+			isa = PBXGroup;
+			children = (
+				30FB2476309A18F000CA19F3 /* Resources */,
+				30FB246A309A18F000CA19F3 /* SafariWebExtensionHandler.swift */,
+				30FB246C309A18F000CA19F3 /* Info.plist */,
+			);
+			path = "M10C Video MindMap Extension";
+			sourceTree = "<group>";
+		};
+		30FB2476309A18F000CA19F3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				30FB2477309A18F000CA19F3 /* preview.html */,
+				30FB2478309A18F000CA19F3 /* background.js */,
+				30FB2479309A18F000CA19F3 /* popup.html */,
+				30FB247A309A18F000CA19F3 /* chunks */,
+				30FB247B309A18F000CA19F3 /* content-scripts */,
+				30FB247C309A18F000CA19F3 /* manifest.json */,
+				30FB247D309A18F000CA19F3 /* options.html */,
+				30FB247E309A18F000CA19F3 /* _locales */,
+				30FB247F309A18F000CA19F3 /* icon */,
+				30FB2480309A18F000CA19F3 /* assets */,
+			);
+			name = Resources;
+			path = "M10C Video MindMap Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		30FB2449309A18EF00CA19F3 /* M10C Video MindMap */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 30FB2473309A18F000CA19F3 /* Build configuration list for PBXNativeTarget "M10C Video MindMap" */;
+			buildPhases = (
+				30FB2446309A18EF00CA19F3 /* Sources */,
+				30FB2447309A18EF00CA19F3 /* Frameworks */,
+				30FB2448309A18EF00CA19F3 /* Resources */,
+				30FB2472309A18F000CA19F3 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				30FB2468309A18F000CA19F3 /* PBXTargetDependency */,
+			);
+			name = "M10C Video MindMap";
+			packageProductDependencies = (
+			);
+			productName = "M10C Video MindMap";
+			productReference = 30FB244A309A18EF00CA19F3 /* M10C Video MindMap.app */;
+			productType = "com.apple.product-type.application";
+		};
+		30FB2464309A18F000CA19F3 /* M10C Video MindMap Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 30FB246F309A18F000CA19F3 /* Build configuration list for PBXNativeTarget "M10C Video MindMap Extension" */;
+			buildPhases = (
+				30FB2461309A18F000CA19F3 /* Sources */,
+				30FB2462309A18F000CA19F3 /* Frameworks */,
+				30FB2463309A18F000CA19F3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "M10C Video MindMap Extension";
+			packageProductDependencies = (
+			);
+			productName = "M10C Video MindMap Extension";
+			productReference = 30FB2465309A18F000CA19F3 /* M10C Video MindMap Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		30FB2442309A18EF00CA19F3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					30FB2449309A18EF00CA19F3 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					30FB2464309A18F000CA19F3 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+				};
+			};
+			buildConfigurationList = 30FB2445309A18EF00CA19F3 /* Build configuration list for PBXProject "M10C Video MindMap" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 30FB2441309A18EF00CA19F3;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 30FB244B309A18EF00CA19F3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				30FB2449309A18EF00CA19F3 /* M10C Video MindMap */,
+				30FB2464309A18F000CA19F3 /* M10C Video MindMap Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		30FB2448309A18EF00CA19F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30FB2454309A18EF00CA19F3 /* Icon.png in Resources */,
+				30FB245D309A18EF00CA19F3 /* Main.storyboard in Resources */,
+				30FB2458309A18EF00CA19F3 /* Script.js in Resources */,
+				30FB2452309A18EF00CA19F3 /* Main.html in Resources */,
+				30FB245F309A18F000CA19F3 /* Assets.xcassets in Resources */,
+				30FB2456309A18EF00CA19F3 /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30FB2463309A18F000CA19F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30FB2487309A18F000CA19F3 /* options.html in Resources */,
+				30FB2482309A18F000CA19F3 /* background.js in Resources */,
+				30FB2488309A18F000CA19F3 /* _locales in Resources */,
+				30FB2483309A18F000CA19F3 /* popup.html in Resources */,
+				30FB2484309A18F000CA19F3 /* chunks in Resources */,
+				30FB248A309A18F000CA19F3 /* assets in Resources */,
+				30FB2481309A18F000CA19F3 /* preview.html in Resources */,
+				30FB2486309A18F000CA19F3 /* manifest.json in Resources */,
+				30FB2489309A18F000CA19F3 /* icon in Resources */,
+				30FB2485309A18F000CA19F3 /* content-scripts in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		30FB2446309A18EF00CA19F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30FB245A309A18EF00CA19F3 /* ViewController.swift in Sources */,
+				30FB244E309A18EF00CA19F3 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		30FB2461309A18F000CA19F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30FB246B309A18F000CA19F3 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		30FB2468309A18F000CA19F3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 30FB2464309A18F000CA19F3 /* M10C Video MindMap Extension */;
+			targetProxy = 30FB2467309A18F000CA19F3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		30FB2450309A18EF00CA19F3 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				30FB2451309A18EF00CA19F3 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		30FB245B309A18EF00CA19F3 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				30FB245C309A18EF00CA19F3 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		30FB246D309A18F000CA19F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		30FB246E309A18F000CA19F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		30FB2470309A18F000CA19F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9J69XMW5FC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "M10C Video MindMap Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "M10C Video MindMap Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 3.7.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.timerecord.m10c.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		30FB2471309A18F000CA19F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9J69XMW5FC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "M10C Video MindMap Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "M10C Video MindMap Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 3.7.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.timerecord.m10c.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		30FB2474309A18F000CA19F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9J69XMW5FC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "M10C Video MindMap/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "M10C Video MindMap";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 3.7.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.timerecord.m10c;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		30FB2475309A18F000CA19F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9J69XMW5FC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "M10C Video MindMap/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "M10C Video MindMap";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MARKETING_VERSION = 3.7.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.timerecord.m10c;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		30FB2445309A18EF00CA19F3 /* Build configuration list for PBXProject "M10C Video MindMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30FB246D309A18F000CA19F3 /* Debug */,
+				30FB246E309A18F000CA19F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		30FB246F309A18F000CA19F3 /* Build configuration list for PBXNativeTarget "M10C Video MindMap Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30FB2470309A18F000CA19F3 /* Debug */,
+				30FB2471309A18F000CA19F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		30FB2473309A18F000CA19F3 /* Build configuration list for PBXNativeTarget "M10C Video MindMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				30FB2474309A18F000CA19F3 /* Debug */,
+				30FB2475309A18F000CA19F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 30FB2442309A18EF00CA19F3 /* Project object */;
+}

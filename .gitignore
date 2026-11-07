@@ -36,3 +36,17 @@ local-docs/
 
 # Release card exports (generated artifacts, not source)
 screenshots/
+
+# Xcode
+xcuserdata/
+build/
+DerivedData/
+
+# Safari: extension resources are generated from .output/safari-mv2
+safari/**/M10C Video MindMap Extension/Resources/
+
+# Signing artifacts (never commit)
+*.p12
+*.p8
+*.mobileprovision
+ExportOptions.plist
