@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.8.0] - 2026-11-08
+
+### Added
+- **Subtitle Export in Three Formats**: Added a download menu to the subtitle panel that exports captions as SRT (standard timestamps), TXT (plain text lines), or Markdown (time-tagged list headed by the video title). Filenames are derived from the video title with illegal characters stripped and length capped; the new UI strings are localized across all 6 supported locales.
+- **AI Generation Glow Effect**: Introduced the `GenerationGlow` component, layering an animated halo and colorful mist over the summary and mindmap panels while content is generated, with a blinking caret for streaming output. Animation phases are driven by React state and `requestAnimationFrame`, timers are cleaned up on unmount, and the effect is skipped when the user prefers reduced motion.
+- **System-Aware Dark Mode**: Added a `useSystemTheme` hook that follows OS color-scheme changes at runtime and applies dark styling to panels, CSS variables, prose typography, and text colors. The glow effect gained a dedicated dark-canvas variant (wider ring, less blur, additive blending) so it stays visible on dark mindmap backgrounds, with a fade-in to smooth canvas theme transitions.
+- **Safari Build Support**: Added `build:safari` / `zip:safari` scripts and a browser-conditional manifest that sets Safari's `strict_min_version` to 16.4 while keeping Firefox's Gecko data-collection permissions. An Xcode host project was added with a Swift web-extension handler, app icons, and ignore rules for generated extension resources.
+
+### Changed / Refactored
+- **Mindmap Prompt & Response Parsing**: Tightened `MINDMAP_SYSTEM` so node IDs must sit at the end of a text line, ID-only lines and duplicate IDs are forbidden, and root/first-level summary lines are no longer allowed. A new response parser normalizes model output before rendering: moving misplaced IDs, merging ID-only lines into their parent node, aliasing duplicate IDs, dropping relations that reference missing IDs, and stripping top-level summaries.
+- **Mindmap Loading State**: Action buttons (copy, download, fullscreen, open in Mind Elixir) are hidden while a map is regenerating, and the cached-result indicator is cleared when a new generation starts.
+- **Dependencies**: Upgraded `@mind-elixir/open-desktop` to v0.0.5.
+
+### Fixed
+- **Subtitle Export Filenames**: TXT downloads no longer save with a `.srt` extension; the file extension and MIME type now follow the selected format.
+- **Malformed Mindmap Output**: Prevented empty orphan nodes, silently dropped relation links, and oversized floating blocks caused by ID-only lines, dangling IDs, and top-level summary lines.
+
+---
+
 ## [3.7.0] - 2026-10-17
 
 ### Added
