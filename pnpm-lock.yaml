@@ -12,8 +12,8 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       '@mind-elixir/open-desktop':
-        specifier: ^0.0.4
-        version: 0.0.4
+        specifier: ^0.0.5
+        version: 0.0.5
       '@radix-ui/react-checkbox':
         specifier: ^1.3.2
         version: 1.3.3(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -98,7 +98,7 @@ importers:
         version: 5.0.6
       '@wxt-dev/module-react':
         specifier: ^1.1.5
-        version: 1.2.2(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7))(wxt@0.20.26(@types/node@25.6.0)(jiti@1.21.7))
+        version: 1.2.2(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7))(wxt@0.20.26(@types/node@25.6.0)(jiti@1.21.7)(supports-color@3.2.3))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.5.0(postcss@8.5.10)
@@ -116,7 +116,7 @@ importers:
         version: 5.9.3
       wxt:
         specifier: ^0.20.26
-        version: 0.20.26(@types/node@25.6.0)(jiti@1.21.7)
+        version: 0.20.26(@types/node@25.6.0)(jiti@1.21.7)(supports-color@3.2.3)
 
 packages:
 
@@ -374,8 +374,8 @@ packages:
   '@mind-elixir/export-mindmap@0.1.3':
     resolution: {integrity: sha512-eUbhVUD+JyndqTtFYGzYT8wj4YSL3rTRHSuavHLjpVD6A1rkSSPX72z5sYG6aDZnST+AJZOfgoTMn9ZSUVxY3g==}
 
-  '@mind-elixir/open-desktop@0.0.4':
-    resolution: {integrity: sha512-7G/uj45HaePCrWYGZt7Vtqlant7gWl3ImorwEp+s1zy7e9Z6i4QpJbCBRptiWqPmmEeqfpJUyhZvVWmvUQ3Blw==}
+  '@mind-elixir/open-desktop@0.0.5':
+    resolution: {integrity: sha512-Aag8c05V95fufSZM152GiX3xeUeMSg1I56W3T5UkaCBryWK2taCnPMi6s6brdBaJTEFOnuuErbjjacOeaCHERg==}
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -2746,13 +2746,13 @@ snapshots:
 
   '@devicefarmer/adbkit-monkey@1.2.1': {}
 
-  '@devicefarmer/adbkit@3.3.8':
+  '@devicefarmer/adbkit@3.3.8(supports-color@3.2.3)':
     dependencies:
       '@devicefarmer/adbkit-logcat': 2.1.3
       '@devicefarmer/adbkit-monkey': 1.2.1
       bluebird: 3.7.2
       commander: 9.5.0
-      debug: 4.3.7
+      debug: 4.3.7(supports-color@3.2.3)
       node-forge: 1.4.0
       split: 1.0.1
     transitivePeerDependencies:
@@ -2895,7 +2895,7 @@ snapshots:
       jszip: 3.10.1
       modern-screenshot: 4.7.0
 
-  '@mind-elixir/open-desktop@0.0.4': {}
+  '@mind-elixir/open-desktop@0.0.5': {}
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -3436,11 +3436,11 @@ snapshots:
       '@types/filesystem': 0.0.36
       '@types/har-format': 1.2.16
 
-  '@wxt-dev/module-react@1.2.2(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7))(wxt@0.20.26(@types/node@25.6.0)(jiti@1.21.7))':
+  '@wxt-dev/module-react@1.2.2(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7))(wxt@0.20.26(@types/node@25.6.0)(jiti@1.21.7)(supports-color@3.2.3))':
     dependencies:
       '@vitejs/plugin-react': 6.0.1(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7))
       vite: 8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7)
-      wxt: 0.20.26(@types/node@25.6.0)(jiti@1.21.7)
+      wxt: 0.20.26(@types/node@25.6.0)(jiti@1.21.7)(supports-color@3.2.3)
     transitivePeerDependencies:
       - '@rolldown/plugin-babel'
       - babel-plugin-react-compiler
@@ -3617,12 +3617,12 @@ snapshots:
     dependencies:
       readdirp: 5.0.0
 
-  chrome-launcher@1.2.0:
+  chrome-launcher@1.2.0(supports-color@3.2.3):
     dependencies:
       '@types/node': 25.6.0
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
-      lighthouse-logger: 2.0.2
+      lighthouse-logger: 2.0.2(supports-color@3.2.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -3714,13 +3714,17 @@ snapshots:
 
   debounce@1.2.1: {}
 
-  debug@4.3.7:
+  debug@4.3.7(supports-color@3.2.3):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 3.2.3
 
-  debug@4.4.3:
+  debug@4.4.3(supports-color@3.2.3):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 3.2.3
 
   deep-extend@0.6.0: {}
 
@@ -4117,9 +4121,9 @@ snapshots:
     dependencies:
       immediate: 3.0.6
 
-  lighthouse-logger@2.0.2:
+  lighthouse-logger@2.0.2(supports-color@3.2.3):
     dependencies:
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@3.2.3)
       marky: 1.3.0
     transitivePeerDependencies:
       - supports-color
@@ -4988,11 +4992,11 @@ snapshots:
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.11
 
-  web-ext-run@0.2.4:
+  web-ext-run@0.2.4(supports-color@3.2.3):
     dependencies:
       '@babel/runtime': 7.28.2
-      '@devicefarmer/adbkit': 3.3.8
-      chrome-launcher: 1.2.0
+      '@devicefarmer/adbkit': 3.3.8(supports-color@3.2.3)
+      chrome-launcher: 1.2.0(supports-color@3.2.3)
       debounce: 1.2.1
       es6-error: 4.1.1
       firefox-profile: 4.7.0
@@ -5057,7 +5061,7 @@ snapshots:
       is-wsl: 3.1.1
       powershell-utils: 0.1.0
 
-  wxt@0.20.26(@types/node@25.6.0)(jiti@1.21.7):
+  wxt@0.20.26(@types/node@25.6.0)(jiti@1.21.7)(supports-color@3.2.3):
     dependencies:
       '@1natsu/wait-element': 4.2.0
       '@aklinker1/rollup-plugin-visualizer': 5.12.0
@@ -5100,7 +5104,7 @@ snapshots:
       unimport: 6.1.1
       vite: 8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7)
       vite-node: 6.0.0(@types/node@25.6.0)(esbuild@0.27.7)(jiti@1.21.7)
-      web-ext-run: 0.2.4
+      web-ext-run: 0.2.4(supports-color@3.2.3)
     transitivePeerDependencies:
       - '@types/node'
       - '@vitejs/devtools'

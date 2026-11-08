@@ -2,5 +2,5 @@ allowBuilds:
   esbuild: true
   spawn-sync: true
 minimumReleaseAgeExclude:
-  - '@mind-elixir/open-desktop@0.0.4'
+  - '@mind-elixir/open-desktop@0.0.4 || 0.0.5'
   - mind-elixir@5.15.0
